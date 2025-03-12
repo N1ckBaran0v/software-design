@@ -73,3 +73,23 @@
 ![](img/bpmn1.svg)
 ![](img/bpmn2.svg)
 ![](img/bpmn3.svg)
+
+## Тип приложения
+
+Web SPA
+
+## Технологический стек
+
+Backend: Java 21 
+
+Frontend: HTML + CSS + TypeScript
+
+СУБД: PostgreSQL
+
+## Верхнеуровневое разбиение на компоненты
+
+![](img/components.svg)
+
+## UML диаграмма компонентов бизнес логики и доступа к данным
+
+![](img/uml.svg)
