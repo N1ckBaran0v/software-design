@@ -90,6 +90,6 @@ Frontend: HTML + CSS + TypeScript
 
 ![](img/components.svg)
 
-## UML диаграммы
+## UML диаграмма компонентов бизнес логики и доступа к данным
 
-Раздел находится в разработке.
+![](img/uml.svg)
