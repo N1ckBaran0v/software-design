@@ -1,13 +1,14 @@
 package ru.traintickets.businesslogic.api;
 
+import ru.traintickets.businesslogic.exception.UserAlreadyExistsException;
 import ru.traintickets.businesslogic.model.User;
 import ru.traintickets.businesslogic.model.UserId;
 
 public interface UserService {
-    void createUser(User user);
+    void createUser(User user) throws UserAlreadyExistsException;
     void deleteUser(UserId userId);
-    void getUser(UserId userId);
-    void getUserByAdmin(UserId userId);
-    void updateUser(User user);
-    void updateUserByAdmin(User user);
+    User getUser(UserId userId);
+    User getUserByAdmin(UserId userId);
+    void updateUser(UserId userId, User user);
+    void updateUserByAdmin(UserId userId, User user);
 }

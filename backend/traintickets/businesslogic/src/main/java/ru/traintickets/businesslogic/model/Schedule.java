@@ -1,6 +1,6 @@
 package ru.traintickets.businesslogic.model;
 
-import java.sql.Time;
+import java.util.Date;
 
-public record Schedule(String name, Time arrival, Time departure, double multiplier) {
+public record Schedule(String name, Date arrival, Date departure, double multiplier) {
 }

@@ -1,4 +1,4 @@
 package ru.traintickets.businesslogic.model;
 
-public record RailcarId(String id) {
+public record RailcarId(long id) {
 }
