@@ -74,7 +74,7 @@ class TrainServiceImplTest {
         given(trainRepository.getTrains(start, end)).willReturn(List.of());
         var result = trainService.getTrains(start, end);
         assertNotNull(result);
-        assertEquals(0, result.size());
+        assertTrue(result.isEmpty());
     }
 
     @Test
@@ -105,6 +105,6 @@ class TrainServiceImplTest {
         given(railcarRepository.getRailcars(type)).willReturn(List.of());
         var result = trainService.getRailcars(type);
         assertNotNull(result);
-        assertEquals(0, result.size());
+        assertTrue(result.isEmpty());
     }
 }

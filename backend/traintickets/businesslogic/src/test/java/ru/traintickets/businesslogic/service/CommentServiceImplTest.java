@@ -35,8 +35,8 @@ class CommentServiceImplTest {
     @Test
     void getComments_positive_got() {
         var trainId = new TrainId(228);
-        var comm1 = new Comment(new CommId(1), new UserId("random_username1"), trainId, 5, "good");
-        var comm2 = new Comment(new CommId(2), new UserId("random_username2"), trainId, 1, "bad");
+        var comm1 = new Comment(new CommId(1), new UserId("rand_username1"), trainId, 5, "good");
+        var comm2 = new Comment(new CommId(2), new UserId("rand_username2"), trainId, 1, "bad");
         given(commentRepository.getComments(trainId)).willReturn(List.of(comm1, comm2));
         var comments = commentService.getComments(trainId);
         assertNotNull(comments);
@@ -49,9 +49,9 @@ class CommentServiceImplTest {
     void getComments_positive_empty() {
         var trainId = new TrainId(228);
         given(commentRepository.getComments(trainId)).willReturn(List.of());
-        var comments = commentService.getComments(trainId);
-        assertNotNull(comments);
-        assertEquals(0, comments.size());
+        var result = commentService.getComments(trainId);
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
     }
 
     @Test

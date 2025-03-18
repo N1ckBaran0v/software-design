@@ -34,7 +34,7 @@ class TicketServiceImplTest {
         var start = new Schedule("station1", null, Timestamp.valueOf("2025-07-11 13:34:00"), 2);
         var end = new Schedule("station2", Timestamp.valueOf("2025-07-20 12:45:00"), null, 7);
         var cost = BigDecimal.valueOf((7 - 2) * 10);
-        var ticket1 = new Ticket(owner, race, 3, new Place(1, null, "universal", BigDecimal.TEN), start, end, cost);
+        var ticket1 = new Ticket(owner, race, 3, new Place(1, null, "any_human", BigDecimal.TEN), start, end, cost);
         var ticket2 = new Ticket(owner, race, 3, new Place(2, null, "invalids", BigDecimal.TEN), start, end, cost);
         tickets = List.of(ticket1, ticket2);
     }
@@ -63,6 +63,6 @@ class TicketServiceImplTest {
         given(ticketRepository.getTicketsByUser(user)).willReturn(List.of());
         var result = ticketService.getTickets(user);
         assertNotNull(result);
-        assertEquals(0, result.size());
+        assertTrue(result.isEmpty());
     }
 }

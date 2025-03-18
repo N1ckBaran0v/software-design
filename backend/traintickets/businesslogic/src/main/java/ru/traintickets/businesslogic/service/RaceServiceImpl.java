@@ -2,6 +2,7 @@ package ru.traintickets.businesslogic.service;
 
 import ru.traintickets.businesslogic.api.RaceService;
 import ru.traintickets.businesslogic.exception.EntityNotFoundException;
+import ru.traintickets.businesslogic.exception.TrainAlreadyReservedException;
 import ru.traintickets.businesslogic.model.Race;
 import ru.traintickets.businesslogic.model.RaceId;
 import ru.traintickets.businesslogic.model.Ticket;
@@ -28,7 +29,7 @@ public final class RaceServiceImpl implements RaceService {
     }
 
     @Override
-    public void addRace(Race race) {
+    public void addRace(Race race) throws TrainAlreadyReservedException {
         raceRepository.addRace(race);
     }
 

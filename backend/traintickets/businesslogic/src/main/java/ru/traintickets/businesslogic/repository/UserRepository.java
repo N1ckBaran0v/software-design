@@ -11,6 +11,6 @@ public interface UserRepository {
     void addUser(User user) throws UserAlreadyExistsException;
     Optional<User> getUser(UserId userId);
     Iterable<User> getUsers(List<UserId> userIds);
-    void updateUser(UserId userId, User user);
+    void updateUser(UserId userId, User user) throws UserAlreadyExistsException;
     void deleteUser(UserId userId);
 }

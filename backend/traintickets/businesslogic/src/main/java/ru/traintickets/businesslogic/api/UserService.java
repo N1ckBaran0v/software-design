@@ -9,6 +9,6 @@ public interface UserService {
     void deleteUser(UserId userId);
     User getUser(UserId userId);
     User getUserByAdmin(UserId userId);
-    void updateUser(UserId userId, User user);
-    void updateUserByAdmin(UserId userId, User user);
+    void updateUser(UserId userId, User user) throws UserAlreadyExistsException;
+    void updateUserByAdmin(UserId userId, User user) throws UserAlreadyExistsException;
 }

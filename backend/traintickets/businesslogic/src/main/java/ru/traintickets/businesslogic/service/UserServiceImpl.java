@@ -21,6 +21,7 @@ public final class UserServiceImpl implements UserService {
 
     @Override
     public void createUser(User user) throws UserAlreadyExistsException {
+        user.validate();
         userRepository.addUser(user);
     }
 
@@ -43,12 +44,14 @@ public final class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updateUser(UserId userId, User user) {
+    public void updateUser(UserId userId, User user) throws UserAlreadyExistsException {
+        user.validate();
         userRepository.updateUser(userId, user);
     }
 
     @Override
-    public void updateUserByAdmin(UserId userId, User user) {
+    public void updateUserByAdmin(UserId userId, User user) throws UserAlreadyExistsException {
+        user.validate();
         userRepository.updateUser(userId, user);
     }
 }

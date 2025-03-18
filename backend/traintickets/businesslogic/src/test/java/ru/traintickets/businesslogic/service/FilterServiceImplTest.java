@@ -99,7 +99,7 @@ class FilterServiceImplTest {
         given(filterRepository.getFilters(userId)).willReturn(List.of());
         var result = filterService.getFilters(userId);
         assertNotNull(result);
-        assertEquals(0, result.size());
+        assertTrue(result.isEmpty());
     }
 
     @Test

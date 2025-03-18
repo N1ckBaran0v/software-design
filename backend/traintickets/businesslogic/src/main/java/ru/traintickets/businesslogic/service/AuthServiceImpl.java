@@ -4,6 +4,7 @@ import ru.traintickets.businesslogic.api.AuthService;
 import ru.traintickets.businesslogic.exception.EntityNotFoundException;
 import ru.traintickets.businesslogic.exception.InvalidPasswordException;
 import ru.traintickets.businesslogic.exception.UserAlreadyExistsException;
+import ru.traintickets.businesslogic.exception.UserWasBannedException;
 import ru.traintickets.businesslogic.model.User;
 import ru.traintickets.businesslogic.repository.UserRepository;
 import ru.traintickets.businesslogic.session.SessionManager;
@@ -16,10 +17,12 @@ import java.util.UUID;
 public final class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final SessionManager sessionManager;
+    private final String clientRole;
 
-    public AuthServiceImpl(UserRepository userRepository, SessionManager sessionManager) {
+    public AuthServiceImpl(UserRepository userRepository, SessionManager sessionManager, String clientRole) {
         this.userRepository = Objects.requireNonNull(userRepository);
         this.sessionManager = Objects.requireNonNull(sessionManager);
+        this.clientRole = Objects.requireNonNull(clientRole);
     }
 
     @Override
@@ -27,8 +30,8 @@ public final class AuthServiceImpl implements AuthService {
         var username = form.username();
         var password = form.password();
         var name = form.name();
-        var role = "client_user";
-        var user = new User(username, password, name, role, false);
+        var user = new User(username, password, name, clientRole, true);
+        user.validate();
         userRepository.addUser(user);
         sessionManager.startSession(sessionId, user);
     }
@@ -39,6 +42,9 @@ public final class AuthServiceImpl implements AuthService {
                 () -> new EntityNotFoundException(String.format("User %s not found", form.username())));
         if (!user.password().equals(form.password())) {
             throw new InvalidPasswordException();
+        }
+        if (!user.active()) {
+            throw new UserWasBannedException(user.username());
         }
         sessionManager.startSession(sessionId, user);
     }
