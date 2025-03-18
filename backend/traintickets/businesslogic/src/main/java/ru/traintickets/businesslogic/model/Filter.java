@@ -6,6 +6,8 @@ import java.util.List;
 
 public record Filter(UserId user,
                      String name,
+                     String departure,
+                     String destination,
                      String trainClass,
                      int transfers,
                      List<String> passengers,

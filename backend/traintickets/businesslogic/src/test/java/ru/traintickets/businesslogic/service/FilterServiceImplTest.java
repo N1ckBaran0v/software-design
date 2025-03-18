@@ -29,15 +29,10 @@ class FilterServiceImplTest {
 
     @Test
     void addFilter_positive_saved() {
-        var filter = new Filter(new UserId(1),
-                "filter",
-                "express",
-                0,
-                List.of("adult", "adult", "child"),
-                Date.valueOf("2025-03-19"),
-                Date.valueOf("2025-10-11"),
-                BigDecimal.valueOf(100),
-                BigDecimal.valueOf(10000));
+        var filter = new Filter(new UserId(1), "filter", "first", "second",
+                "express", 0, List.of("adult", "adult", "child"),
+                Date.valueOf("2025-03-19"), Date.valueOf("2025-10-11"),
+                BigDecimal.valueOf(100), BigDecimal.valueOf(10000));
         filterService.addFilter(filter);
         verify(filterRepository).addFilter(filter);
     }
@@ -46,15 +41,10 @@ class FilterServiceImplTest {
     void getFilter_positive_found() {
         var userId = new UserId(1);
         var name = "filter";
-        var filter = new Filter(userId,
-                name,
-                "express",
-                0,
-                List.of("adult", "adult", "child"),
-                Date.valueOf("2025-03-19"),
-                Date.valueOf("2025-10-11"),
-                BigDecimal.valueOf(100),
-                BigDecimal.valueOf(10000));
+        var filter = new Filter(userId, name, "first", "second",
+                "express", 0, List.of("adult", "adult", "child"),
+                Date.valueOf("2025-03-19"), Date.valueOf("2025-10-11"),
+                BigDecimal.valueOf(100), BigDecimal.valueOf(10000));
         given(filterRepository.getFilter(userId, name)).willReturn(Optional.of(filter));
         var result = filterService.getFilter(userId, name);
         assertSame(filter, result);
@@ -71,24 +61,14 @@ class FilterServiceImplTest {
     @Test
     void getFilters_positive_got() {
         var userId = new UserId(1);
-        var filter1 = new Filter(userId,
-                "first",
-                "regular",
-                0,
-                List.of("adult"),
-                Date.valueOf("2025-03-19"),
-                Date.valueOf("2025-10-11"),
-                BigDecimal.valueOf(100),
-                BigDecimal.valueOf(10000));
-        var filter2 = new Filter(userId,
-                "second",
-                "express",
-                0,
-                List.of("adult", "child"),
-                Date.valueOf("2025-03-19"),
-                Date.valueOf("2025-10-11"),
-                BigDecimal.valueOf(100),
-                BigDecimal.valueOf(10000));
+        var filter1 = new Filter(userId, "filter1", "first", "second",
+                "regular", 0, List.of("adult"),
+                Date.valueOf("2025-03-19"), Date.valueOf("2025-10-11"),
+                BigDecimal.valueOf(100), BigDecimal.valueOf(10000));
+        var filter2 = new Filter(userId, "filter2", "first", "second",
+                "express", 0, List.of("adult", "child"),
+                Date.valueOf("2025-03-19"), Date.valueOf("2025-10-11"),
+                BigDecimal.valueOf(100), BigDecimal.valueOf(10000));
         given(filterRepository.getFilters(userId)).willReturn(List.of(filter1, filter2));
         var result = filterService.getFilters(userId);
         assertNotNull(result);

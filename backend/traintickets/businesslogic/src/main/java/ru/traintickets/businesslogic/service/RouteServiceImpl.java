@@ -11,16 +11,6 @@ import ru.traintickets.businesslogic.repository.TrainRepository;
 import java.util.*;
 
 public final class RouteServiceImpl implements RouteService {
-    static final class RouteNode {
-        private final RaceId raceId;
-        private final Map<RaceId, RouteNode> children;
-
-        RouteNode(RaceId raceId) {
-            this.raceId = raceId;
-            this.children = new HashMap<>();
-        }
-    }
-
     private final RailcarRepository railcarRepository;
     private final TrainRepository trainRepository;
     private final RaceRepository raceRepository;
@@ -38,7 +28,128 @@ public final class RouteServiceImpl implements RouteService {
 
     @Override
     public List<Route> getRoutes(Filter filter) {
-        return List.of();
+        var races = raceRepository.getRaces(filter);
+        var transfers = filter.transfers();
+        var map = new HashMap<String, List<Race>>();
+        races.forEach(race -> race.schedule().forEach(schedule -> {
+            var name = schedule.name();
+            if (!map.containsKey(name)) {
+                map.put(name, new ArrayList<>());
+            }
+            map.get(name).add(race);
+        }));
+        var used = new HashSet<RaceId>();
+        var visited = new HashSet<String>();
+        visited.add(filter.departure());
+        var testRoute = new Route(new ArrayList<>(transfers + 1),
+                new ArrayList<>(transfers + 1),
+                new ArrayList<>(transfers + 1));
+        var result = new ArrayList<Route>();
+        var departure = filter.departure();
+        map.get(departure).forEach(race -> searchRoute(result, testRoute, used, visited, filter,
+                map, race, find(race.schedule(), departure, 0), transfers));
+        return result;
+    }
+
+    private void searchRoute(List<Route> routes,
+                             Route testRoute,
+                             Set<RaceId> used,
+                             Set<String> visited,
+                             Filter filter,
+                             Map<String, List<Race>> map,
+                             Race currentRace,
+                             int currentStation,
+                             int transfers) {
+        used.add(currentRace.id());
+        var races = testRoute.races();
+        var starts = testRoute.starts();
+        var schedule = currentRace.schedule();
+        races.add(currentRace.id());
+        starts.add(schedule.get(currentStation));
+        var dstPos = find(schedule, filter.destination(), currentStation);
+        if (dstPos != -1) {
+            saveRoute(routes, visited, currentStation, dstPos, schedule, testRoute);
+        } else if (transfers > 0) {
+            searchNext(routes, testRoute, used, visited, filter, map, currentStation, transfers - 1, schedule);
+        }
+        starts.removeLast();
+        races.removeLast();
+        used.remove(currentRace.id());
+    }
+
+    private void searchNext(List<Route> routes,
+                            Route testRoute,
+                            Set<RaceId> used,
+                            Set<String> visited,
+                            Filter filter,
+                            Map<String, List<Race>> map,
+                            int currentStation,
+                            int transfers,
+                            List<Schedule> schedule) {
+        var stop = schedule.size();
+        for (var i = currentStation + 1; i < stop; ++i) {
+            var current = schedule.get(i);
+            var name = current.name();
+            if (!visited.contains(name)) {
+                visited.add(name);
+                map.get(name).forEach(race -> {
+                    if (!used.contains(race.id())) {
+                        testRoute.ends().add(current);
+                        var curr = race.schedule();
+                        var pos = find(curr, name, 0);
+                        var arrivalTime = schedule.get(currentStation).arrival();
+                        var departureTime = curr.get(pos).departure();
+                        if (arrivalTime != null && departureTime != null && arrivalTime.before(departureTime)) {
+                            searchRoute(routes, testRoute, used, visited, filter, map, race, pos, transfers);
+                        }
+                        testRoute.ends().removeLast();
+                    }
+                });
+            } else {
+                stop = i;
+            }
+        }
+        for (var i = currentStation + 1; i < stop; ++i) {
+            visited.remove(schedule.get(i).name());
+        }
+    }
+
+    private void saveRoute(List<Route> routes,
+                           Set<String> visited,
+                           int currentStation,
+                           int dstPos,
+                           List<Schedule> schedule,
+                           Route testRoute) {
+        var stop = dstPos;
+        for (var i = currentStation + 1; i < stop; ++i) {
+            var station = schedule.get(i).name();
+            if (!visited.contains(station)) {
+                visited.add(station);
+            } else {
+                stop = i;
+            }
+        }
+        if (stop == dstPos && dstPos != currentStation) {
+            testRoute.ends().add(schedule.get(dstPos));
+            var races = new ArrayList<>(testRoute.races());
+            var starts = new ArrayList<>(testRoute.starts());
+            var ends = new ArrayList<>(testRoute.ends());
+            routes.add(new Route(races, starts, ends));
+        }
+        for (var i = currentStation + 1; i < stop; ++i) {
+            visited.remove(schedule.get(i).name());
+        }
+    }
+
+    private int find(List<Schedule> schedule, String name, int start) {
+        var result = -1;
+        for (var i = start; i < schedule.size(); ++i) {
+            if (name.equals(schedule.get(i).name())) {
+                result = i;
+                break;
+            }
+        }
+        return result;
     }
 
     @Override
@@ -66,11 +177,11 @@ public final class RouteServiceImpl implements RouteService {
         for (var i = 0; i < numbers.size(); ++i) {
             var arr = new ArrayList<Place>();
             var bought = boughtAll.get(i);
-            for (var place : railcars.get(numbers.get(i)).places()) {
+            railcars.get(numbers.get(i)).places().forEach(place -> {
                 if (!bought.contains(place.number())) {
                     arr.add(place);
                 }
-            }
+            });
             result.add(arr);
         }
         return result;
