@@ -8,10 +8,19 @@ import ru.traintickets.businesslogic.repository.RailcarRepository;
 import ru.traintickets.businesslogic.repository.TicketRepository;
 import ru.traintickets.businesslogic.repository.TrainRepository;
 
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public final class RouteServiceImpl implements RouteService {
+    static final class RouteNode {
+        private final RaceId raceId;
+        private final Map<RaceId, RouteNode> children;
+
+        RouteNode(RaceId raceId) {
+            this.raceId = raceId;
+            this.children = new HashMap<>();
+        }
+    }
+
     private final RailcarRepository railcarRepository;
     private final TrainRepository trainRepository;
     private final RaceRepository raceRepository;
@@ -44,9 +53,26 @@ public final class RouteServiceImpl implements RouteService {
                 () -> new EntityNotFoundException(String.format("No race with id %d found", raceId.id())));
         var train = trainRepository.getTrain(race.trainId()).orElseThrow(
                 () -> new EntityNotFoundException(String.format("No train with id %d found", raceId.id())));
-        var railcars = railcarRepository.getRailcars(train.id());
-        var tickets = ticketRepository.getTicketsByRace(raceId);
-
-        return List.of();
+        var numbers = train.railcars();
+        var railcars = new HashMap<RailcarId, Railcar>();
+        railcarRepository.getRailcars(train.id()).forEach(railcar -> railcars.put(railcar.id(), railcar));
+        var boughtAll = new ArrayList<Set<Integer>>(numbers.size());
+        for (var i = 0; i < numbers.size(); ++i) {
+            boughtAll.add(new HashSet<>());
+        }
+        ticketRepository.getTicketsByRace(raceId).forEach(
+                ticket -> boughtAll.get(ticket.railcar() - 1).add(ticket.place().number()));
+        var result = new ArrayList<List<Place>>();
+        for (var i = 0; i < numbers.size(); ++i) {
+            var arr = new ArrayList<Place>();
+            var bought = boughtAll.get(i);
+            for (var place : railcars.get(numbers.get(i)).places()) {
+                if (!bought.contains(place.number())) {
+                    arr.add(place);
+                }
+            }
+            result.add(arr);
+        }
+        return result;
     }
 }
