@@ -29,9 +29,10 @@ class FilterServiceImplTest {
 
     @Test
     void addFilter_positive_saved() {
-        var filter = new Filter(new UserId("random_username"),
+        var filter = new Filter(new UserId(1),
                 "filter",
                 "express",
+                0,
                 List.of("adult", "adult", "child"),
                 Date.valueOf("2025-03-19"),
                 Date.valueOf("2025-10-11"),
@@ -43,11 +44,12 @@ class FilterServiceImplTest {
 
     @Test
     void getFilter_positive_found() {
-        var userId = new UserId("random_username");
+        var userId = new UserId(1);
         var name = "filter";
         var filter = new Filter(userId,
                 name,
                 "express",
+                0,
                 List.of("adult", "adult", "child"),
                 Date.valueOf("2025-03-19"),
                 Date.valueOf("2025-10-11"),
@@ -60,7 +62,7 @@ class FilterServiceImplTest {
 
     @Test
     void getFilter_negative_notFound() {
-        var userId = new UserId("random_username");
+        var userId = new UserId(1);
         var name = "filter";
         given(filterRepository.getFilter(userId, name)).willReturn(Optional.empty());
         assertThrows(EntityNotFoundException.class, () -> filterService.getFilter(userId, name));
@@ -68,10 +70,11 @@ class FilterServiceImplTest {
 
     @Test
     void getFilters_positive_got() {
-        var userId = new UserId("random_username");
+        var userId = new UserId(1);
         var filter1 = new Filter(userId,
                 "first",
                 "regular",
+                0,
                 List.of("adult"),
                 Date.valueOf("2025-03-19"),
                 Date.valueOf("2025-10-11"),
@@ -80,6 +83,7 @@ class FilterServiceImplTest {
         var filter2 = new Filter(userId,
                 "second",
                 "express",
+                0,
                 List.of("adult", "child"),
                 Date.valueOf("2025-03-19"),
                 Date.valueOf("2025-10-11"),
@@ -95,7 +99,7 @@ class FilterServiceImplTest {
 
     @Test
     void getFilters_positive_empty() {
-        var userId = new UserId("random_username");
+        var userId = new UserId(1);
         given(filterRepository.getFilters(userId)).willReturn(List.of());
         var result = filterService.getFilters(userId);
         assertNotNull(result);
@@ -104,7 +108,7 @@ class FilterServiceImplTest {
 
     @Test
     void deleteFilter_positive_deleted() {
-        var userId = new UserId("random_username");
+        var userId = new UserId(1);
         var name = "filter";
         filterService.deleteFilter(userId, name);
         verify(filterRepository).deleteFilter(userId, name);

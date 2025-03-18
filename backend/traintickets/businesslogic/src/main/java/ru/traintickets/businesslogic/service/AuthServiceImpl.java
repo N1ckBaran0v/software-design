@@ -30,7 +30,7 @@ public final class AuthServiceImpl implements AuthService {
         var username = form.username();
         var password = form.password();
         var name = form.name();
-        var user = new User(username, password, name, clientRole, true);
+        var user = new User(null, username, password, name, clientRole, true);
         user.validate();
         userRepository.addUser(user);
         sessionManager.startSession(sessionId, user);

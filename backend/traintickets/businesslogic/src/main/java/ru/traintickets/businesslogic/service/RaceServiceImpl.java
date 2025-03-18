@@ -3,17 +3,12 @@ package ru.traintickets.businesslogic.service;
 import ru.traintickets.businesslogic.api.RaceService;
 import ru.traintickets.businesslogic.exception.EntityNotFoundException;
 import ru.traintickets.businesslogic.exception.TrainAlreadyReservedException;
-import ru.traintickets.businesslogic.model.Race;
-import ru.traintickets.businesslogic.model.RaceId;
-import ru.traintickets.businesslogic.model.Ticket;
-import ru.traintickets.businesslogic.model.User;
+import ru.traintickets.businesslogic.model.*;
 import ru.traintickets.businesslogic.repository.RaceRepository;
 import ru.traintickets.businesslogic.repository.TicketRepository;
 import ru.traintickets.businesslogic.repository.UserRepository;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.StreamSupport;
+import java.util.*;
 
 public final class RaceServiceImpl implements RaceService {
     private final UserRepository userRepository;
@@ -53,10 +48,17 @@ public final class RaceServiceImpl implements RaceService {
     }
 
     @Override
-    public List<User> getPassengersList(RaceId raceId) {
-        return StreamSupport.stream(userRepository.getUsers(
-                StreamSupport.stream(ticketRepository.getTicketsByRace(raceId).spliterator(), false)
-                        .map(Ticket::owner).distinct().toList())
-                .spliterator(), false).toList();
+    public Map<String, List<String>> getPassengers(RaceId raceId) {
+        var tickets = new HashMap<UserId, List<String>>();
+        ticketRepository.getTicketsByRace(raceId).forEach(ticket -> {
+            var key = ticket.owner();
+            if (!tickets.containsKey(key)) {
+                tickets.put(key, new ArrayList<>());
+            }
+            tickets.get(key).add(ticket.passenger());
+        });
+        var result = new HashMap<String, List<String>>();
+        userRepository.getUsers(tickets.keySet()).forEach(user -> result.put(user.username(), tickets.get(user.id())));
+        return result;
     }
 }

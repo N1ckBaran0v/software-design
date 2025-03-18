@@ -2,7 +2,9 @@ package ru.traintickets.businesslogic.service;
 
 import ru.traintickets.businesslogic.api.UserService;
 import ru.traintickets.businesslogic.exception.EntityNotFoundException;
+import ru.traintickets.businesslogic.exception.InvalidEntityException;
 import ru.traintickets.businesslogic.exception.UserAlreadyExistsException;
+import ru.traintickets.businesslogic.exception.UserWasBannedException;
 import ru.traintickets.businesslogic.model.User;
 import ru.traintickets.businesslogic.model.UserId;
 import ru.traintickets.businesslogic.repository.UserRepository;
@@ -32,26 +34,33 @@ public final class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User getUser(UserId userId) {
-        return userRepository.getUser(userId).orElseThrow(
-                () -> new EntityNotFoundException(String.format("User with username '%s' not found", userId.id())));
+    public User getUser(String username) {
+        var result = userRepository.getUser(username).orElseThrow(
+                () -> new EntityNotFoundException(String.format("User with username '%s' not found", username)));
+        if (!result.active()) {
+            throw new UserWasBannedException(username);
+        }
+        return result;
     }
 
     @Override
-    public User getUserByAdmin(UserId userId) {
-        return userRepository.getUser(userId).orElseThrow(
-                () -> new EntityNotFoundException(String.format("User with username '%s' not found", userId.id())));
+    public User getUserByAdmin(String username) {
+        return userRepository.getUser(username).orElseThrow(
+                () -> new EntityNotFoundException(String.format("User with username '%s' not found", username)));
     }
 
     @Override
-    public void updateUser(UserId userId, User user) throws UserAlreadyExistsException {
+    public void updateUser(User user) throws UserAlreadyExistsException {
         user.validate();
-        userRepository.updateUser(userId, user);
+        if (!user.active()) {
+            throw new InvalidEntityException("User can be banned only by admin");
+        }
+        userRepository.updateUser(user);
     }
 
     @Override
-    public void updateUserByAdmin(UserId userId, User user) throws UserAlreadyExistsException {
+    public void updateUserByAdmin(User user) throws UserAlreadyExistsException {
         user.validate();
-        userRepository.updateUser(userId, user);
+        userRepository.updateUser(user);
     }
 }

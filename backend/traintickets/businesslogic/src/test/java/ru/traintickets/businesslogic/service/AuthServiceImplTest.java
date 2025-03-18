@@ -41,7 +41,7 @@ class AuthServiceImplTest {
 
     @Test
     void register_positive_saved() throws UserAlreadyExistsException {
-        var form = new RegisterForm(new UserId("random_username"), "qwerty123", "qwerty123", "Zubenko Mikhail");
+        var form = new RegisterForm("random_username", "qwerty123", "qwerty123", "Zubenko Mikhail");
         authService.register(UUID.randomUUID(), form);
         verify(userRepository).addUser(any());
         verify(sessionManager).startSession(any(), any());
@@ -49,9 +49,9 @@ class AuthServiceImplTest {
 
     @Test
     void register_negative_exists() throws UserAlreadyExistsException {
-        var userId = new UserId("random_username");
-        var form = new RegisterForm(userId, "qwerty123", "qwerty123", "Zubenko Mikhail");
-        var exception = new UserAlreadyExistsException(userId);
+        var username = "random_username";
+        var form = new RegisterForm(username, "qwerty123", "qwerty123", "Zubenko Mikhail");
+        var exception = new UserAlreadyExistsException(username);
         willThrow(exception).given(userRepository).addUser(any());
         assertThrows(UserAlreadyExistsException.class, () -> authService.register(UUID.randomUUID(), form));
         verify(sessionManager, never()).startSession(any(), any());
@@ -59,8 +59,7 @@ class AuthServiceImplTest {
 
     @Test
     void register_negative_invalid() throws UserAlreadyExistsException {
-        var userId = new UserId("random_username_long");
-        var form = new RegisterForm(userId, "qwerty123", "qwerty123", "Zubenko Mikhail");
+        var form = new RegisterForm("random_username_long", "qwerty123", "qwerty123", "Zubenko Mikhail");
         assertThrows(InvalidEntityException.class, () -> authService.register(UUID.randomUUID(), form));
         verify(userRepository, never()).addUser(any());
         verify(sessionManager, never()).startSession(any(), any());
@@ -68,46 +67,46 @@ class AuthServiceImplTest {
 
     @Test
     void login_positive_loggedIn() {
-        var userId = new UserId("random_username");
+        var username = "random_username";
         var password = "qwerty123";
-        var form = new LoginForm(userId, password);
-        var user = new User(userId, password, "Zubenko Mikhail", clientRole, true);
+        var form = new LoginForm(username, password);
+        var user = new User(new UserId(1), username, password, "Zubenko Mikhail", clientRole, true);
         var sessionId = UUID.randomUUID();
-        given(userRepository.getUser(userId)).willReturn(Optional.of(user));
+        given(userRepository.getUser(username)).willReturn(Optional.of(user));
         authService.login(sessionId, form);
         verify(sessionManager).startSession(sessionId, user);
     }
 
     @Test
     void login_negative_notFound() {
-        var userId = new UserId("random_username");
+        var username = "random_username";
         var password = "qwerty123";
-        var form = new LoginForm(userId, password);
+        var form = new LoginForm(username, password);
         var sessionId = UUID.randomUUID();
-        given(userRepository.getUser(userId)).willReturn(Optional.empty());
+        given(userRepository.getUser(username)).willReturn(Optional.empty());
         assertThrows(EntityNotFoundException.class, () -> authService.login(sessionId, form));
         verify(sessionManager, never()).startSession(any(), any());
     }
 
     @Test
     void login_negative_invalidPassword() {
-        var userId = new UserId("random_username");
-        var form = new LoginForm(userId, "qwerty1234");
+        var username = "random_username";
+        var form = new LoginForm(username, "qwerty1234");
         var sessionId = UUID.randomUUID();
-        var user = new User(userId, "qwerty123", "Zubenko Mikhail", clientRole, true);
-        given(userRepository.getUser(userId)).willReturn(Optional.of(user));
+        var user = new User(null, username, "qwerty123", "Zubenko Mikhail", clientRole, true);
+        given(userRepository.getUser(username)).willReturn(Optional.of(user));
         assertThrows(InvalidPasswordException.class, () -> authService.login(sessionId, form));
         verify(sessionManager, never()).startSession(any(), any());
     }
 
     @Test
     void login_negative_banned() {
-        var userId = new UserId("random_username");
+        var username = "random_username";
         var password = "qwerty123";
-        var form = new LoginForm(userId, password);
+        var form = new LoginForm(username, password);
         var sessionId = UUID.randomUUID();
-        var user = new User(userId, password, "Zubenko Mikhail", clientRole, false);
-        given(userRepository.getUser(userId)).willReturn(Optional.of(user));
+        var user = new User(null, username, password, "Zubenko Mikhail", clientRole, false);
+        given(userRepository.getUser(username)).willReturn(Optional.of(user));
         assertThrows(UserWasBannedException.class, () -> authService.login(sessionId, form));
         verify(sessionManager, never()).startSession(any(), any());
     }

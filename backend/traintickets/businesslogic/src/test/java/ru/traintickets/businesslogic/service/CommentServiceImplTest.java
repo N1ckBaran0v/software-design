@@ -5,7 +5,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import ru.traintickets.businesslogic.model.CommId;
+import ru.traintickets.businesslogic.model.CommentId;
 import ru.traintickets.businesslogic.model.Comment;
 import ru.traintickets.businesslogic.model.TrainId;
 import ru.traintickets.businesslogic.model.UserId;
@@ -27,7 +27,7 @@ class CommentServiceImplTest {
 
     @Test
     void addComment_positive_saved() {
-        var comment = new Comment(null, new UserId("random_username"), new TrainId(737), 5, "good");
+        var comment = new Comment(null, new UserId(1), new TrainId(737), 5, "good");
         commentService.addComment(comment);
         verify(commentRepository).addComment(comment);
     }
@@ -35,8 +35,8 @@ class CommentServiceImplTest {
     @Test
     void getComments_positive_got() {
         var trainId = new TrainId(228);
-        var comm1 = new Comment(new CommId(1), new UserId("rand_username1"), trainId, 5, "good");
-        var comm2 = new Comment(new CommId(2), new UserId("rand_username2"), trainId, 1, "bad");
+        var comm1 = new Comment(new CommentId(1), new UserId(1), trainId, 5, "good");
+        var comm2 = new Comment(new CommentId(2), new UserId(2), trainId, 1, "bad");
         given(commentRepository.getComments(trainId)).willReturn(List.of(comm1, comm2));
         var comments = commentService.getComments(trainId);
         assertNotNull(comments);
@@ -56,7 +56,7 @@ class CommentServiceImplTest {
 
     @Test
     void deleteComment_positive_deleted() {
-        var commId = new CommId(1);
+        var commId = new CommentId(1);
         commentService.deleteComment(commId);
         verify(commentRepository).deleteComment(commId);
     }

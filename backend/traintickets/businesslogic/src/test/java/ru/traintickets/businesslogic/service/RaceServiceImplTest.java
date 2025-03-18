@@ -103,25 +103,33 @@ class RaceServiceImplTest {
     }
 
     @Test
-    void getPassengersList_positive_got() {
+    void getPassengers_positive_got() {
         var raceId = new RaceId(1);
-        var userId1 = new UserId("first_user");
-        var userId2 = new UserId("second_user");
+        var userId1 = new UserId(1);
+        var userId2 = new UserId(2);
         var start = new Schedule("start", null, Timestamp.valueOf("2001-09-11 08:46:26"), 0);
         var end = new Schedule("start", null, Timestamp.valueOf("2001-09-11 09:03:02"), 100);
-        var ticket1 = new Ticket(userId1, raceId, 1,
+        var ticket1 = new Ticket(new TicketId(1), userId1, "adult", raceId, 1,
                 new Place(1, null, "any_human", BigDecimal.TEN), start, end, BigDecimal.valueOf(10 * 100));
-        var ticket2 = new Ticket(userId2, raceId, 1,
+        var ticket2 = new Ticket(new TicketId(2), userId2, "invalid", raceId, 1,
                 new Place(2, null, "any_human", BigDecimal.TEN), start, end, BigDecimal.valueOf(10 * 100));
-        var user1 = new User(userId1, "qwerty123", "Zubenko Mikhail", "clientRole", true);
-        var user2 = new User(userId2, "qwerty123", "Zubenko Mikhail", "clientRole", true);
+        var username1 = "username1";
+        var username2 = "username2";
+        var user1 = new User(userId1, username1, "qwerty123", "Zubenko Mikhail", "clientRole", true);
+        var user2 = new User(userId2, username2, "qwerty123", "Zubenko Mikhail", "clientRole", true);
         given(ticketRepository.getTicketsByRace(raceId)).willReturn(List.of(ticket1, ticket2));
         given(userRepository.getUsers(any())).willReturn(List.of(user1, user2));
-        var result = raceService.getPassengersList(raceId);
+        var result = raceService.getPassengers(raceId);
         assertNotNull(result);
         assertEquals(2, result.size());
-        assertEquals(user1, result.get(0));
-        assertEquals(user2, result.get(1));
+        var first = result.get(username1);
+        assertNotNull(first);
+        assertEquals(1, first.size());
+        assertEquals("adult", first.getFirst());
+        var second = result.get(username2);
+        assertNotNull(second);
+        assertEquals(1, second.size());
+        assertEquals("invalid", second.getFirst());
     }
 
     @Test
@@ -129,7 +137,7 @@ class RaceServiceImplTest {
         var raceId = new RaceId(1);
         given(ticketRepository.getTicketsByRace(raceId)).willReturn(List.of());
         given(userRepository.getUsers(any())).willReturn(List.of());
-        var result = raceService.getPassengersList(raceId);
+        var result = raceService.getPassengers(raceId);
         assertNotNull(result);
         assertTrue(result.isEmpty());
     }

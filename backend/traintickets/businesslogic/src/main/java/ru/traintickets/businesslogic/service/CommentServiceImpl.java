@@ -1,7 +1,7 @@
 package ru.traintickets.businesslogic.service;
 
 import ru.traintickets.businesslogic.api.CommentService;
-import ru.traintickets.businesslogic.model.CommId;
+import ru.traintickets.businesslogic.model.CommentId;
 import ru.traintickets.businesslogic.model.Comment;
 import ru.traintickets.businesslogic.model.TrainId;
 import ru.traintickets.businesslogic.repository.CommentRepository;
@@ -28,7 +28,7 @@ public final class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public void deleteComment(CommId commId) {
-        commentRepository.deleteComment(commId);
+    public void deleteComment(CommentId commentId) {
+        commentRepository.deleteComment(commentId);
     }
 }

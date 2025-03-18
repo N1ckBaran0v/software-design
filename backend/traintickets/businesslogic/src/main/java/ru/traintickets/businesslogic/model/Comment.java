@@ -1,4 +1,4 @@
 package ru.traintickets.businesslogic.model;
 
-public record Comment(CommId id, UserId author, TrainId train, int score, String text) {
+public record Comment(CommentId id, UserId author, TrainId train, int score, String text) {
 }

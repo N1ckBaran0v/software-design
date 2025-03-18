@@ -7,6 +7,7 @@ import java.util.List;
 public record Filter(UserId user,
                      String name,
                      String trainClass,
+                     int transfers,
                      List<String> passengers,
                      Date start,
                      Date end,
