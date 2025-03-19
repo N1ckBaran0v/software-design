@@ -1,3 +1,6 @@
 rootProject.name = "traintickets"
-include(":businesslogic")
-
+include(":business-logic")
+include(":di")
+include(":data-access")
+include(":security")
+include("control")
