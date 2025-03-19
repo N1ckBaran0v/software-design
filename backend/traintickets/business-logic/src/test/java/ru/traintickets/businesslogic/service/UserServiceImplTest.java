@@ -13,8 +13,10 @@ import ru.traintickets.businesslogic.model.User;
 import ru.traintickets.businesslogic.model.UserId;
 import ru.traintickets.businesslogic.repository.UserRepository;
 import ru.traintickets.businesslogic.session.SessionManager;
+import ru.traintickets.businesslogic.transport.UserInfo;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -116,31 +118,56 @@ class UserServiceImplTest {
 
     @Test
     void updateUser_positive_updated() throws UserAlreadyExistsException {
-        var user = new User(new UserId(1), "random_username", "qwerty123", "Zubenko Mikhail", "client", true);
-        userService.updateUser(user);
+        var userId = new UserId(1);
+        var role = "client";
+        var user = new User(userId, "random_username", "qwerty123", "Zubenko Mikhail", role, true);
+        var uuid = UUID.randomUUID();
+        var userInfo = new UserInfo(userId, role);
+        given(sessionManager.getUserInfo(uuid)).willReturn(userInfo);
+        userService.updateUser(uuid, user);
         verify(userRepository).updateUser(user);
     }
 
     @Test
     void updateUser_negative_invalid() throws UserAlreadyExistsException {
         var user = new User(new UserId(1), "random_username_long", "qwerty123", "Zubenko Mikhail", "client", true);
-        assertThrows(InvalidEntityException.class, () -> userService.updateUser(user));
+        assertThrows(InvalidEntityException.class, () -> userService.updateUser(UUID.randomUUID(), user));
+        verify(sessionManager, never()).getUserInfo(any());
         verify(userRepository, never()).updateUser(any());
     }
 
     @Test
     void updateUser_negative_exists() throws UserAlreadyExistsException {
+        var userId = new UserId(1);
         var username = "random_username";
-        var user = new User(new UserId(1), username, "qwerty123", "Zubenko Mikhail", "client", true);
+        var role = "client";
+        var user = new User(userId, username, "qwerty123", "Zubenko Mikhail", role, true);
+        var uuid = UUID.randomUUID();
+        var userInfo = new UserInfo(userId, role);
+        given(sessionManager.getUserInfo(uuid)).willReturn(userInfo);
         var exception = new UserAlreadyExistsException(username);
         willThrow(exception).given(userRepository).updateUser(user);
-        assertThrows(UserAlreadyExistsException.class, () -> userService.updateUser(user));
+        assertThrows(UserAlreadyExistsException.class, () -> userService.updateUser(uuid, user));
     }
 
     @Test
     void updateUser_negative_banned() throws UserAlreadyExistsException {
         var user = new User(new UserId(1), "random_username", "qwerty123", "Zubenko Mikhail", "client", false);
-        assertThrows(InvalidEntityException.class, () -> userService.updateUser(user));
+        var uuid = UUID.randomUUID();
+        assertThrows(InvalidEntityException.class, () -> userService.updateUser(uuid, user));
+        verify(sessionManager, never()).getUserInfo(any());
+        verify(userRepository, never()).updateUser(any());
+    }
+
+    @Test
+    void updateUser_negative_changedRole() throws UserAlreadyExistsException {
+        var userId = new UserId(1);
+        var username = "random_username";
+        var user = new User(userId, username, "qwerty123", "Zubenko Mikhail", "client", true);
+        var uuid = UUID.randomUUID();
+        var userInfo = new UserInfo(userId, "admin");
+        given(sessionManager.getUserInfo(uuid)).willReturn(userInfo);
+        assertThrows(InvalidEntityException.class, () -> userService.updateUser(uuid, user));
         verify(userRepository, never()).updateUser(any());
     }
 

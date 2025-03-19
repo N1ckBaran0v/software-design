@@ -9,8 +9,10 @@ import ru.traintickets.businesslogic.model.User;
 import ru.traintickets.businesslogic.model.UserId;
 import ru.traintickets.businesslogic.repository.UserRepository;
 import ru.traintickets.businesslogic.session.SessionManager;
+import ru.traintickets.businesslogic.transport.UserInfo;
 
 import java.util.Objects;
+import java.util.UUID;
 
 public final class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
@@ -50,10 +52,14 @@ public final class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updateUser(User user) throws UserAlreadyExistsException {
+    public void updateUser(UUID sessionId, User user) throws UserAlreadyExistsException {
         user.validate();
         if (!user.active()) {
             throw new InvalidEntityException("User can be banned only by admin");
+        }
+        var userInfo = sessionManager.getUserInfo(sessionId);
+        if (!userInfo.role().equals(user.role())) {
+            throw new InvalidEntityException("User role may be changed only by admin");
         }
         userRepository.updateUser(user);
     }
@@ -61,6 +67,7 @@ public final class UserServiceImpl implements UserService {
     @Override
     public void updateUserByAdmin(User user) throws UserAlreadyExistsException {
         user.validate();
+        sessionManager.updateUserInfo(new UserInfo(user.id(), user.role()));
         userRepository.updateUser(user);
     }
 }
