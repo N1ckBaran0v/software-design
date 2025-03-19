@@ -5,7 +5,7 @@ plugins {
 subprojects {
     apply(plugin = "java")
 
-    group = "ru.traintickets"
+    group = "traintickets"
     version = "1.0-SNAPSHOT"
 
     java {
