@@ -46,8 +46,10 @@ public final class RouteServiceImpl implements RouteService {
                 new ArrayList<>(transfers + 1));
         var result = new ArrayList<Route>();
         var departure = filter.departure();
-        map.get(departure).forEach(race -> searchRoute(result, testRoute, used, visited, filter,
-                map, race, find(race.schedule(), departure, 0), transfers));
+        if (map.containsKey(departure)) {
+            map.get(departure).forEach(race -> searchRoute(result, testRoute, used, visited, filter,
+                    map, race, find(race.schedule(), departure, 0), transfers));
+        }
         return result;
     }
 
@@ -97,7 +99,7 @@ public final class RouteServiceImpl implements RouteService {
                         testRoute.ends().add(current);
                         var curr = race.schedule();
                         var pos = find(curr, name, 0);
-                        var arrivalTime = schedule.get(currentStation).arrival();
+                        var arrivalTime = current.arrival();
                         var departureTime = curr.get(pos).departure();
                         if (arrivalTime != null && departureTime != null && arrivalTime.before(departureTime)) {
                             searchRoute(routes, testRoute, used, visited, filter, map, race, pos, transfers);
@@ -163,10 +165,10 @@ public final class RouteServiceImpl implements RouteService {
         var race = raceRepository.getRace(raceId).orElseThrow(
                 () -> new EntityNotFoundException(String.format("No race with id %d found", raceId.id())));
         var train = trainRepository.getTrain(race.trainId()).orElseThrow(
-                () -> new EntityNotFoundException(String.format("No train with id %d found", raceId.id())));
+                () -> new EntityNotFoundException(String.format("No train with id %d found", race.trainId().id())));
         var numbers = train.railcars();
         var railcars = new HashMap<RailcarId, Railcar>();
-        railcarRepository.getRailcars(train.id()).forEach(railcar -> railcars.put(railcar.id(), railcar));
+        railcarRepository.getRailcarsByTrain(train.id()).forEach(railcar -> railcars.put(railcar.id(), railcar));
         var boughtAll = new ArrayList<Set<Integer>>(numbers.size());
         for (var i = 0; i < numbers.size(); ++i) {
             boughtAll.add(new HashSet<>());

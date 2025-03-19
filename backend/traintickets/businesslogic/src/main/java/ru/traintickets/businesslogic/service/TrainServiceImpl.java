@@ -45,6 +45,6 @@ public final class TrainServiceImpl implements TrainService {
 
     @Override
     public List<Railcar> getRailcars(String type) {
-        return StreamSupport.stream(railcarRepository.getRailcars(type).spliterator(), false).toList();
+        return StreamSupport.stream(railcarRepository.getRailcarsByType(type).spliterator(), false).toList();
     }
 }

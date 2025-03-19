@@ -91,7 +91,7 @@ class TrainServiceImplTest {
         var railcar1 = new Railcar(railcarId1, type, List.of());
         var railcarId2 = new RailcarId(2);
         var railcar2 = new Railcar(railcarId2, type, List.of());
-        given(railcarRepository.getRailcars(type)).willReturn(List.of(railcar1, railcar2));
+        given(railcarRepository.getRailcarsByType(type)).willReturn(List.of(railcar1, railcar2));
         var result = trainService.getRailcars(type);
         assertNotNull(result);
         assertEquals(2, result.size());
@@ -102,7 +102,7 @@ class TrainServiceImplTest {
     @Test
     void getRailcars_positive_empty() {
         var type = "cars";
-        given(railcarRepository.getRailcars(type)).willReturn(List.of());
+        given(railcarRepository.getRailcarsByType(type)).willReturn(List.of());
         var result = trainService.getRailcars(type);
         assertNotNull(result);
         assertTrue(result.isEmpty());
