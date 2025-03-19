@@ -1,10 +1,7 @@
 package ru.traintickets.businesslogic.service;
 
 import ru.traintickets.businesslogic.api.AuthService;
-import ru.traintickets.businesslogic.exception.EntityNotFoundException;
-import ru.traintickets.businesslogic.exception.InvalidPasswordException;
-import ru.traintickets.businesslogic.exception.UserAlreadyExistsException;
-import ru.traintickets.businesslogic.exception.UserWasBannedException;
+import ru.traintickets.businesslogic.exception.*;
 import ru.traintickets.businesslogic.model.User;
 import ru.traintickets.businesslogic.repository.UserRepository;
 import ru.traintickets.businesslogic.session.SessionManager;
@@ -29,6 +26,10 @@ public final class AuthServiceImpl implements AuthService {
     public void register(UUID sessionId, RegisterForm form) throws UserAlreadyExistsException {
         var username = form.username();
         var password = form.password();
+        var confirmPassword = form.confirmPassword();
+        if (!password.equals(confirmPassword)) {
+            throw new PasswordsMismatchesException();
+        }
         var name = form.name();
         var user = new User(null, username, password, name, clientRole, true);
         user.validate();

@@ -66,6 +66,14 @@ class AuthServiceImplTest {
     }
 
     @Test
+    void register_negative_mismatches() throws UserAlreadyExistsException {
+        var form = new RegisterForm("random_username", "qwerty123", "qwertu123", "Zubenko Mikhail");
+        assertThrows(PasswordsMismatchesException.class, () -> authService.register(UUID.randomUUID(), form));
+        verify(userRepository, never()).addUser(any());
+        verify(sessionManager, never()).startSession(any(), any());
+    }
+
+    @Test
     void login_positive_loggedIn() {
         var username = "random_username";
         var password = "qwerty123";
