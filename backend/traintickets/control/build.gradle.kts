@@ -3,7 +3,7 @@ plugins {
 }
 
 description = "control"
-group = "ru.traintickets.control"
+group = "traintickets.control"
 
 dependencies {
     api(project(":business-logic"))
@@ -14,7 +14,7 @@ dependencies {
 
 tasks.jar {
     manifest {
-        attributes["Main-Class"] = "ru.traintickets.control.Main"
+        attributes["Main-Class"] = "traintickets.control.Main"
         attributes["Created-By"] = "Nikolay Baranov"
     }
     archiveBaseName.set("control")

@@ -3,7 +3,7 @@ plugins {
 }
 
 description = "security"
-group = "ru.traintickets.security"
+group = "traintickets.security"
 
 dependencies {
     api(project(":business-logic"))

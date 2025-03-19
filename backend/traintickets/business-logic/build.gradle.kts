@@ -3,7 +3,7 @@ plugins {
 }
 
 description = "business-logic"
-group = "ru.traintickets.businesslogic"
+group = "traintickets.businesslogic"
 
 tasks.jar {
     manifest {

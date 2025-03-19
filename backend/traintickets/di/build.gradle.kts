@@ -3,7 +3,7 @@ plugins {
 }
 
 description = "di"
-group = "ru.traintickets.di"
+group = "traintickets.di"
 
 tasks.jar {
     manifest {

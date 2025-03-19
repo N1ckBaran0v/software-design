@@ -3,7 +3,7 @@ plugins {
 }
 
 description = "data-access"
-group = "ru.traintickets.dataaccess"
+group = "traintickets.dataaccess"
 
 dependencies {
     api(project(":business-logic"))
