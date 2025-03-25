@@ -37,14 +37,14 @@ class UserServiceImplTest {
     private UserServiceImpl userService;
 
     @Test
-    void createUser_positive_created() throws UserAlreadyExistsException {
+    void createUser_positive_created() {
         var user = new User(null, "random_username", "qwerty123", "Zubenko Mikhail", "client", true);
         userService.createUser(user);
         verify(userRepository).addUser(user);
     }
 
     @Test
-    void createUser_negative_exists() throws UserAlreadyExistsException {
+    void createUser_negative_exists() {
         var username = "random_username";
         var user = new User(null, username, "qwerty123", "Zubenko Mikhail", "client", true);
         var exception = new UserAlreadyExistsException(username);
@@ -53,7 +53,7 @@ class UserServiceImplTest {
     }
 
     @Test
-    void createUser_negative_invalid() throws UserAlreadyExistsException {
+    void createUser_negative_invalid() {
         var user = new User(null, "random_username_long", "qwerty123", "Zubenko Mikhail", "client", true);
         assertThrows(InvalidEntityException.class, () -> userService.createUser(user));
         verify(userRepository, never()).addUser(any());
@@ -117,7 +117,7 @@ class UserServiceImplTest {
     }
 
     @Test
-    void updateUser_positive_updated() throws UserAlreadyExistsException {
+    void updateUser_positive_updated() {
         var userId = new UserId(1);
         var role = "client";
         var user = new User(userId, "random_username", "qwerty123", "Zubenko Mikhail", role, true);
@@ -129,7 +129,7 @@ class UserServiceImplTest {
     }
 
     @Test
-    void updateUser_negative_invalid() throws UserAlreadyExistsException {
+    void updateUser_negative_invalid() {
         var user = new User(new UserId(1), "random_username_long", "qwerty123", "Zubenko Mikhail", "client", true);
         assertThrows(InvalidEntityException.class, () -> userService.updateUser(UUID.randomUUID(), user));
         verify(sessionManager, never()).getUserInfo(any());
@@ -137,7 +137,7 @@ class UserServiceImplTest {
     }
 
     @Test
-    void updateUser_negative_exists() throws UserAlreadyExistsException {
+    void updateUser_negative_exists() {
         var userId = new UserId(1);
         var username = "random_username";
         var role = "client";
@@ -151,7 +151,7 @@ class UserServiceImplTest {
     }
 
     @Test
-    void updateUser_negative_banned() throws UserAlreadyExistsException {
+    void updateUser_negative_banned() {
         var user = new User(new UserId(1), "random_username", "qwerty123", "Zubenko Mikhail", "client", false);
         var uuid = UUID.randomUUID();
         assertThrows(InvalidEntityException.class, () -> userService.updateUser(uuid, user));
@@ -160,7 +160,7 @@ class UserServiceImplTest {
     }
 
     @Test
-    void updateUser_negative_changedRole() throws UserAlreadyExistsException {
+    void updateUser_negative_changedRole() {
         var userId = new UserId(1);
         var username = "random_username";
         var user = new User(userId, username, "qwerty123", "Zubenko Mikhail", "client", true);
@@ -172,21 +172,21 @@ class UserServiceImplTest {
     }
 
     @Test
-    void updateUserByAdmin_positive_updated() throws UserAlreadyExistsException {
+    void updateUserByAdmin_positive_updated() {
         var user = new User(new UserId(1), "random_username", "qwerty123", "Zubenko Mikhail", "client", true);
         userService.updateUserByAdmin(user);
         verify(userRepository).updateUser(user);
     }
 
     @Test
-    void updateUserByAdmin_negative_invalid() throws UserAlreadyExistsException {
+    void updateUserByAdmin_negative_invalid() {
         var user = new User(new UserId(1), "random_username_long", "qwerty123", "Zubenko Mikhail", "client", true);
         assertThrows(InvalidEntityException.class, () -> userService.updateUserByAdmin(user));
         verify(userRepository, never()).updateUser(any());
     }
 
     @Test
-    void updateUserByAdmin_negative_exists() throws UserAlreadyExistsException {
+    void updateUserByAdmin_negative_exists() {
         var username = "random_username";
         var user = new User(new UserId(1), username, "qwerty123", "Zubenko Mikhail", "client", true);
         var exception = new UserAlreadyExistsException(username);
@@ -195,7 +195,7 @@ class UserServiceImplTest {
     }
 
     @Test
-    void updateUserByAdmin_positive_banned() throws UserAlreadyExistsException {
+    void updateUserByAdmin_positive_banned() {
         var user = new User(new UserId(1), "random_username", "qwerty123", "Zubenko Mikhail", "client", false);
         userService.updateUserByAdmin(user);
         verify(userRepository).updateUser(user);

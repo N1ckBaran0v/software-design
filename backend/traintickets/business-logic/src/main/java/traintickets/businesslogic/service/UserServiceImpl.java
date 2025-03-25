@@ -3,7 +3,6 @@ package traintickets.businesslogic.service;
 import traintickets.businesslogic.api.UserService;
 import traintickets.businesslogic.exception.EntityNotFoundException;
 import traintickets.businesslogic.exception.InvalidEntityException;
-import traintickets.businesslogic.exception.UserAlreadyExistsException;
 import traintickets.businesslogic.exception.UserWasBannedException;
 import traintickets.businesslogic.model.User;
 import traintickets.businesslogic.model.UserId;
@@ -24,7 +23,7 @@ public final class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void createUser(User user) throws UserAlreadyExistsException {
+    public void createUser(User user) {
         user.validate();
         userRepository.addUser(user);
     }
@@ -52,7 +51,7 @@ public final class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updateUser(UUID sessionId, User user) throws UserAlreadyExistsException {
+    public void updateUser(UUID sessionId, User user) {
         user.validate();
         if (!user.active()) {
             throw new InvalidEntityException("User can be banned only by admin");
@@ -65,7 +64,7 @@ public final class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updateUserByAdmin(User user) throws UserAlreadyExistsException {
+    public void updateUserByAdmin(User user) {
         user.validate();
         sessionManager.updateUserInfo(new UserInfo(user.id(), user.role()));
         userRepository.updateUser(user);

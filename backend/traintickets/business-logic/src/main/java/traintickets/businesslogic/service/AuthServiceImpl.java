@@ -23,7 +23,7 @@ public final class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void register(UUID sessionId, RegisterForm form) throws UserAlreadyExistsException {
+    public void register(UUID sessionId, RegisterForm form) {
         var username = form.username();
         var password = form.password();
         var confirmPassword = form.confirmPassword();

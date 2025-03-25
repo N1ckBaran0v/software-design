@@ -40,7 +40,7 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void register_positive_saved() throws UserAlreadyExistsException {
+    void register_positive_saved() {
         var form = new RegisterForm("random_username", "qwerty123", "qwerty123", "Zubenko Mikhail");
         authService.register(UUID.randomUUID(), form);
         verify(userRepository).addUser(any());
@@ -48,7 +48,7 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void register_negative_exists() throws UserAlreadyExistsException {
+    void register_negative_exists() {
         var username = "random_username";
         var form = new RegisterForm(username, "qwerty123", "qwerty123", "Zubenko Mikhail");
         var exception = new UserAlreadyExistsException(username);
@@ -58,7 +58,7 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void register_negative_invalid() throws UserAlreadyExistsException {
+    void register_negative_invalid() {
         var form = new RegisterForm("random_username_long", "qwerty123", "qwerty123", "Zubenko Mikhail");
         assertThrows(InvalidEntityException.class, () -> authService.register(UUID.randomUUID(), form));
         verify(userRepository, never()).addUser(any());
@@ -66,7 +66,7 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void register_negative_mismatches() throws UserAlreadyExistsException {
+    void register_negative_mismatches() {
         var form = new RegisterForm("random_username", "qwerty123", "qwertu123", "Zubenko Mikhail");
         assertThrows(PasswordsMismatchesException.class, () -> authService.register(UUID.randomUUID(), form));
         verify(userRepository, never()).addUser(any());
