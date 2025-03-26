@@ -19,37 +19,25 @@ class UserRepositoryImplIT extends PostgresIT {
     @Override
     void setUp() {
         super.setUp();
-        userRepository = new UserRepositoryImpl(jdbcTemplate, systemRoleName);
-        jdbcTemplate.executeCons(systemRoleName, Connection.TRANSACTION_READ_UNCOMMITTED, conn -> {
-            try (var statement = conn.prepareStatement(
-                    "insert into users_view (user_name, pass_word, real_name, user_role, is_active) " +
-                            "values ('first', 'qwerty123', 'Иванов Иван Иванович', 'userRole', TRUE); " +
-                            "insert into users_view (user_name, pass_word, real_name, user_role, is_active) " +
-                            "values ('second', 'qwerty123', 'Петров Пётр Петрович', 'userRole', TRUE);"
-            )) {
-                statement.execute();
-            }
-        });
+        userRepository = new UserRepositoryImpl(jdbcTemplate, roleName);
     }
 
     @Test
     void addUser_positive_added() {
         var user = new User(null, "random_username", "qwerty123", "Зубенко Михаил Петрович", "userRole", true);
         userRepository.addUser(user);
-        jdbcTemplate.executeCons(systemRoleName, Connection.TRANSACTION_READ_UNCOMMITTED, conn -> {
+        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, conn -> {
             try (var statement = conn.prepareStatement(
                     "select * from users_view where user_name = 'random_username';"
             )) {
                 try (var resultSet = statement.executeQuery()) {
-                    if (resultSet.next()) {
-                        assertEquals(user.username(), resultSet.getString(2));
-                        assertEquals(user.password(), resultSet.getString(3));
-                        assertEquals(user.name(), resultSet.getString(4));
-                        assertEquals(user.role(), resultSet.getString(5));
-                        assertTrue(resultSet.getBoolean(6));
-                    } else {
-                        fail();
-                    }
+                    assertTrue(resultSet.next());
+                    assertEquals(user.username(), resultSet.getString(2));
+                    assertEquals(user.password(), resultSet.getString(3));
+                    assertEquals(user.name(), resultSet.getString(4));
+                    assertEquals(user.role(), resultSet.getString(5));
+                    assertTrue(resultSet.getBoolean(6));
+                    assertFalse(resultSet.next());
                 }
             }
         });
@@ -112,7 +100,7 @@ class UserRepositoryImplIT extends PostgresIT {
     void updateUser_positive_updated() {
         var user = new User(new UserId(1), "third", "qwerty124", "Сидорович Иван Иванович", "unknownRole", false);
         userRepository.updateUser(user);
-        jdbcTemplate.executeCons(systemRoleName, Connection.TRANSACTION_READ_UNCOMMITTED, conn -> {
+        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, conn -> {
             try (var statement = conn.prepareStatement(
                     "select * from users_view where user_name = 'third';"
             )) {
@@ -141,7 +129,7 @@ class UserRepositoryImplIT extends PostgresIT {
     void deleteUser_positive_banned() {
         var id = new UserId(1);
         userRepository.deleteUser(id);
-        jdbcTemplate.executeCons(systemRoleName, Connection.TRANSACTION_READ_UNCOMMITTED, conn -> {
+        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, conn -> {
             try (var statement = conn.prepareStatement(
                     "select * from users_view where user_name = 'first';"
             )) {
