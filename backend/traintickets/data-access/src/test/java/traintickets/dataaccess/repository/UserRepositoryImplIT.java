@@ -2,7 +2,7 @@ package traintickets.dataaccess.repository;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import traintickets.businesslogic.exception.UserAlreadyExistsException;
+import traintickets.businesslogic.exception.EntityAlreadyExistsException;
 import traintickets.businesslogic.model.User;
 import traintickets.businesslogic.model.UserId;
 import traintickets.businesslogic.repository.UserRepository;
@@ -20,6 +20,19 @@ class UserRepositoryImplIT extends PostgresIT {
     void setUp() {
         super.setUp();
         userRepository = new UserRepositoryImpl(jdbcTemplate, roleName);
+    }
+
+    @Override
+    protected void insertData() {
+        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, conn -> {
+            try (var statement = conn.prepareStatement(
+                    "insert into users_view (user_name, pass_word, real_name, user_role, is_active) values " +
+                            "('first', 'qwerty123', 'Иванов Иван Иванович', 'userRole', TRUE), " +
+                            "('second', 'qwerty123', 'Петров Пётр Петрович', 'userRole', TRUE); "
+            )) {
+                statement.execute();
+            }
+        });
     }
 
     @Test
@@ -46,7 +59,7 @@ class UserRepositoryImplIT extends PostgresIT {
     @Test
     void addUser_negative_exists() {
         var user = new User(null, "first", "qwerty123", "Зубенко Михаил Петрович", "userRole", true);
-        assertThrows(UserAlreadyExistsException.class, () -> userRepository.addUser(user));
+        assertThrows(EntityAlreadyExistsException.class, () -> userRepository.addUser(user));
     }
 
     @Test
@@ -122,7 +135,7 @@ class UserRepositoryImplIT extends PostgresIT {
     @Test
     void updateUser_negative_exists() {
         var user = new User(new UserId(1), "second", "qwerty124", "Сидорович Иван Иванович", "unknownRole", false);
-        assertThrows(UserAlreadyExistsException.class, () -> userRepository.updateUser(user));
+        assertThrows(EntityAlreadyExistsException.class, () -> userRepository.updateUser(user));
     }
 
     @Test

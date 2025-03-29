@@ -37,6 +37,7 @@ CREATE table if not exists Places (
 
 CREATE table if not exists Railcars (
                                         id BIGSERIAL,
+                                        railcar_model TEXT,
                                         railcar_type TEXT
 );
 

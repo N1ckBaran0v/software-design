@@ -5,9 +5,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import traintickets.businesslogic.exception.EntityAlreadyExistsException;
 import traintickets.businesslogic.exception.EntityNotFoundException;
 import traintickets.businesslogic.exception.InvalidEntityException;
-import traintickets.businesslogic.exception.UserAlreadyExistsException;
 import traintickets.businesslogic.exception.UserWasBannedException;
 import traintickets.businesslogic.model.User;
 import traintickets.businesslogic.model.UserId;
@@ -47,9 +47,9 @@ class UserServiceImplTest {
     void createUser_negative_exists() {
         var username = "random_username";
         var user = new User(null, username, "qwerty123", "Zubenko Mikhail", "client", true);
-        var exception = new UserAlreadyExistsException(username);
+        var exception = new EntityAlreadyExistsException(String.format("User %s already exists", username));
         willThrow(exception).given(userRepository).addUser(user);
-        assertThrows(UserAlreadyExistsException.class, () -> userService.createUser(user));
+        assertThrows(EntityAlreadyExistsException.class, () -> userService.createUser(user));
     }
 
     @Test
@@ -145,9 +145,9 @@ class UserServiceImplTest {
         var uuid = UUID.randomUUID();
         var userInfo = new UserInfo(userId, role);
         given(sessionManager.getUserInfo(uuid)).willReturn(userInfo);
-        var exception = new UserAlreadyExistsException(username);
+        var exception = new EntityAlreadyExistsException(String.format("User %s already exists",username));
         willThrow(exception).given(userRepository).updateUser(user);
-        assertThrows(UserAlreadyExistsException.class, () -> userService.updateUser(uuid, user));
+        assertThrows(EntityAlreadyExistsException.class, () -> userService.updateUser(uuid, user));
     }
 
     @Test
@@ -189,9 +189,9 @@ class UserServiceImplTest {
     void updateUserByAdmin_negative_exists() {
         var username = "random_username";
         var user = new User(new UserId(1), username, "qwerty123", "Zubenko Mikhail", "client", true);
-        var exception = new UserAlreadyExistsException(username);
+        var exception = new EntityAlreadyExistsException(String.format("User %s already exists",username));
         willThrow(exception).given(userRepository).updateUser(user);
-        assertThrows(UserAlreadyExistsException.class, () -> userService.updateUserByAdmin(user));
+        assertThrows(EntityAlreadyExistsException.class, () -> userService.updateUserByAdmin(user));
     }
 
     @Test

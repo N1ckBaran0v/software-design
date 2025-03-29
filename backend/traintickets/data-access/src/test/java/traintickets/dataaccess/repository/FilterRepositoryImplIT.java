@@ -2,7 +2,7 @@ package traintickets.dataaccess.repository;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import traintickets.businesslogic.exception.FilterAlreadyExistsException;
+import traintickets.businesslogic.exception.EntityAlreadyExistsException;
 import traintickets.businesslogic.model.Filter;
 import traintickets.businesslogic.model.UserId;
 import traintickets.businesslogic.repository.FilterRepository;
@@ -21,6 +21,24 @@ class FilterRepositoryImplIT extends PostgresIT {
     public void setUp() {
         super.setUp();
         filterRepository = new FilterRepositoryImpl(jdbcTemplate, roleName);
+    }
+
+    @Override
+    protected void insertData() {
+        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, conn -> {
+            try (var statement = conn.prepareStatement(
+                    "insert into users_view (user_name, pass_word, real_name, user_role, is_active) values " +
+                            "('first', 'qwerty123', 'Иванов Иван Иванович', 'userRole', TRUE), " +
+                            "('second', 'qwerty123', 'Петров Пётр Петрович', 'userRole', TRUE); " +
+                            "insert into filters (user_id, filter_name, departure, destination, train_class, transfers, min_cost, max_cost) values " +
+                            "(1, 'first', 'first', 'second', 'Экспресс', 0, 100, 10000), " +
+                            "(1, 'second', 'first', 'second', 'Скорый', 1, 100, 10000); " +
+                            "insert into passengers (filter_id, passengers_type, passengers_count) values " +
+                            "(1, 'adult', 2), (1, 'child', 1), (2, 'adult', 1); "
+            )) {
+                statement.execute();
+            }
+        });
     }
 
     @Test
@@ -62,7 +80,7 @@ class FilterRepositoryImplIT extends PostgresIT {
     void addFilter_negative_exists() {
         var filter = new Filter(new UserId(1), "first", "first", "second", "Экспресс", 0,
                 List.of("adult"), null, null, BigDecimal.TEN, BigDecimal.valueOf(10000));
-        assertThrows(FilterAlreadyExistsException.class, () -> filterRepository.addFilter(filter));
+        assertThrows(EntityAlreadyExistsException.class, () -> filterRepository.addFilter(filter));
     }
 
     @Test

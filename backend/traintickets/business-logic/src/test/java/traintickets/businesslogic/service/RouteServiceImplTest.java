@@ -101,8 +101,8 @@ class RouteServiceImplTest {
         var train = new Train(trainId, "express", List.of(railcarId1, railcarId2));
         var place1 = new Place(1, null, "any_human", BigDecimal.TEN);
         var place2 = new Place(2, null, "any_human", BigDecimal.valueOf(15));
-        var railcar1 = new Railcar(railcarId1, "express", List.of(place1));
-        var railcar2 = new Railcar(railcarId2, "express", List.of(place1, place2));
+        var railcar1 = new Railcar(railcarId1, "1", "express", List.of(place1));
+        var railcar2 = new Railcar(railcarId2, "2", "express", List.of(place1, place2));
         var ticket = new Ticket(new TicketId(1), new UserId(1), "adult",
                 raceId, 2, place1, start, end, BigDecimal.valueOf(1000));
         given(raceRepository.getRace(raceId)).willReturn(Optional.of(race));
@@ -130,8 +130,8 @@ class RouteServiceImplTest {
         var train = new Train(trainId, "express", List.of(railcarId1, railcarId2));
         var place1 = new Place(1, null, "any_human", BigDecimal.TEN);
         var place2 = new Place(2, null, "any_human", BigDecimal.valueOf(15));
-        var railcar1 = new Railcar(railcarId1, "express", List.of(place1));
-        var railcar2 = new Railcar(railcarId2, "express", List.of(place1, place2));
+        var railcar1 = new Railcar(railcarId1, "1", "express", List.of(place1));
+        var railcar2 = new Railcar(railcarId2, "2", "express", List.of(place1, place2));
         var ticket1 = new Ticket(new TicketId(1), new UserId(1), "adult",
                 raceId, 1, place1, start, end, BigDecimal.valueOf(1000));
         var ticket2 = new Ticket(new TicketId(2), new UserId(2), "adult",

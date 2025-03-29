@@ -1,6 +1,6 @@
 package traintickets.dataaccess.repository;
 
-import traintickets.businesslogic.exception.FilterAlreadyExistsException;
+import traintickets.businesslogic.exception.EntityAlreadyExistsException;
 import traintickets.businesslogic.model.Filter;
 import traintickets.businesslogic.model.UserId;
 import traintickets.businesslogic.repository.FilterRepository;
@@ -35,7 +35,8 @@ public final class FilterRepositoryImpl implements FilterRepository {
                 statement.setString(2, filter.name());
                 try (var resultSet = statement.executeQuery()) {
                     if (resultSet.next()) {
-                        throw new FilterAlreadyExistsException(filter.name());
+                        throw new EntityAlreadyExistsException(String.format(
+                                "Filter %s already exists", filter.name()));
                     }
                 }
             }

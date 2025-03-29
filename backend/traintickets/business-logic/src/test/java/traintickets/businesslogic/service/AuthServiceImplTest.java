@@ -51,9 +51,9 @@ class AuthServiceImplTest {
     void register_negative_exists() {
         var username = "random_username";
         var form = new RegisterForm(username, "qwerty123", "qwerty123", "Zubenko Mikhail");
-        var exception = new UserAlreadyExistsException(username);
+        var exception = new EntityAlreadyExistsException(String.format("User %s already exists", username));
         willThrow(exception).given(userRepository).addUser(any());
-        assertThrows(UserAlreadyExistsException.class, () -> authService.register(UUID.randomUUID(), form));
+        assertThrows(EntityAlreadyExistsException.class, () -> authService.register(UUID.randomUUID(), form));
         verify(sessionManager, never()).startSession(any(), any());
     }
 

@@ -22,6 +22,23 @@ class CommentRepositoryImplIT extends PostgresIT {
         commentRepository = new CommentRepositoryImpl(jdbcTemplate, roleName);
     }
 
+    @Override
+    protected void insertData() {
+        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, conn -> {
+            try (var statement = conn.prepareStatement(
+                    "insert into users_view (user_name, pass_word, real_name, user_role, is_active) values " +
+                            "('first', 'qwerty123', 'Иванов Иван Иванович', 'userRole', TRUE), " +
+                            "('second', 'qwerty123', 'Петров Пётр Петрович', 'userRole', TRUE); " +
+                            "insert into trains (train_class) values ('Скорый'); " +
+                            "insert into comments (user_id, train_id, score, comment_text) values " +
+                            "(1, 1, 5, 'Лучший поезд'), " +
+                            "(2, 1, 1, 'Грубые проводники'); "
+            )) {
+                statement.execute();
+            }
+        });
+    }
+
     @Test
     void addComment_positive_added() {
         var comment = new Comment(null, new UserId(1), new TrainId(1), 4, "Упс, не туда нажал");

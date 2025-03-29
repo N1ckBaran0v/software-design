@@ -1,6 +1,6 @@
 package traintickets.dataaccess.repository;
 
-import traintickets.businesslogic.exception.UserAlreadyExistsException;
+import traintickets.businesslogic.exception.EntityAlreadyExistsException;
 import traintickets.businesslogic.model.User;
 import traintickets.businesslogic.model.UserId;
 import traintickets.businesslogic.repository.UserRepository;
@@ -32,7 +32,8 @@ public final class UserRepositoryImpl implements UserRepository {
                 statement.setString(1, user.username());
                 try (var resultSet = statement.executeQuery()) {
                     if (resultSet.next()) {
-                        throw new UserAlreadyExistsException(user.username());
+                        throw new EntityAlreadyExistsException(String.format(
+                                "User %s already exists", user.username()));
                     }
                 }
             }
@@ -94,7 +95,8 @@ public final class UserRepositoryImpl implements UserRepository {
                 try (var resultSet = statement.executeQuery()) {
                     var found = getUser(resultSet);
                     if (found != null && !found.id().equals(user.id())) {
-                        throw new UserAlreadyExistsException(user.username());
+                        throw new EntityAlreadyExistsException(String.format(
+                                "User %s already exists", user.username()));
                     }
                 }
             }

@@ -79,7 +79,7 @@ class TrainServiceImplTest {
 
     @Test
     void addRailcar_positive_saved() {
-        var railcar = new Railcar(null, "cars", List.of(new Place(1, null, "cars", BigDecimal.valueOf(1000))));
+        var railcar = new Railcar(null, "1", "cars", List.of(new Place(1, null, "cars", BigDecimal.valueOf(1000))));
         trainService.addRailcar(railcar);
         verify(railcarRepository).addRailcar(railcar);
     }
@@ -88,9 +88,9 @@ class TrainServiceImplTest {
     void getRailcars_positive_got() {
         var type = "restaurant";
         var railcarId1 = new RailcarId(1);
-        var railcar1 = new Railcar(railcarId1, type, List.of());
+        var railcar1 = new Railcar(railcarId1, "1", type, List.of());
         var railcarId2 = new RailcarId(2);
-        var railcar2 = new Railcar(railcarId2, type, List.of());
+        var railcar2 = new Railcar(railcarId2, "2", type, List.of());
         given(railcarRepository.getRailcarsByType(type)).willReturn(List.of(railcar1, railcar2));
         var result = trainService.getRailcars(type);
         assertNotNull(result);
