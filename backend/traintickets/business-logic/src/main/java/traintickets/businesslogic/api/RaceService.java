@@ -11,6 +11,5 @@ public interface RaceService {
     void addRace(Race race) throws TrainAlreadyReservedException;
     Race getRace(RaceId raceId);
     void finishRace(RaceId raceId);
-    void cancelRace(RaceId raceId);
     Map<String, List<String>> getPassengers(RaceId raceId);
 }

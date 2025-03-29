@@ -45,11 +45,6 @@ public final class RaceServiceImpl implements RaceService {
     }
 
     @Override
-    public void cancelRace(RaceId raceId) {
-        raceRepository.deleteRace(raceId);
-    }
-
-    @Override
     public Map<String, List<String>> getPassengers(RaceId raceId) {
         var tickets = new HashMap<UserId, List<String>>();
         ticketRepository.getTicketsByRace(raceId).forEach(ticket -> {

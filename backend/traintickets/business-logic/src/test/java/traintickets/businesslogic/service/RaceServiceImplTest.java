@@ -96,13 +96,6 @@ class RaceServiceImplTest {
     }
 
     @Test
-    void cancelRace_positive_cancelled() {
-        var raceId = new RaceId(1);
-        raceService.cancelRace(raceId);
-        verify(raceRepository).deleteRace(any());
-    }
-
-    @Test
     void getPassengers_positive_got() {
         var raceId = new RaceId(1);
         var userId1 = new UserId(1);
