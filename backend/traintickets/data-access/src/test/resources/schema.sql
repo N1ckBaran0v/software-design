@@ -49,7 +49,6 @@ CREATE table if not exists Trains (
 CREATE table if not exists RailcarsInTrains (
                                                 id BIGSERIAL,
                                                 train_id BIGINT,
-                                                railcar_number INT,
                                                 railcar_id INT
 );
 
