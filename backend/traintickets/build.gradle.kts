@@ -24,6 +24,11 @@ subprojects {
         testImplementation("org.mockito:mockito-junit-jupiter:5.16.0")
     }
 
+    tasks.register<Copy>("copyDependencies") {
+        from(configurations.runtimeClasspath)
+        into("${rootProject.projectDir}/build/libs")
+    }
+
     tasks.test {
         useJUnitPlatform()
     }
