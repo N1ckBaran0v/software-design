@@ -24,6 +24,7 @@ public final class TrainServiceImpl implements TrainService {
 
     @Override
     public void addTrain(Train train) {
+        train.validate();
         trainRepository.addTrain(train);
     }
 
@@ -40,6 +41,7 @@ public final class TrainServiceImpl implements TrainService {
 
     @Override
     public void addRailcar(Railcar railcar) {
+        railcar.validate();
         railcarRepository.addRailcar(railcar);
     }
 

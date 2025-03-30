@@ -28,6 +28,7 @@ public final class RouteServiceImpl implements RouteService {
 
     @Override
     public List<Route> getRoutes(Filter filter) {
+        filter.validate();
         var races = raceRepository.getRaces(filter);
         var transfers = filter.transfers();
         var map = new HashMap<String, List<Race>>();

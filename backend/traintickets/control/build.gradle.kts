@@ -9,6 +9,8 @@ dependencies {
     api(project(":business-logic"))
     api(project(":di"))
     api(project(":data-access"))
+    api(project(":jdbc"))
+    api(project(":payment"))
     api(project(":security"))
 }
 

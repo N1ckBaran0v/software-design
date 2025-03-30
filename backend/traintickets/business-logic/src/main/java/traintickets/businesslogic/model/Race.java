@@ -13,6 +13,9 @@ public record Race(RaceId id, TrainId trainId, List<Schedule> schedule, boolean 
             throw new InvalidEntityException("Schedule requires at least 2 stations");
         }
         var curr = schedule.getFirst();
+        if (curr == null) {
+            throw new InvalidEntityException("Schedule cannot be null");
+        }
         curr.validate();
         if (curr.multiplier() != 0.0) {
             throw new InvalidEntityException("Schedule requires a multiplier 0 of 1");
@@ -20,6 +23,9 @@ public record Race(RaceId id, TrainId trainId, List<Schedule> schedule, boolean 
         for (var i = 1; i < schedule.size(); ++i) {
             var prev = curr;
             curr = schedule.get(i);
+            if (curr == null) {
+                throw new InvalidEntityException("Schedule cannot be null");
+            }
             curr.validate();
             if (curr.arrival() == null || prev.departure() == null || curr.arrival().before(prev.departure())) {
                 throw new InvalidEntityException("Schedule contains invalid arrival and departure time");

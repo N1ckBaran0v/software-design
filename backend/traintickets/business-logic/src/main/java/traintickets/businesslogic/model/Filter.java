@@ -3,7 +3,6 @@ package traintickets.businesslogic.model;
 import traintickets.businesslogic.exception.InvalidEntityException;
 
 import java.math.BigDecimal;
-import java.security.InvalidParameterException;
 import java.util.Date;
 import java.util.List;
 
@@ -24,6 +23,9 @@ public record Filter(UserId user,
                 transfers < 0 || passengers == null || start== null || end == null ||
                 minCost == null || maxCost == null) {
             throw new InvalidEntityException("Invalid parameters");
+        }
+        if (departure.equals(destination)) {
+            throw new InvalidEntityException("Departure and destination are the same");
         }
         if (passengers.isEmpty()) {
             throw new InvalidEntityException("Passengers cannot be empty");

@@ -6,6 +6,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import traintickets.businesslogic.exception.EntityNotFoundException;
+import traintickets.businesslogic.exception.InvalidEntityException;
 import traintickets.businesslogic.model.*;
 import traintickets.businesslogic.repository.RaceRepository;
 import traintickets.businesslogic.repository.RailcarRepository;
@@ -72,10 +73,19 @@ class RouteServiceImplTest {
     }
 
     @Test
+    void getRoutes_negative_invalidFilter() {
+        var filter = new Filter(new UserId(1), "filter", "start", "start", "express", 1, List.of("adult"),
+                Timestamp.valueOf("2025-03-19 08:00:00"), Timestamp.valueOf("2025-03-19 12:00:00"),
+                BigDecimal.valueOf(50), BigDecimal.valueOf(150));
+        assertThrows(InvalidEntityException.class, () -> routeService.getRoutes(filter));
+        verify(raceRepository, never()).getRaces(any());
+    }
+
+    @Test
     void getRace_positive_found() {
         var raceId = new RaceId(1);
         var start = new Schedule(new ScheduleId(1), "start", null, Timestamp.valueOf("2025-03-19 08:30:00"), 0);
-        var end = new Schedule(new ScheduleId(2), "end", null, Timestamp.valueOf("2025-03-19 10:00:00"), 100);
+        var end = new Schedule(new ScheduleId(2), "end", Timestamp.valueOf("2025-03-19 10:00:00"), null, 100);
         var race = new Race(raceId, new TrainId(1), List.of(start, end), false);
         given(raceRepository.getRace(raceId)).willReturn(Optional.of(race));
         var result = routeService.getRace(raceId);
@@ -96,7 +106,7 @@ class RouteServiceImplTest {
         var railcarId1 = new RailcarId(1);
         var railcarId2 = new RailcarId(2);
         var start = new Schedule(new ScheduleId(1), "start", null, Timestamp.valueOf("2025-03-19 08:30:00"), 0);
-        var end = new Schedule( new ScheduleId(2), "end", null, Timestamp.valueOf("2025-03-19 10:00:00"), 100);
+        var end = new Schedule( new ScheduleId(2), "end", Timestamp.valueOf("2025-03-19 10:00:00"), null, 100);
         var race = new Race(raceId, trainId, List.of(start, end), false);
         var train = new Train(trainId, "express", List.of(railcarId1, railcarId2));
         var place1 = new Place(new PlaceId(1), 1, null, "any_human", BigDecimal.TEN);
@@ -125,7 +135,7 @@ class RouteServiceImplTest {
         var railcarId1 = new RailcarId(1);
         var railcarId2 = new RailcarId(2);
         var start = new Schedule(new ScheduleId(1), "start", null, Timestamp.valueOf("2025-03-19 08:30:00"), 0);
-        var end = new Schedule(new ScheduleId(2), "end", null, Timestamp.valueOf("2025-03-19 10:00:00"), 100);
+        var end = new Schedule(new ScheduleId(2), "end", Timestamp.valueOf("2025-03-19 10:00:00"), null, 100);
         var race = new Race(raceId, trainId, List.of(start, end), false);
         var train = new Train(trainId, "express", List.of(railcarId1, railcarId2));
         var place1 = new Place(new PlaceId(1), 1, null, "any_human", BigDecimal.TEN);

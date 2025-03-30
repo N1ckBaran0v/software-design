@@ -53,6 +53,9 @@ public final class UserServiceImpl implements UserService {
     @Override
     public void updateUser(UUID sessionId, User user) {
         user.validate();
+        if (user.id() == null) {
+            throw new InvalidEntityException("All data required");
+        }
         if (!user.active()) {
             throw new InvalidEntityException("User can be banned only by admin");
         }
@@ -66,6 +69,9 @@ public final class UserServiceImpl implements UserService {
     @Override
     public void updateUserByAdmin(User user) {
         user.validate();
+        if (user.id() == null) {
+            throw new InvalidEntityException("All data required");
+        }
         sessionManager.updateUserInfo(new UserInfo(user.id(), user.role()));
         userRepository.updateUser(user);
     }

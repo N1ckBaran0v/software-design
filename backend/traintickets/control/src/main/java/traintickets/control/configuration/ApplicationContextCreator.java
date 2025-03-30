@@ -1,8 +1,6 @@
 package traintickets.control.configuration;
 
-import traintickets.control.modules.BusinessLogicModule;
-import traintickets.control.modules.DataAccessModule;
-import traintickets.control.modules.SecurityModule;
+import traintickets.control.modules.*;
 import traintickets.di.ApplicationContext;
 
 public final class ApplicationContextCreator {
@@ -13,6 +11,8 @@ public final class ApplicationContextCreator {
         return ApplicationContext.builder()
                 .addModule(new BusinessLogicModule())
                 .addModule(new DataAccessModule())
+                .addModule(new JdbcTemplateModule())
+                .addModule(new PaymentModule())
                 .addModule(new SecurityModule())
                 .build();
     }

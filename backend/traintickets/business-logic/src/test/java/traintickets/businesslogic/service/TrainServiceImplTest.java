@@ -6,6 +6,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import traintickets.businesslogic.exception.EntityNotFoundException;
+import traintickets.businesslogic.exception.InvalidEntityException;
 import traintickets.businesslogic.model.*;
 import traintickets.businesslogic.repository.RailcarRepository;
 import traintickets.businesslogic.repository.TrainRepository;
@@ -16,7 +17,9 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,6 +38,13 @@ class TrainServiceImplTest {
         var train = new Train(null, "express", List.of(new RailcarId(1), new RailcarId(2)));
         trainService.addTrain(train);
         verify(trainRepository).addTrain(train);
+    }
+
+    @Test
+    void addTrain_negative_invalid() {
+        var train = new Train(null, "express", List.of());
+        assertThrows(InvalidEntityException.class, () -> trainService.addTrain(train));
+        verify(trainRepository, never()).addTrain(any());
     }
 
     @Test
@@ -80,7 +90,7 @@ class TrainServiceImplTest {
     @Test
     void addRailcar_positive_saved() {
         var railcar = new Railcar(null, "1", "cars",
-                List.of(new Place(null, 1, null, "cars", BigDecimal.valueOf(1000))));
+                List.of(new Place(null, 1, "", "cars", BigDecimal.valueOf(1000))));
         trainService.addRailcar(railcar);
         verify(railcarRepository).addRailcar(railcar);
     }

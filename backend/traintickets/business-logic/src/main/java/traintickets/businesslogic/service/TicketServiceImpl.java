@@ -1,6 +1,7 @@
 package traintickets.businesslogic.service;
 
 import traintickets.businesslogic.api.TicketService;
+import traintickets.businesslogic.exception.InvalidEntityException;
 import traintickets.businesslogic.model.Ticket;
 import traintickets.businesslogic.model.UserId;
 import traintickets.businesslogic.payment.PaymentData;
@@ -20,8 +21,12 @@ public final class TicketServiceImpl implements TicketService {
 
     @Override
     public void buyTickets(List<Ticket> tickets, PaymentData paymentData) {
+        if (tickets.isEmpty()) {
+            throw new InvalidEntityException("Tickets cannot be empty");
+        }
         var sum = BigDecimal.ZERO;
         for (var ticket : tickets) {
+            ticket.validate();
             sum = sum.add(ticket.cost());
         }
         paymentData.setSum(sum);

@@ -1,2 +1,2 @@
 #!/bin/bash
-java -cp "control/build/libs/control.jar:business-logic/build/libs/business-logic.jar:data-access/build/libs/data-access.jar:di/build/libs/di.jar:security/build/libs/security.jar" ru.traintickets.control.Main
+java -cp "control/build/libs/control.jar:business-logic/build/libs/business-logic.jar:data-access/build/libs/data-access.jar:di/build/libs/di.jar:jdbc/build/libs/jdbc.jar:payment/build/libs/payment.jar:security/build/libs/security.jar:~/.gradle/caches/modules-2/files-2.1/org.postgresql/postgresql/42.7.5/747897987b86c741fb8b56f6b81929ae1e6e4b46/postgresql-42.7.5.jar" traintickets.control.Main
