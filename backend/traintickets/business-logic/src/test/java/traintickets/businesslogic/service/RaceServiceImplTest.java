@@ -6,6 +6,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import traintickets.businesslogic.exception.EntityNotFoundException;
+import traintickets.businesslogic.exception.InvalidEntityException;
 import traintickets.businesslogic.exception.TrainAlreadyReservedException;
 import traintickets.businesslogic.model.*;
 import traintickets.businesslogic.repository.RaceRepository;
@@ -20,7 +21,6 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -41,21 +41,19 @@ class RaceServiceImplTest {
     @Test
     void addRace_positive_added() throws TrainAlreadyReservedException {
         var start = new Schedule(null, "start", null, Timestamp.valueOf("2001-09-11 08:46:26"), 0);
-        var end = new Schedule(null, "start", null, Timestamp.valueOf("2001-09-11 09:03:02"), 100);
+        var end = new Schedule(null, "end", Timestamp.valueOf("2001-09-11 09:03:02"), null, 100);
         var race = new Race(null, new TrainId(1), List.of(start, end), false);
         raceService.addRace(race);
         verify(raceRepository).addRace(race);
     }
 
     @Test
-    void addRace_negative_reserved() throws TrainAlreadyReservedException {
-        var start = new Schedule(null, "start", null, Timestamp.valueOf("2001-09-11 08:46:26"), 0);
-        var end = new Schedule(null, "start", null, Timestamp.valueOf("2001-09-11 09:03:02"), 100);
-        var trainId = new TrainId(1);
-        var race = new Race(null, trainId, List.of(start, end), false);
-        var exception = new TrainAlreadyReservedException(trainId);
-        willThrow(exception).given(raceRepository).addRace(race);
-        assertThrows(TrainAlreadyReservedException.class, () -> raceService.addRace(race));
+    void addRace_negative_invalid() throws TrainAlreadyReservedException {
+        var start = new Schedule(null, "start", null, Timestamp.valueOf("2001-09-11 09:03:02"), 0);
+        var end = new Schedule(null, "end", Timestamp.valueOf("2001-09-11 08:46:26"), null, 100);
+        var race = new Race(null, new TrainId(1), List.of(start, end), false);
+        assertThrows(InvalidEntityException.class, () -> raceService.addRace(race));
+        verify(raceRepository, never()).addRace(any());
     }
 
     @Test
@@ -79,7 +77,7 @@ class RaceServiceImplTest {
     @Test
     void finishRace_positive_finished() {
         var start = new Schedule(new ScheduleId(1), "start", null, Timestamp.valueOf("2001-09-11 08:46:26"), 0);
-        var end = new Schedule(new ScheduleId(2), "start", null, Timestamp.valueOf("2001-09-11 09:03:02"), 100);
+        var end = new Schedule(new ScheduleId(2), "end", Timestamp.valueOf("2001-09-11 09:03:02"), null, 100);
         var raceId = new RaceId(1);
         var race = new Race(raceId, new TrainId(1), List.of(start, end), false);
         given(raceRepository.getRace(raceId)).willReturn(Optional.of(race));
@@ -101,7 +99,7 @@ class RaceServiceImplTest {
         var userId1 = new UserId(1);
         var userId2 = new UserId(2);
         var start = new Schedule(new ScheduleId(1), "start", null, Timestamp.valueOf("2001-09-11 08:46:26"), 0);
-        var end = new Schedule(new ScheduleId(2), "start", null, Timestamp.valueOf("2001-09-11 09:03:02"), 100);
+        var end = new Schedule(new ScheduleId(2), "end", Timestamp.valueOf("2001-09-11 09:03:02"), null, 100);
         var ticket1 = new Ticket(new TicketId(1), userId1, "adult", raceId, 1, new Place(
                 new PlaceId(1), 1, null, "any_human", BigDecimal.TEN), start, end, BigDecimal.valueOf(10 * 100));
         var ticket2 = new Ticket(new TicketId(2), userId2, "invalid", raceId, 1, new Place(

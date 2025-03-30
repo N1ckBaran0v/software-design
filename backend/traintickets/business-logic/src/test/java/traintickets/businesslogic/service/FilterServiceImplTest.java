@@ -6,6 +6,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import traintickets.businesslogic.exception.EntityNotFoundException;
+import traintickets.businesslogic.exception.InvalidEntityException;
 import traintickets.businesslogic.model.Filter;
 import traintickets.businesslogic.model.UserId;
 import traintickets.businesslogic.repository.FilterRepository;
@@ -16,7 +17,9 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,6 +38,16 @@ class FilterServiceImplTest {
                 BigDecimal.valueOf(100), BigDecimal.valueOf(10000));
         filterService.addFilter(filter);
         verify(filterRepository).addFilter(filter);
+    }
+
+    @Test
+    void addFilter_negative_invalid() {
+        var filter = new Filter(new UserId(1), "filter", "first", "second",
+                "express", 0, List.of(),
+                Date.valueOf("2025-03-19"), Date.valueOf("2025-10-11"),
+                BigDecimal.valueOf(100), BigDecimal.valueOf(10000));
+        assertThrows(InvalidEntityException.class, () -> filterService.addFilter(filter));
+        verify(filterRepository, never()).addFilter(any());
     }
 
     @Test

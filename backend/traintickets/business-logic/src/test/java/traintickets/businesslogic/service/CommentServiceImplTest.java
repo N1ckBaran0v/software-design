@@ -5,6 +5,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import traintickets.businesslogic.exception.InvalidEntityException;
 import traintickets.businesslogic.model.CommentId;
 import traintickets.businesslogic.model.Comment;
 import traintickets.businesslogic.model.TrainId;
@@ -14,7 +15,9 @@ import traintickets.businesslogic.repository.CommentRepository;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -30,6 +33,13 @@ class CommentServiceImplTest {
         var comment = new Comment(null, new UserId(1), new TrainId(737), 5, "good");
         commentService.addComment(comment);
         verify(commentRepository).addComment(comment);
+    }
+
+    @Test
+    void addComment_negative_invalid() {
+        var comment = new Comment(null, new UserId(1), new TrainId(737), 6, "good");
+        assertThrows(InvalidEntityException.class, () -> commentService.addComment(comment));
+        verify(commentRepository, never()).addComment(any());
     }
 
     @Test

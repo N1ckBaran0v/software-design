@@ -27,6 +27,7 @@ public final class RaceServiceImpl implements RaceService {
 
     @Override
     public void addRace(Race race) throws TrainAlreadyReservedException {
+        race.validate();
         raceRepository.addRace(race);
     }
 

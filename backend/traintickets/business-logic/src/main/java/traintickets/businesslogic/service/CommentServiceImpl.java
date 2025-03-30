@@ -19,6 +19,7 @@ public final class CommentServiceImpl implements CommentService {
 
     @Override
     public void addComment(Comment comment) {
+        comment.validate();
         commentRepository.addComment(comment);
     }
 

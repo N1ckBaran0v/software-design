@@ -19,7 +19,6 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -48,12 +47,10 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void register_negative_exists() {
-        var username = "random_username";
-        var form = new RegisterForm(username, "qwerty123", "qwerty123", "Zubenko Mikhail");
-        var exception = new EntityAlreadyExistsException(String.format("User %s already exists", username));
-        willThrow(exception).given(userRepository).addUser(any());
-        assertThrows(EntityAlreadyExistsException.class, () -> authService.register(UUID.randomUUID(), form));
+    void register_negative_empty() {
+        var form = new RegisterForm("random_username", null, "qwerty123", "Zubenko Mikhail");
+        assertThrows(InvalidEntityException.class, () -> authService.register(UUID.randomUUID(), form));
+        verify(userRepository, never()).addUser(any());
         verify(sessionManager, never()).startSession(any(), any());
     }
 

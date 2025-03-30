@@ -10,6 +10,9 @@ public record User(UserId id, String username, String password, String name, Str
     private static final Pattern namePattern = Pattern.compile("^.{3,30}$");
 
     public void validate() {
+        if (username == null || password == null || name == null || role == null) {
+            throw new InvalidEntityException("All data required");
+        }
         if (!usernamePattern.matcher(username).matches()) {
             throw new InvalidEntityException("Invalid username");
         }

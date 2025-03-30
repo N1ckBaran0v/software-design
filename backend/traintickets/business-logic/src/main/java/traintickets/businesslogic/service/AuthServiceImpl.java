@@ -27,6 +27,9 @@ public final class AuthServiceImpl implements AuthService {
         var username = form.username();
         var password = form.password();
         var confirmPassword = form.confirmPassword();
+        if (password == null) {
+            throw new InvalidEntityException("All data required");
+        }
         if (!password.equals(confirmPassword)) {
             throw new PasswordsMismatchesException();
         }

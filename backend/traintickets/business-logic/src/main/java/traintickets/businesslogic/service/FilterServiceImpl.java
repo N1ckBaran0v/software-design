@@ -19,6 +19,7 @@ public final class FilterServiceImpl implements FilterService {
 
     @Override
     public void addFilter(Filter filter) {
+        filter.validate();
         filterRepository.addFilter(filter);
     }
 
