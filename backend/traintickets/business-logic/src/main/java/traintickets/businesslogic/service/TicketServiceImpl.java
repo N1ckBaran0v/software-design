@@ -3,8 +3,10 @@ package traintickets.businesslogic.service;
 import traintickets.businesslogic.api.TicketService;
 import traintickets.businesslogic.model.Ticket;
 import traintickets.businesslogic.model.UserId;
+import traintickets.businesslogic.payment.PaymentData;
 import traintickets.businesslogic.repository.TicketRepository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.StreamSupport;
@@ -17,8 +19,13 @@ public final class TicketServiceImpl implements TicketService {
     }
 
     @Override
-    public void buyTickets(List<Ticket> tickets) {
-        ticketRepository.addTickets(tickets);
+    public void buyTickets(List<Ticket> tickets, PaymentData paymentData) {
+        var sum = BigDecimal.ZERO;
+        for (var ticket : tickets) {
+            sum = sum.add(ticket.cost());
+        }
+        paymentData.setSum(sum);
+        ticketRepository.addTickets(tickets, paymentData);
     }
 
     @Override

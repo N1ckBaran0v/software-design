@@ -24,8 +24,8 @@ class CommentRepositoryImplIT extends PostgresIT {
 
     @Override
     protected void insertData() {
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, conn -> {
-            try (var statement = conn.prepareStatement(
+        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+            try (var statement = connection.prepareStatement(
                     "insert into users_view (user_name, pass_word, real_name, user_role, is_active) values " +
                             "('first', 'qwerty123', 'Иванов Иван Иванович', 'userRole', TRUE), " +
                             "('second', 'qwerty123', 'Петров Пётр Петрович', 'userRole', TRUE); " +
@@ -43,8 +43,8 @@ class CommentRepositoryImplIT extends PostgresIT {
     void addComment_positive_added() {
         var comment = new Comment(null, new UserId(1), new TrainId(1), 4, "Упс, не туда нажал");
         commentRepository.addComment(comment);
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, conn -> {
-            try (var statement = conn.prepareStatement("select * from comments where id = 3;")) {
+        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+            try (var statement = connection.prepareStatement("select * from comments where id = 3;")) {
                 try (var resultSet = statement.executeQuery()) {
                     assertTrue(resultSet.next());
                     assertEquals(comment.author().id(), resultSet.getLong(2));
@@ -83,8 +83,8 @@ class CommentRepositoryImplIT extends PostgresIT {
     void deleteComment() {
         var commentId = new CommentId(1);
         commentRepository.deleteComment(commentId);
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, conn -> {
-            try (var statement = conn.prepareStatement("select * from comments where id = 1;")) {
+        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+            try (var statement = connection.prepareStatement("select * from comments where id = 1;")) {
                 try (var resultSet = statement.executeQuery()) {
                     assertFalse(resultSet.next());
                 }

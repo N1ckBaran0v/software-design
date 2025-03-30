@@ -25,19 +25,9 @@ public final class UserRepositoryImpl implements UserRepository {
 
     @Override
     public void addUser(User user) {
-        jdbcTemplate.executeCons(systemRoleName, Connection.TRANSACTION_REPEATABLE_READ, conn -> {
-            try (var statement = conn.prepareStatement(
-                    "SELECT * FROM users_view WHERE user_name = (?);"
-            )) {
-                statement.setString(1, user.username());
-                try (var resultSet = statement.executeQuery()) {
-                    if (resultSet.next()) {
-                        throw new EntityAlreadyExistsException(String.format(
-                                "User %s already exists", user.username()));
-                    }
-                }
-            }
-            try (var statement = conn.prepareStatement(
+        jdbcTemplate.executeCons(systemRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+            checkIfExists(user, connection);
+            try (var statement = connection.prepareStatement(
                     "INSERT INTO users_view (user_name, pass_word, real_name, user_role, is_active)\n" +
                             "VALUES (?, ?, ?, ?, ?);"
             )) {
@@ -53,8 +43,8 @@ public final class UserRepositoryImpl implements UserRepository {
 
     @Override
     public Optional<User> getUser(String username) {
-        return jdbcTemplate.executeFunc(systemRoleName, Connection.TRANSACTION_REPEATABLE_READ, conn -> {
-            try (var statement = conn.prepareStatement(
+        return jdbcTemplate.executeFunc(systemRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+            try (var statement = connection.prepareStatement(
                     "SELECT * FROM users_view WHERE user_name = (?);"
             )) {
                 statement.setString(1, username);
@@ -67,9 +57,9 @@ public final class UserRepositoryImpl implements UserRepository {
 
     @Override
     public Iterable<User> getUsers(Iterable<UserId> userIds) {
-        return jdbcTemplate.executeFunc(systemRoleName, Connection.TRANSACTION_REPEATABLE_READ, conn -> {
+        return jdbcTemplate.executeFunc(systemRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             var ids = StreamSupport.stream(userIds.spliterator(), false).map(id -> String.valueOf(id.id())).toList();
-            try (var statement = conn.prepareStatement(
+            try (var statement = connection.prepareStatement(
                     "SELECT * FROM users_view WHERE id IN ('" + String.join("', '", ids) + "');"
             )) {
                 try (var resultSet = statement.executeQuery()) {
@@ -87,20 +77,9 @@ public final class UserRepositoryImpl implements UserRepository {
 
     @Override
     public void updateUser(User user) {
-        jdbcTemplate.executeCons(systemRoleName, Connection.TRANSACTION_REPEATABLE_READ, conn -> {
-            try (var statement = conn.prepareStatement(
-                    "SELECT * FROM users_view WHERE user_name = (?);"
-            )) {
-                statement.setString(1, user.username());
-                try (var resultSet = statement.executeQuery()) {
-                    var found = getUser(resultSet);
-                    if (found != null && !found.id().equals(user.id())) {
-                        throw new EntityAlreadyExistsException(String.format(
-                                "User %s already exists", user.username()));
-                    }
-                }
-            }
-            try (var statement = conn.prepareStatement(
+        jdbcTemplate.executeCons(systemRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+            checkIfExists(user, connection);
+            try (var statement = connection.prepareStatement(
                     "UPDATE users_view SET " +
                             "user_name = (?), " +
                             "pass_word = (?), " +
@@ -132,15 +111,30 @@ public final class UserRepositoryImpl implements UserRepository {
         });
     }
 
+    private void checkIfExists(User user, Connection connection) throws SQLException {
+        try (var statement = connection.prepareStatement(
+                "SELECT * FROM users_view WHERE user_name = (?);"
+        )) {
+            statement.setString(1, user.username());
+            try (var resultSet = statement.executeQuery()) {
+                var found = getUser(resultSet);
+                if (found != null && !found.id().equals(user.id())) {
+                    throw new EntityAlreadyExistsException(String.format(
+                            "User %s already exists", user.username()));
+                }
+            }
+        }
+    }
+
     private User getUser(ResultSet resultSet) throws SQLException {
         var result = (User) null;
         if (resultSet.next()) {
-            var id = new UserId(resultSet.getLong("id"));
-            var username = resultSet.getString("user_name");
-            var password = resultSet.getString("pass_word");
-            var name = resultSet.getString("real_name");
-            var role = resultSet.getString("user_role");
-            var active = resultSet.getBoolean("is_active");
+            var id = new UserId(resultSet.getLong(1));
+            var username = resultSet.getString(2);
+            var password = resultSet.getString(3);
+            var name = resultSet.getString(4);
+            var role = resultSet.getString(5);
+            var active = resultSet.getBoolean(6);
             result = new User(id, username, password, name, role, active);
         }
         return result;

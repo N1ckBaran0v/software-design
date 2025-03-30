@@ -7,6 +7,7 @@ import traintickets.jdbc.api.JdbcTemplate;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public final class RailcarRepositoryImpl implements RailcarRepository {
@@ -20,69 +21,80 @@ public final class RailcarRepositoryImpl implements RailcarRepository {
 
     @Override
     public void addRailcar(Railcar railcar) {
-        jdbcTemplate.executeCons(carrierRoleName, Connection.TRANSACTION_REPEATABLE_READ, conn -> {
-            var railcarId = 0L;
-            try (var statement = conn.prepareStatement(
-                    "SELECT * FROM railcars where railcar_model = (?);"
-            )) {
-                statement.setString(1, railcar.model());
-                try (var resultSet = statement.executeQuery()) {
-                    if (resultSet.next()) {
-                        throw new EntityAlreadyExistsException(String.format(
-                                "Railcar %s already exists", railcar.model()));
-                    }
-                }
-            }
-            try (var statement = conn.prepareStatement(
-                    "INSERT INTO railcars (railcar_model, railcar_type) " +
-                            "VALUES (?, ?);",
-                    Statement.RETURN_GENERATED_KEYS
-            )) {
-                statement.setString(1, railcar.model());
-                statement.setString(2, railcar.type());
-                statement.executeUpdate();
-                var rs = statement.getGeneratedKeys();
-                if (rs.next()) {
-                    railcarId = rs.getLong(1);
-                }
-            }
-            try (var statement = conn.prepareStatement(
-                    "INSERT INTO places (railcar_id, place_number, description, purpose, place_cost) " +
-                            "VALUES (?, ?, ?, ?, ?);"
-            )) {
-                for (var place : railcar.places()) {
-                    statement.setLong(1, railcarId);
-                    statement.setLong(2, place.number());
-                    statement.setString(3, place.description());
-                    statement.setString(4, place.purpose());
-                    statement.setBigDecimal(5, place.cost());
-                    statement.executeUpdate();
-                }
-            }
+        jdbcTemplate.executeCons(carrierRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+            checkIfExists(railcar, connection);
+            var railcarId = saveRailcar(railcar, connection);
+            savePlaces(railcar, connection, railcarId);
         });
+    }
+
+    private void checkIfExists(Railcar railcar, Connection connection) throws SQLException {
+        try (var statement = connection.prepareStatement(
+                "SELECT * FROM railcars where railcar_model = (?);"
+        )) {
+            statement.setString(1, railcar.model());
+            try (var resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    throw new EntityAlreadyExistsException(String.format(
+                            "Railcar %s already exists", railcar.model()));
+                }
+            }
+        }
+    }
+
+    private long saveRailcar(Railcar railcar, Connection connection) throws SQLException {
+        try (var statement = connection.prepareStatement(
+                "INSERT INTO railcars (railcar_model, railcar_type) " +
+                        "VALUES (?, ?);",
+                Statement.RETURN_GENERATED_KEYS
+        )) {
+            statement.setString(1, railcar.model());
+            statement.setString(2, railcar.type());
+            statement.executeUpdate();
+            var rs = statement.getGeneratedKeys();
+            rs.next();
+            return rs.getLong(1);
+        }
+    }
+
+    private void savePlaces(Railcar railcar, Connection connection, long railcarId) throws SQLException {
+        try (var statement = connection.prepareStatement(
+                "INSERT INTO places (railcar_id, place_number, description, purpose, place_cost) " +
+                        "VALUES (?, ?, ?, ?, ?);"
+        )) {
+            for (var place : railcar.places()) {
+                statement.setLong(1, railcarId);
+                statement.setLong(2, place.number());
+                statement.setString(3, place.description());
+                statement.setString(4, place.purpose());
+                statement.setBigDecimal(5, place.cost());
+                statement.addBatch();
+            }
+            statement.executeBatch();
+        }
     }
 
     @Override
     public Iterable<Railcar> getRailcarsByType(String type) {
-        return jdbcTemplate.executeFunc(carrierRoleName, Connection.TRANSACTION_READ_COMMITTED, conn -> {
-            try (var statement = conn.prepareStatement(
+        return jdbcTemplate.executeFunc(carrierRoleName, Connection.TRANSACTION_READ_COMMITTED, connection -> {
+            try (var statement = connection.prepareStatement(
                     "SELECT * FROM railcars where railcar_type = (?);"
             )) {
                 statement.setString(1, type);
-                return extractRailcars(conn, statement);
+                return extractRailcars(connection, statement);
             }
         });
     }
 
     @Override
     public Iterable<Railcar> getRailcarsByTrain(TrainId trainId) {
-        return jdbcTemplate.executeFunc(carrierRoleName, Connection.TRANSACTION_READ_COMMITTED, conn -> {
-            try (var statement = conn.prepareStatement(
+        return jdbcTemplate.executeFunc(carrierRoleName, Connection.TRANSACTION_READ_COMMITTED, connection -> {
+            try (var statement = connection.prepareStatement(
                     "WITH railcars_ids AS (SELECT DISTINCT railcar_id FROM railcarsintrains WHERE train_id = (?)) " +
                             "SELECT * FROM railcars WHERE id IN (SELECT * FROM railcars_ids);"
             )) {
                 statement.setLong(1, trainId.id());
-                return extractRailcars(conn, statement);
+                return extractRailcars(connection, statement);
             }
         });
     }
@@ -105,23 +117,29 @@ public final class RailcarRepositoryImpl implements RailcarRepository {
             var railcarId = new RailcarId(resultSet.getLong(1));
             var model = resultSet.getString(2);
             var type = resultSet.getString(3);
-            var places = new ArrayList<Place>();
-            try (var statement = connection.prepareStatement(
-                    "SELECT * FROM places WHERE railcar_id = (?);"
-            )) {
-                statement.setLong(1, railcarId.id());
-                try (var resultSet2 = statement.executeQuery()) {
-                    while (resultSet2.next()) {
-                        var number = resultSet2.getInt(3);
-                        var description = resultSet2.getString(4);
-                        var purpose = resultSet2.getString(5);
-                        var cost = resultSet2.getBigDecimal(6);
-                        places.add(new Place(number, description, purpose, cost));
-                    }
-                }
-            }
+            var places = getPlaces(connection, railcarId);
             answer = new Railcar(railcarId, model, type, places);
         }
         return answer;
+    }
+
+    private List<Place> getPlaces(Connection connection, RailcarId railcarId) throws SQLException {
+        var places = new ArrayList<Place>();
+        try (var statement = connection.prepareStatement(
+                "SELECT * FROM places WHERE railcar_id = (?);"
+        )) {
+            statement.setLong(1, railcarId.id());
+            try (var resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    var id = new PlaceId(resultSet.getLong(1));
+                    var number = resultSet.getInt(3);
+                    var description = resultSet.getString(4);
+                    var purpose = resultSet.getString(5);
+                    var cost = resultSet.getBigDecimal(6);
+                    places.add(new Place(id, number, description, purpose, cost));
+                }
+            }
+        }
+        return places;
     }
 }

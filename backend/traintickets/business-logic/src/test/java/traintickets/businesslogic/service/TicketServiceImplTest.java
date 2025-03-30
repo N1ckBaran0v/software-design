@@ -7,6 +7,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import traintickets.businesslogic.model.*;
+import traintickets.businesslogic.payment.PaymentData;
 import traintickets.businesslogic.repository.TicketRepository;
 
 import java.math.BigDecimal;
@@ -25,26 +26,29 @@ class TicketServiceImplTest {
     @InjectMocks
     private TicketServiceImpl ticketService;
 
+    @Mock
+    private PaymentData paymentData;
+
     private List<Ticket> tickets;
 
     @BeforeEach
     void setUp() {
         var owner = new UserId(1);
         var race = new RaceId(228);
-        var start = new Schedule("station1", null, Timestamp.valueOf("2025-07-11 13:34:00"), 2);
-        var end = new Schedule("station2", Timestamp.valueOf("2025-07-20 12:45:00"), null, 7);
+        var start = new Schedule(new ScheduleId(1), "station1", null, Timestamp.valueOf("2025-07-11 13:34:00"), 2);
+        var end = new Schedule(new ScheduleId(2), "station2", Timestamp.valueOf("2025-07-20 12:45:00"), null, 7);
         var cost = BigDecimal.valueOf((7 - 2) * 10);
         var ticket1 = new Ticket(new TicketId(1), owner, "adult", race, 3,
-                new Place(1, null, "any_human", BigDecimal.TEN), start, end, cost);
+                new Place(new PlaceId(1), 1, null, "any_human", BigDecimal.TEN), start, end, cost);
         var ticket2 = new Ticket(new TicketId(2), owner, "child", race, 3,
-                new Place(2, null, "invalids", BigDecimal.TEN), start, end, cost);
+                new Place(new PlaceId(2), 2, null, "invalids", BigDecimal.TEN), start, end, cost);
         tickets = List.of(ticket1, ticket2);
     }
 
     @Test
     void buyTickets_positive_saved() {
-        ticketService.buyTickets(tickets);
-        verify(ticketRepository).addTickets(tickets);
+        ticketService.buyTickets(tickets, paymentData);
+        verify(ticketRepository).addTickets(tickets, paymentData);
     }
 
     @Test

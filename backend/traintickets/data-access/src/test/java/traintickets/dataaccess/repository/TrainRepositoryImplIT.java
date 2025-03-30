@@ -25,8 +25,8 @@ class TrainRepositoryImplIT extends PostgresIT {
 
     @Override
     protected void insertData() {
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, conn -> {
-            try (var statement = conn.prepareStatement(
+        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+            try (var statement = connection.prepareStatement(
                     "insert into trains (train_class) values ('фирменный'), ('Скорый'); " +
                             "insert into races (train_id, finished) values " +
                             "(1, true), (2, false); " +
@@ -47,8 +47,8 @@ class TrainRepositoryImplIT extends PostgresIT {
     void addTrain_positive_added() {
         var train = new Train(null, "Скорый", List.of(new RailcarId(1)));
         trainRepository.addTrain(train);
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, conn -> {
-            try (var statement = conn.prepareStatement(
+        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+            try (var statement = connection.prepareStatement(
                     "SELECT * FROM trains WHERE id = 3;"
             )) {
                 try (var resultSet = statement.executeQuery()) {
@@ -57,7 +57,7 @@ class TrainRepositoryImplIT extends PostgresIT {
                     assertFalse(resultSet.next());
                 }
             }
-            try (var statement = conn.prepareStatement(
+            try (var statement = connection.prepareStatement(
                     "SELECT * FROM railcarsintrains WHERE train_id = 3;"
             )) {
                 try (var resultSet = statement.executeQuery()) {

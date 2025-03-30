@@ -40,8 +40,8 @@ class RaceServiceImplTest {
 
     @Test
     void addRace_positive_added() throws TrainAlreadyReservedException {
-        var start = new Schedule("start", null, Timestamp.valueOf("2001-09-11 08:46:26"), 0);
-        var end = new Schedule("start", null, Timestamp.valueOf("2001-09-11 09:03:02"), 100);
+        var start = new Schedule(null, "start", null, Timestamp.valueOf("2001-09-11 08:46:26"), 0);
+        var end = new Schedule(null, "start", null, Timestamp.valueOf("2001-09-11 09:03:02"), 100);
         var race = new Race(null, new TrainId(1), List.of(start, end), false);
         raceService.addRace(race);
         verify(raceRepository).addRace(race);
@@ -49,8 +49,8 @@ class RaceServiceImplTest {
 
     @Test
     void addRace_negative_reserved() throws TrainAlreadyReservedException {
-        var start = new Schedule("start", null, Timestamp.valueOf("2001-09-11 08:46:26"), 0);
-        var end = new Schedule("start", null, Timestamp.valueOf("2001-09-11 09:03:02"), 100);
+        var start = new Schedule(null, "start", null, Timestamp.valueOf("2001-09-11 08:46:26"), 0);
+        var end = new Schedule(null, "start", null, Timestamp.valueOf("2001-09-11 09:03:02"), 100);
         var trainId = new TrainId(1);
         var race = new Race(null, trainId, List.of(start, end), false);
         var exception = new TrainAlreadyReservedException(trainId);
@@ -60,8 +60,8 @@ class RaceServiceImplTest {
 
     @Test
     void getRace_positive_found() {
-        var start = new Schedule("start", null, Timestamp.valueOf("2001-09-11 08:46:26"), 0);
-        var end = new Schedule("start", null, Timestamp.valueOf("2001-09-11 09:03:02"), 100);
+        var start = new Schedule(new ScheduleId(1), "start", null, Timestamp.valueOf("2001-09-11 08:46:26"), 0);
+        var end = new Schedule(new ScheduleId(2), "start", null, Timestamp.valueOf("2001-09-11 09:03:02"), 100);
         var raceId = new RaceId(1);
         var race = new Race(raceId, new TrainId(1), List.of(start, end), false);
         given(raceRepository.getRace(raceId)).willReturn(Optional.of(race));
@@ -78,8 +78,8 @@ class RaceServiceImplTest {
 
     @Test
     void finishRace_positive_finished() {
-        var start = new Schedule("start", null, Timestamp.valueOf("2001-09-11 08:46:26"), 0);
-        var end = new Schedule("start", null, Timestamp.valueOf("2001-09-11 09:03:02"), 100);
+        var start = new Schedule(new ScheduleId(1), "start", null, Timestamp.valueOf("2001-09-11 08:46:26"), 0);
+        var end = new Schedule(new ScheduleId(2), "start", null, Timestamp.valueOf("2001-09-11 09:03:02"), 100);
         var raceId = new RaceId(1);
         var race = new Race(raceId, new TrainId(1), List.of(start, end), false);
         given(raceRepository.getRace(raceId)).willReturn(Optional.of(race));
@@ -100,12 +100,12 @@ class RaceServiceImplTest {
         var raceId = new RaceId(1);
         var userId1 = new UserId(1);
         var userId2 = new UserId(2);
-        var start = new Schedule("start", null, Timestamp.valueOf("2001-09-11 08:46:26"), 0);
-        var end = new Schedule("start", null, Timestamp.valueOf("2001-09-11 09:03:02"), 100);
-        var ticket1 = new Ticket(new TicketId(1), userId1, "adult", raceId, 1,
-                new Place(1, null, "any_human", BigDecimal.TEN), start, end, BigDecimal.valueOf(10 * 100));
-        var ticket2 = new Ticket(new TicketId(2), userId2, "invalid", raceId, 1,
-                new Place(2, null, "any_human", BigDecimal.TEN), start, end, BigDecimal.valueOf(10 * 100));
+        var start = new Schedule(new ScheduleId(1), "start", null, Timestamp.valueOf("2001-09-11 08:46:26"), 0);
+        var end = new Schedule(new ScheduleId(2), "start", null, Timestamp.valueOf("2001-09-11 09:03:02"), 100);
+        var ticket1 = new Ticket(new TicketId(1), userId1, "adult", raceId, 1, new Place(
+                new PlaceId(1), 1, null, "any_human", BigDecimal.TEN), start, end, BigDecimal.valueOf(10 * 100));
+        var ticket2 = new Ticket(new TicketId(2), userId2, "invalid", raceId, 1, new Place(
+                new PlaceId(2), 2, null, "any_human", BigDecimal.TEN), start, end, BigDecimal.valueOf(10 * 100));
         var username1 = "username1";
         var username2 = "username2";
         var user1 = new User(userId1, username1, "qwerty123", "Zubenko Mikhail", "clientRole", true);

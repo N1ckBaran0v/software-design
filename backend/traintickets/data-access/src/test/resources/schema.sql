@@ -72,6 +72,7 @@ CREATE table if not exists Tickets (
                                        id BIGSERIAL,
                                        user_id BIGINT,
                                        passenger TEXT,
+                                       race_id BIGINT,
                                        railcar INT,
                                        place_id BIGINT,
                                        departure BIGINT,
@@ -189,6 +190,7 @@ ALTER TABLE Schedule
 ALTER TABLE Tickets
     ADD CONSTRAINT pk_tickets PRIMARY KEY(id),
     ADD CONSTRAINT fk_user_id FOREIGN KEY(user_id) REFERENCES Users(id) ON DELETE CASCADE,
+    ADD CONSTRAINT fk_race FOREIGN KEY(race_id) REFERENCES Races(id) ON DELETE CASCADE,
     ADD CONSTRAINT fk_departure FOREIGN KEY(departure) REFERENCES Schedule(id) ON DELETE CASCADE,
     ADD CONSTRAINT fk_destination FOREIGN KEY(destination) REFERENCES Schedule(id) ON DELETE CASCADE,
     ADD CONSTRAINT fk_place_id FOREIGN KEY(place_id) REFERENCES Places(id) ON DELETE CASCADE;

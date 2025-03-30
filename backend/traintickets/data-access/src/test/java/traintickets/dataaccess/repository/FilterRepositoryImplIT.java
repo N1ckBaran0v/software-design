@@ -25,8 +25,8 @@ class FilterRepositoryImplIT extends PostgresIT {
 
     @Override
     protected void insertData() {
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, conn -> {
-            try (var statement = conn.prepareStatement(
+        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+            try (var statement = connection.prepareStatement(
                     "insert into users_view (user_name, pass_word, real_name, user_role, is_active) values " +
                             "('first', 'qwerty123', 'Иванов Иван Иванович', 'userRole', TRUE), " +
                             "('second', 'qwerty123', 'Петров Пётр Петрович', 'userRole', TRUE); " +
@@ -46,8 +46,8 @@ class FilterRepositoryImplIT extends PostgresIT {
         var filter = new Filter(new UserId(2), "first", "first", "second", "Экспресс", 0,
                 List.of("adult"), null, null, BigDecimal.TEN, BigDecimal.valueOf(10000));
         filterRepository.addFilter(filter);
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, conn -> {
-            try (var statement = conn.prepareStatement(
+        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+            try (var statement = connection.prepareStatement(
                     "SELECT * FROM filters WHERE id = 3;"
             )) {
                 try (var resultSet = statement.executeQuery()) {
@@ -63,7 +63,7 @@ class FilterRepositoryImplIT extends PostgresIT {
                     assertFalse(resultSet.next());
                 }
             }
-            try (var statement = conn.prepareStatement(
+            try (var statement = connection.prepareStatement(
                     "SELECT * FROM passengers WHERE filter_id = 3;"
             )) {
                 try (var resultSet = statement.executeQuery()) {
@@ -81,6 +81,22 @@ class FilterRepositoryImplIT extends PostgresIT {
         var filter = new Filter(new UserId(1), "first", "first", "second", "Экспресс", 0,
                 List.of("adult"), null, null, BigDecimal.TEN, BigDecimal.valueOf(10000));
         assertThrows(EntityAlreadyExistsException.class, () -> filterRepository.addFilter(filter));
+        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+            try (var statement = connection.prepareStatement(
+                    "SELECT * FROM filters WHERE id = 3;"
+            )) {
+                try (var resultSet = statement.executeQuery()) {
+                    assertFalse(resultSet.next());
+                }
+            }
+            try (var statement = connection.prepareStatement(
+                    "SELECT * FROM passengers WHERE filter_id = 3;"
+            )) {
+                try (var resultSet = statement.executeQuery()) {
+                    assertFalse(resultSet.next());
+                }
+            }
+        });
     }
 
     @Test
@@ -122,8 +138,8 @@ class FilterRepositoryImplIT extends PostgresIT {
     @Test
     void deleteFilter_positive_deleted() {
         filterRepository.deleteFilter(new UserId(1), "first");
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, conn -> {
-            try (var statement = conn.prepareStatement(
+        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+            try (var statement = connection.prepareStatement(
                     "SELECT * FROM filters WHERE id = 1;"
             )) {
                 try (var resultSet = statement.executeQuery()) {

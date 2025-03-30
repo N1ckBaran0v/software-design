@@ -24,8 +24,8 @@ class RaceRepositoryImplIT extends PostgresIT {
 
     @Override
     protected void insertData() {
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, conn -> {
-            try (var statement = conn.prepareStatement(
+        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+            try (var statement = connection.prepareStatement(
                     "insert into trains (train_class) values ('фирменный'), ('Скорый'); " +
                             "insert into races (train_id, finished) values " +
                             "(1, true), (2, false); " +
@@ -44,12 +44,12 @@ class RaceRepositoryImplIT extends PostgresIT {
 
     @Test
     void addRace_positive_added() {
-        var sched1 = new Schedule("first", null, Timestamp.valueOf("2025-04-01 11:50:00"), 0);
-        var sched2 = new Schedule("second", Timestamp.valueOf("2025-04-01 13:20:00"), null, 5);
+        var sched1 = new Schedule(null, "first", null, Timestamp.valueOf("2025-04-01 11:50:00"), 0);
+        var sched2 = new Schedule(null, "second", Timestamp.valueOf("2025-04-01 13:20:00"), null, 5);
         var race = new Race(null, new TrainId(1), List.of(sched1, sched2), false);
         raceRepository.addRace(race);
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, conn -> {
-            try (var statement = conn.prepareStatement(
+        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+            try (var statement = connection.prepareStatement(
                     "SELECT * FROM races WHERE id = 3;"
             )) {
                 try (var resultSet = statement.executeQuery()) {
@@ -59,7 +59,7 @@ class RaceRepositoryImplIT extends PostgresIT {
                     assertFalse(resultSet.next());
                 }
             }
-            try (var statement = conn.prepareStatement(
+            try (var statement = connection.prepareStatement(
                     "SELECT * FROM schedule WHERE race_id = 3;"
             )) {
                 try (var resultSet = statement.executeQuery()) {
@@ -81,17 +81,33 @@ class RaceRepositoryImplIT extends PostgresIT {
 
     @Test
     void addRace_negative_reserved() {
-        var sched1 = new Schedule("first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0);
-        var sched2 = new Schedule("second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5);
+        var sched1 = new Schedule(new ScheduleId(1), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0);
+        var sched2 = new Schedule(new ScheduleId(2), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5);
         var race = new Race(null, new TrainId(1), List.of(sched1, sched2), false);
         assertThrows(TrainAlreadyReservedException.class, () -> raceRepository.addRace(race));
+        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+            try (var statement = connection.prepareStatement(
+                    "SELECT * FROM races WHERE id = 3;"
+            )) {
+                try (var resultSet = statement.executeQuery()) {
+                    assertFalse(resultSet.next());
+                }
+            }
+            try (var statement = connection.prepareStatement(
+                    "SELECT * FROM schedule WHERE race_id = 3;"
+            )) {
+                try (var resultSet = statement.executeQuery()) {
+                    assertFalse(resultSet.next());
+                }
+            }
+        });
     }
 
     @Test
     void getRace_positive_found() {
         var id = new RaceId(1);
-        var sched1 = new Schedule("first", null, Timestamp.valueOf("2025-04-01 10:10:00"), 0);
-        var sched2 = new Schedule("second", Timestamp.valueOf("2025-04-01 11:40:00"), null, 5);
+        var sched1 = new Schedule(new ScheduleId(1), "first", null, Timestamp.valueOf("2025-04-01 10:10:00"), 0);
+        var sched2 = new Schedule(new ScheduleId(2), "second", Timestamp.valueOf("2025-04-01 11:40:00"), null, 5);
         var race = new Race(id, new TrainId(1), List.of(sched1, sched2), true);
         var result = raceRepository.getRace(id).orElse(null);
         assertEquals(race, result);
@@ -106,8 +122,8 @@ class RaceRepositoryImplIT extends PostgresIT {
     void getRaces_positive_got() {
         var filter = new Filter(null, null, null, null, null, 1, null, Timestamp.valueOf("2025-04-01 10:00:00"),
                 Timestamp.valueOf("2025-04-01 11:59:59"), null, null);
-        var sched1 = new Schedule("first", null, Timestamp.valueOf("2025-04-01 10:10:00"), 0);
-        var sched2 = new Schedule("second", Timestamp.valueOf("2025-04-01 11:40:00"), null, 5);
+        var sched1 = new Schedule(new ScheduleId(1), "first", null, Timestamp.valueOf("2025-04-01 10:10:00"), 0);
+        var sched2 = new Schedule(new ScheduleId(2), "second", Timestamp.valueOf("2025-04-01 11:40:00"), null, 5);
         var race = new Race(new RaceId(1), new TrainId(1), List.of(sched1, sched2), true);
         var result = raceRepository.getRaces(filter);
         assertNotNull(result);
@@ -128,12 +144,12 @@ class RaceRepositoryImplIT extends PostgresIT {
 
     @Test
     void updateRace_positive_updates() {
-        var sched1 = new Schedule("first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0);
-        var sched2 = new Schedule("second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5);
+        var sched1 = new Schedule(new ScheduleId(1), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0);
+        var sched2 = new Schedule(new ScheduleId(2), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5);
         var race = new Race(new RaceId(2), new TrainId(2), List.of(sched1, sched2), true);
         raceRepository.updateRace(race);
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, conn -> {
-            try (var statement = conn.prepareStatement(
+        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+            try (var statement = connection.prepareStatement(
                     "SELECT * FROM races WHERE id = 2;"
             )) {
                 try (var resultSet = statement.executeQuery()) {
@@ -143,7 +159,7 @@ class RaceRepositoryImplIT extends PostgresIT {
                     assertFalse(resultSet.next());
                 }
             }
-            try (var statement = conn.prepareStatement(
+            try (var statement = connection.prepareStatement(
                     "SELECT * FROM schedule WHERE race_id = 2;"
             )) {
                 try (var resultSet = statement.executeQuery()) {

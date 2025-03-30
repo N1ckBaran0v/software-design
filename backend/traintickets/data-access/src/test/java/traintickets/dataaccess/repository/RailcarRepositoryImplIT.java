@@ -3,10 +3,7 @@ package traintickets.dataaccess.repository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import traintickets.businesslogic.exception.EntityAlreadyExistsException;
-import traintickets.businesslogic.model.Place;
-import traintickets.businesslogic.model.Railcar;
-import traintickets.businesslogic.model.RailcarId;
-import traintickets.businesslogic.model.TrainId;
+import traintickets.businesslogic.model.*;
 import traintickets.businesslogic.repository.RailcarRepository;
 
 import java.math.BigDecimal;
@@ -27,8 +24,8 @@ class RailcarRepositoryImplIT extends PostgresIT {
 
     @Override
     protected void insertData() {
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, conn -> {
-            try (var statement = conn.prepareStatement(
+        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+            try (var statement = connection.prepareStatement(
                     "insert into trains (train_class) values ('Скорый'); " +
                             "insert into railcars (railcar_model, railcar_type) values " +
                             "('1', 'сидячий'), ('2', 'купе'); " +
@@ -44,11 +41,11 @@ class RailcarRepositoryImplIT extends PostgresIT {
 
     @Test
     void addRailcar_positive_added() {
-        var place = new Place(1, "", "universal", BigDecimal.valueOf(100));
+        var place = new Place(null, 1, "", "universal", BigDecimal.valueOf(100));
         var railcar = new Railcar(null, "3", "купе", List.of(place));
         railcarRepository.addRailcar(railcar);
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, conn -> {
-            try (var statement = conn.prepareStatement(
+        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+            try (var statement = connection.prepareStatement(
                     "SELECT * FROM railcars WHERE id = 3;"
             )) {
                 try (var resultSet = statement.executeQuery()) {
@@ -58,7 +55,7 @@ class RailcarRepositoryImplIT extends PostgresIT {
                     assertFalse(resultSet.next());
                 }
             }
-            try (var statement = conn.prepareStatement(
+            try (var statement = connection.prepareStatement(
                     "SELECT * FROM places WHERE railcar_id = 3;"
             )) {
                 try (var resultSet = statement.executeQuery()) {
@@ -77,12 +74,28 @@ class RailcarRepositoryImplIT extends PostgresIT {
     void addRailcar_negative_exists() {
         assertThrows(EntityAlreadyExistsException.class,
                 () -> railcarRepository.addRailcar(new Railcar(null, "2", "купе", List.of())));
+        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+            try (var statement = connection.prepareStatement(
+                    "SELECT * FROM railcars WHERE id = 3;"
+            )) {
+                try (var resultSet = statement.executeQuery()) {
+                    assertFalse(resultSet.next());
+                }
+            }
+            try (var statement = connection.prepareStatement(
+                    "SELECT * FROM places WHERE railcar_id = 3;"
+            )) {
+                try (var resultSet = statement.executeQuery()) {
+                    assertFalse(resultSet.next());
+                }
+            }
+        });
     }
 
     @Test
     void getRailcarsByType_positive_got() {
         var railcar = new Railcar(new RailcarId(2), "2", "купе",
-                List.of(new Place(1, "", "universal", BigDecimal.valueOf(100))));
+                List.of(new Place(new PlaceId(3), 1, "", "universal", BigDecimal.valueOf(100))));
         var result = railcarRepository.getRailcarsByType(railcar.type());
         assertNotNull(result);
         var iterator = result.iterator();
@@ -100,10 +113,11 @@ class RailcarRepositoryImplIT extends PostgresIT {
 
     @Test
     void getRailcarsByTrain_positive_got() {
-        var place1 = new Place(1, "", "universal", BigDecimal.valueOf(100));
-        var place2 = new Place(2, "", "child", BigDecimal.valueOf(50));
+        var place1 = new Place(new PlaceId(1), 1, "", "universal", BigDecimal.valueOf(100));
+        var place2 = new Place(new PlaceId(2), 2, "", "child", BigDecimal.valueOf(50));
+        var place3 = new Place(new PlaceId(3), 1, "", "universal", BigDecimal.valueOf(100));
         var railcar1 = new Railcar(new RailcarId(1), "1", "сидячий", List.of(place1, place2));
-        var railcar2 = new Railcar(new RailcarId(2), "2", "купе", List.of(place1));
+        var railcar2 = new Railcar(new RailcarId(2), "2", "купе", List.of(place3));
         var result = railcarRepository.getRailcarsByTrain(new TrainId(1));
         assertNotNull(result);
         var iterator = result.iterator();

@@ -42,14 +42,14 @@ class RouteServiceImplTest {
 
     @Test
     void getRoutes_positive_got() {
-        var start1 = new Schedule("start", null, Timestamp.valueOf("2025-03-19 08:30:00"), 0);
-        var end1 = new Schedule("end", Timestamp.valueOf("2025-03-19 11:40:00"), null, 100);
+        var start1 = new Schedule(new ScheduleId(1), "start", null, Timestamp.valueOf("2025-03-19 08:30:00"), 0);
+        var end1 = new Schedule(new ScheduleId(2), "end", Timestamp.valueOf("2025-03-19 11:40:00"), null, 100);
         var race1 = new Race(new RaceId(1), new TrainId(1), List.of(start1, end1), false);
-        var start2 = new Schedule("start", null, Timestamp.valueOf("2025-03-19 08:30:00"), 0);
-        var end2 = new Schedule("middle", Timestamp.valueOf("2025-03-19 10:00:00"), null, 50);
+        var start2 = new Schedule(new ScheduleId(3), "start", null, Timestamp.valueOf("2025-03-19 08:30:00"), 0);
+        var end2 = new Schedule(new ScheduleId(4), "middle", Timestamp.valueOf("2025-03-19 10:00:00"), null, 50);
         var race2 = new Race(new RaceId(2), new TrainId(1), List.of(start2, end2), false);
-        var start3 = new Schedule("middle", null, Timestamp.valueOf("2025-03-19 10:10:00"), 0);
-        var end3 = new Schedule("end", Timestamp.valueOf("2025-03-19 11:40:00"), null, 50);
+        var start3 = new Schedule(new ScheduleId(5), "middle", null, Timestamp.valueOf("2025-03-19 10:10:00"), 0);
+        var end3 = new Schedule(new ScheduleId(6), "end", Timestamp.valueOf("2025-03-19 11:40:00"), null, 50);
         var race3 = new Race(new RaceId(3), new TrainId(1), List.of(start3, end3), false);
         var filter = new Filter(new UserId(1), "filter", "start", "end", "express", 1, List.of("adult"),
                 Timestamp.valueOf("2025-03-19 08:00:00"), Timestamp.valueOf("2025-03-19 12:00:00"),
@@ -74,8 +74,8 @@ class RouteServiceImplTest {
     @Test
     void getRace_positive_found() {
         var raceId = new RaceId(1);
-        var start = new Schedule("start", null, Timestamp.valueOf("2025-03-19 08:30:00"), 0);
-        var end = new Schedule("end", null, Timestamp.valueOf("2025-03-19 10:00:00"), 100);
+        var start = new Schedule(new ScheduleId(1), "start", null, Timestamp.valueOf("2025-03-19 08:30:00"), 0);
+        var end = new Schedule(new ScheduleId(2), "end", null, Timestamp.valueOf("2025-03-19 10:00:00"), 100);
         var race = new Race(raceId, new TrainId(1), List.of(start, end), false);
         given(raceRepository.getRace(raceId)).willReturn(Optional.of(race));
         var result = routeService.getRace(raceId);
@@ -95,12 +95,12 @@ class RouteServiceImplTest {
         var trainId = new TrainId(1);
         var railcarId1 = new RailcarId(1);
         var railcarId2 = new RailcarId(2);
-        var start = new Schedule("start", null, Timestamp.valueOf("2025-03-19 08:30:00"), 0);
-        var end = new Schedule("end", null, Timestamp.valueOf("2025-03-19 10:00:00"), 100);
+        var start = new Schedule(new ScheduleId(1), "start", null, Timestamp.valueOf("2025-03-19 08:30:00"), 0);
+        var end = new Schedule( new ScheduleId(2), "end", null, Timestamp.valueOf("2025-03-19 10:00:00"), 100);
         var race = new Race(raceId, trainId, List.of(start, end), false);
         var train = new Train(trainId, "express", List.of(railcarId1, railcarId2));
-        var place1 = new Place(1, null, "any_human", BigDecimal.TEN);
-        var place2 = new Place(2, null, "any_human", BigDecimal.valueOf(15));
+        var place1 = new Place(new PlaceId(1), 1, null, "any_human", BigDecimal.TEN);
+        var place2 = new Place(new PlaceId(2), 2, null, "any_human", BigDecimal.valueOf(15));
         var railcar1 = new Railcar(railcarId1, "1", "express", List.of(place1));
         var railcar2 = new Railcar(railcarId2, "2", "express", List.of(place1, place2));
         var ticket = new Ticket(new TicketId(1), new UserId(1), "adult",
@@ -124,12 +124,12 @@ class RouteServiceImplTest {
         var trainId = new TrainId(1);
         var railcarId1 = new RailcarId(1);
         var railcarId2 = new RailcarId(2);
-        var start = new Schedule("start", null, Timestamp.valueOf("2025-03-19 08:30:00"), 0);
-        var end = new Schedule("end", null, Timestamp.valueOf("2025-03-19 10:00:00"), 100);
+        var start = new Schedule(new ScheduleId(1), "start", null, Timestamp.valueOf("2025-03-19 08:30:00"), 0);
+        var end = new Schedule(new ScheduleId(2), "end", null, Timestamp.valueOf("2025-03-19 10:00:00"), 100);
         var race = new Race(raceId, trainId, List.of(start, end), false);
         var train = new Train(trainId, "express", List.of(railcarId1, railcarId2));
-        var place1 = new Place(1, null, "any_human", BigDecimal.TEN);
-        var place2 = new Place(2, null, "any_human", BigDecimal.valueOf(15));
+        var place1 = new Place(new PlaceId(1), 1, null, "any_human", BigDecimal.TEN);
+        var place2 = new Place(new PlaceId(2), 2, null, "any_human", BigDecimal.valueOf(15));
         var railcar1 = new Railcar(railcarId1, "1", "express", List.of(place1));
         var railcar2 = new Railcar(railcarId2, "2", "express", List.of(place1, place2));
         var ticket1 = new Ticket(new TicketId(1), new UserId(1), "adult",
@@ -163,8 +163,8 @@ class RouteServiceImplTest {
     void getFreePlaces_negative_notFoundTrain() {
         var raceId = new RaceId(1);
         var trainId = new TrainId(1);
-        var start = new Schedule("start", null, Timestamp.valueOf("2025-03-19 08:30:00"), 0);
-        var end = new Schedule("end", null, Timestamp.valueOf("2025-03-19 10:00:00"), 100);
+        var start = new Schedule(new ScheduleId(1), "start", null, Timestamp.valueOf("2025-03-19 08:30:00"), 0);
+        var end = new Schedule(new ScheduleId(2), "end", null, Timestamp.valueOf("2025-03-19 10:00:00"), 100);
         var race = new Race(raceId, trainId, List.of(start, end), false);
         given(raceRepository.getRace(raceId)).willReturn(Optional.of(race));
         given(trainRepository.getTrain(trainId)).willReturn(Optional.empty());

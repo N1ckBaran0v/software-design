@@ -79,7 +79,8 @@ class TrainServiceImplTest {
 
     @Test
     void addRailcar_positive_saved() {
-        var railcar = new Railcar(null, "1", "cars", List.of(new Place(1, null, "cars", BigDecimal.valueOf(1000))));
+        var railcar = new Railcar(null, "1", "cars",
+                List.of(new Place(null, 1, null, "cars", BigDecimal.valueOf(1000))));
         trainService.addRailcar(railcar);
         verify(railcarRepository).addRailcar(railcar);
     }
