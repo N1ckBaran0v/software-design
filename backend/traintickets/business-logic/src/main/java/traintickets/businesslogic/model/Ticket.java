@@ -18,10 +18,11 @@ public record Ticket(TicketId ticketId,
                 place == null || start == null || end == null || cost == null) {
             throw new InvalidEntityException("All data required");
         }
+        place.validate();
         start.validate();
         end.validate();
-        if (start.departure() == null || end.arrival() == null || start.departure().after(end.arrival())) {
-            throw new InvalidEntityException("Invalid departure and arrival times");
+        if (start.id().id() >= end.id().id()) {
+            throw new InvalidEntityException("Start id must be less than end id");
         }
         if (cost.compareTo(BigDecimal.ZERO) < 0) {
             throw new InvalidEntityException("Invalid cost");

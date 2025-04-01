@@ -24,7 +24,7 @@ public final class CommentRepositoryImpl implements CommentRepository {
 
     @Override
     public void addComment(Comment comment) {
-        jdbcTemplate.executeCons(userRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+        jdbcTemplate.executeCons(userRoleName, Connection.TRANSACTION_READ_COMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "INSERT INTO comments (user_id, train_id, score, comment_text) " +
                             "VALUES (?, ?, ?, ?);"
@@ -60,7 +60,7 @@ public final class CommentRepositoryImpl implements CommentRepository {
 
     @Override
     public void deleteComment(CommentId commentId) {
-        jdbcTemplate.executeCons(userRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+        jdbcTemplate.executeCons(userRoleName, Connection.TRANSACTION_READ_COMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "DELETE FROM comments WHERE id = (?);"
             )) {

@@ -25,7 +25,7 @@ public final class UserRepositoryImpl implements UserRepository {
 
     @Override
     public void addUser(User user) {
-        jdbcTemplate.executeCons(systemRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+        jdbcTemplate.executeCons(systemRoleName, Connection.TRANSACTION_SERIALIZABLE, connection -> {
             checkIfExists(user, connection);
             try (var statement = connection.prepareStatement(
                     "INSERT INTO users_view (user_name, pass_word, real_name, user_role, is_active)\n" +
@@ -43,7 +43,7 @@ public final class UserRepositoryImpl implements UserRepository {
 
     @Override
     public Optional<User> getUser(String username) {
-        return jdbcTemplate.executeFunc(systemRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+        return jdbcTemplate.executeFunc(systemRoleName, Connection.TRANSACTION_READ_COMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM users_view WHERE user_name = (?);"
             )) {
@@ -57,7 +57,7 @@ public final class UserRepositoryImpl implements UserRepository {
 
     @Override
     public Iterable<User> getUsers(Iterable<UserId> userIds) {
-        return jdbcTemplate.executeFunc(systemRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+        return jdbcTemplate.executeFunc(systemRoleName, Connection.TRANSACTION_READ_COMMITTED, connection -> {
             var ids = StreamSupport.stream(userIds.spliterator(), false).map(id -> String.valueOf(id.id())).toList();
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM users_view WHERE id IN ('" + String.join("', '", ids) + "');"
@@ -77,7 +77,7 @@ public final class UserRepositoryImpl implements UserRepository {
 
     @Override
     public void updateUser(User user) {
-        jdbcTemplate.executeCons(systemRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+        jdbcTemplate.executeCons(systemRoleName, Connection.TRANSACTION_SERIALIZABLE, connection -> {
             checkIfExists(user, connection);
             try (var statement = connection.prepareStatement(
                     "UPDATE users_view SET " +
@@ -101,7 +101,7 @@ public final class UserRepositoryImpl implements UserRepository {
 
     @Override
     public void deleteUser(UserId userId) {
-        jdbcTemplate.executeCons(systemRoleName, Connection.TRANSACTION_REPEATABLE_READ, conn -> {
+        jdbcTemplate.executeCons(systemRoleName, Connection.TRANSACTION_READ_COMMITTED, conn -> {
             try (var statement = conn.prepareStatement(
                     "DELETE FROM users_view WHERE id = (?);"
             )) {

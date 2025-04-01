@@ -21,7 +21,7 @@ public final class RailcarRepositoryImpl implements RailcarRepository {
 
     @Override
     public void addRailcar(Railcar railcar) {
-        jdbcTemplate.executeCons(carrierRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+        jdbcTemplate.executeCons(carrierRoleName, Connection.TRANSACTION_SERIALIZABLE, connection -> {
             checkIfExists(railcar, connection);
             var railcarId = saveRailcar(railcar, connection);
             savePlaces(railcar, connection, railcarId);
@@ -35,8 +35,7 @@ public final class RailcarRepositoryImpl implements RailcarRepository {
             statement.setString(1, railcar.model());
             try (var resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
-                    throw new EntityAlreadyExistsException(String.format(
-                            "Railcar %s already exists", railcar.model()));
+                    throw new EntityAlreadyExistsException(String.format("Railcar %s already exists", railcar.model()));
                 }
             }
         }
@@ -76,7 +75,7 @@ public final class RailcarRepositoryImpl implements RailcarRepository {
 
     @Override
     public Iterable<Railcar> getRailcarsByType(String type) {
-        return jdbcTemplate.executeFunc(carrierRoleName, Connection.TRANSACTION_READ_COMMITTED, connection -> {
+        return jdbcTemplate.executeFunc(carrierRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM railcars where railcar_type = (?);"
             )) {
@@ -88,7 +87,7 @@ public final class RailcarRepositoryImpl implements RailcarRepository {
 
     @Override
     public Iterable<Railcar> getRailcarsByTrain(TrainId trainId) {
-        return jdbcTemplate.executeFunc(carrierRoleName, Connection.TRANSACTION_READ_COMMITTED, connection -> {
+        return jdbcTemplate.executeFunc(carrierRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
                     "WITH railcars_ids AS (SELECT DISTINCT railcar_id FROM railcarsintrains WHERE train_id = (?)) " +
                             "SELECT * FROM railcars WHERE id IN (SELECT * FROM railcars_ids);"

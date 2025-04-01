@@ -1,5 +1,6 @@
 package traintickets.dataaccess.repository;
 
+import traintickets.businesslogic.exception.InvalidEntityException;
 import traintickets.businesslogic.exception.PlaceAlreadyReservedException;
 import traintickets.businesslogic.model.*;
 import traintickets.businesslogic.payment.PaymentData;
@@ -25,12 +26,13 @@ public final class TicketRepositoryImpl implements TicketRepository {
 
     @Override
     public void addTickets(List<Ticket> tickets, PaymentData paymentData) {
-        jdbcTemplate.executeCons(carrierRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+        jdbcTemplate.executeCons(carrierRoleName, Connection.TRANSACTION_SERIALIZABLE, connection -> {
             try (var statement = connection.prepareStatement(
                     "INSERT INTO tickets (user_id, passenger, race_id, railcar, place_id, departure, destination, ticket_cost) " +
                             "VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
             )) {
                 for (var ticket : tickets) {
+                    checkIfCorrect(connection, ticket);
                     checkIfNotExists(connection, ticket);
                     statement.setLong(1, ticket.owner().id());
                     statement.setString(2, ticket.passenger());
@@ -46,6 +48,35 @@ public final class TicketRepositoryImpl implements TicketRepository {
             }
             paymentManager.pay(paymentData);
         });
+    }
+
+    private void checkIfCorrect(Connection connection, Ticket ticket) throws SQLException {
+        try (var  statement = connection.prepareStatement(
+                "WITH curr_train_id AS (SELECT train_id FROM races WHERE id = (?)), " +
+                        "curr_railcar_id AS (SELECT railcar_id FROM places WHERE id = (?)) " +
+                        "SELECT * FROM railcarsintrains WHERE train_id = (SELECT * FROM curr_train_id) " +
+                        "AND railcar_id = (SELECT * FROM curr_railcar_id); "
+        )) {
+            statement.setLong(1, ticket.race().id());
+            statement.setLong(2, ticket.place().id().id());
+            try (var resultSet = statement.executeQuery()) {
+                if (!resultSet.next()) {
+                    throw new InvalidEntityException("Invalid place in ticket");
+                }
+            }
+        }
+        try (var  statement = connection.prepareStatement(
+                "SELECT * FROM schedule WHERE race_id = (?) AND id IN ((?), (?));"
+        )) {
+            statement.setLong(1, ticket.race().id());
+            statement.setLong(2, ticket.start().id().id());
+            statement.setLong(3, ticket.end().id().id());
+            try (var resultSet = statement.executeQuery()) {
+                if (!(resultSet.next() && resultSet.next())) {
+                    throw new InvalidEntityException("Invalid schedule in ticket");
+                }
+            }
+        }
     }
 
     private void checkIfNotExists(Connection connection, Ticket ticket) throws SQLException {
@@ -74,7 +105,7 @@ public final class TicketRepositoryImpl implements TicketRepository {
 
     @Override
     public Iterable<Ticket> getTicketsByUser(UserId userId) {
-        return jdbcTemplate.executeFunc(carrierRoleName, Connection.TRANSACTION_READ_COMMITTED, connection -> {
+        return jdbcTemplate.executeFunc(carrierRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM tickets WHERE user_id = (?);"
             )) {
@@ -86,7 +117,7 @@ public final class TicketRepositoryImpl implements TicketRepository {
 
     @Override
     public Iterable<Ticket> getTicketsByRace(RaceId raceId) {
-        return jdbcTemplate.executeFunc(carrierRoleName, Connection.TRANSACTION_READ_COMMITTED, connection -> {
+        return jdbcTemplate.executeFunc(carrierRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM tickets WHERE race_id = (?);"
             )) {

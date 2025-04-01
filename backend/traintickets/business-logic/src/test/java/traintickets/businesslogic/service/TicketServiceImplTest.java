@@ -39,9 +39,9 @@ class TicketServiceImplTest {
         var end = new Schedule(new ScheduleId(2), "station2", Timestamp.valueOf("2025-07-20 12:45:00"), null, 7);
         var cost = BigDecimal.valueOf((7 - 2) * 10);
         var ticket1 = new Ticket(new TicketId(1), owner, "adult", race, 3,
-                new Place(new PlaceId(1), 1, null, "any_human", BigDecimal.TEN), start, end, cost);
+                new Place(new PlaceId(1), 1, "", "any_human", BigDecimal.TEN), start, end, cost);
         var ticket2 = new Ticket(new TicketId(2), owner, "child", race, 3,
-                new Place(new PlaceId(2), 2, null, "invalids", BigDecimal.TEN), start, end, cost);
+                new Place(new PlaceId(2), 2, "", "invalids", BigDecimal.TEN), start, end, cost);
         tickets = List.of(ticket1, ticket2);
     }
 

@@ -22,7 +22,7 @@ public final class RaceRepositoryImpl implements RaceRepository {
 
     @Override
     public void addRace(Race race) {
-        jdbcTemplate.executeCons(carrierRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+        jdbcTemplate.executeCons(carrierRoleName, Connection.TRANSACTION_SERIALIZABLE, connection -> {
             var startTime = new Timestamp(race.schedule().getFirst().departure().getTime());
             var endTime = new Timestamp(race.schedule().getLast().arrival().getTime());
             checkIfReserved(race, connection, startTime, endTime);
@@ -87,7 +87,7 @@ public final class RaceRepositoryImpl implements RaceRepository {
 
     @Override
     public Optional<Race> getRace(RaceId raceId) {
-        return jdbcTemplate.executeFunc(carrierRoleName, Connection.TRANSACTION_READ_COMMITTED, connection -> {
+        return jdbcTemplate.executeFunc(carrierRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM races WHERE id = (?);"
             )) {
@@ -101,7 +101,7 @@ public final class RaceRepositoryImpl implements RaceRepository {
 
     @Override
     public Iterable<Race> getRaces(Filter filter) {
-        return jdbcTemplate.executeFunc(carrierRoleName, Connection.TRANSACTION_READ_COMMITTED, connection -> {
+        return jdbcTemplate.executeFunc(carrierRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
                     "WITH races_time AS (SELECT race_id, MIN(departure) as start_time, MAX(arrival) as end_time " +
                             "FROM schedule GROUP BY race_id), " +
@@ -126,7 +126,7 @@ public final class RaceRepositoryImpl implements RaceRepository {
 
     @Override
     public void updateRace(Race race) {
-        jdbcTemplate.executeCons(carrierRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+        jdbcTemplate.executeCons(carrierRoleName, Connection.TRANSACTION_READ_COMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "UPDATE races SET finished = (?) WHERE id = (?);"
             )) {

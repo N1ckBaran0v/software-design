@@ -26,7 +26,7 @@ public final class FilterRepositoryImpl implements FilterRepository {
 
     @Override
     public void addFilter(Filter filter) {
-        jdbcTemplate.executeCons(userRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+        jdbcTemplate.executeCons(userRoleName, Connection.TRANSACTION_SERIALIZABLE, connection -> {
             checkIfExists(filter, connection);
             var filterId = saveFilter(filter, connection);
             savePassengers(filter, connection, filterId);
@@ -88,7 +88,7 @@ public final class FilterRepositoryImpl implements FilterRepository {
 
     @Override
     public Optional<Filter> getFilter(UserId userId, String name) {
-        return jdbcTemplate.executeFunc(userRoleName, Connection.TRANSACTION_READ_COMMITTED, connection -> {
+        return jdbcTemplate.executeFunc(userRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM filters WHERE user_id = (?) AND filter_name = (?);"
             )) {
@@ -103,7 +103,7 @@ public final class FilterRepositoryImpl implements FilterRepository {
 
     @Override
     public Iterable<Filter> getFilters(UserId userId) {
-        return jdbcTemplate.executeFunc(userRoleName, Connection.TRANSACTION_READ_COMMITTED, connection -> {
+        return jdbcTemplate.executeFunc(userRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM filters WHERE user_id = (?);"
             )) {
