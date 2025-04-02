@@ -34,13 +34,13 @@ public final class RaceServiceImpl implements RaceService {
     @Override
     public Race getRace(RaceId raceId) {
         return raceRepository.getRace(raceId).orElseThrow(
-                () -> new EntityNotFoundException(String.format("No race with id %d found", raceId.id())));
+                () -> new EntityNotFoundException(String.format("No race with id %s found", raceId.id())));
     }
 
     @Override
     public void finishRace(RaceId raceId) {
         var race = raceRepository.getRace(raceId).orElseThrow(
-                () -> new EntityNotFoundException(String.format("No race with id %d found", raceId.id())));
+                () -> new EntityNotFoundException(String.format("No race with id %s found", raceId.id())));
         var updated = new Race(raceId, race.trainId(), race.schedule(), true);
         raceRepository.updateRace(updated);
     }

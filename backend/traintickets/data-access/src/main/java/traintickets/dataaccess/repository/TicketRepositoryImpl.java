@@ -34,13 +34,13 @@ public final class TicketRepositoryImpl implements TicketRepository {
                 for (var ticket : tickets) {
                     checkIfCorrect(connection, ticket);
                     checkIfNotExists(connection, ticket);
-                    statement.setLong(1, ticket.owner().id());
+                    statement.setLong(1, ((Number) ticket.owner().id()).longValue());
                     statement.setString(2, ticket.passenger());
-                    statement.setLong(3, ticket.race().id());
+                    statement.setLong(3, ((Number) ticket.race().id()).longValue());
                     statement.setInt(4, ticket.railcar());
-                    statement.setLong(5, ticket.place().id().id());
-                    statement.setLong(6, ticket.start().id().id());
-                    statement.setLong(7, ticket.end().id().id());
+                    statement.setLong(5, ((Number) ticket.place().id().id()).longValue());
+                    statement.setLong(6, ((Number) ticket.start().id().id()).longValue());
+                    statement.setLong(7, ((Number) ticket.end().id().id()).longValue());
                     statement.setBigDecimal(8, ticket.cost());
                     statement.addBatch();
                 }
@@ -55,7 +55,7 @@ public final class TicketRepositoryImpl implements TicketRepository {
         try (var statement = connection.prepareStatement(
                 "SELECT railcar_id FROM places WHERE id = (?);"
         )) {
-            statement.setLong(1, ticket.place().id().id());
+            statement.setLong(1, ((Number) ticket.place().id().id()).longValue());
             try (var resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
                     railcarId = resultSet.getLong(1);
@@ -66,9 +66,10 @@ public final class TicketRepositoryImpl implements TicketRepository {
         }
         try (var  statement = connection.prepareStatement(
                 "WITH curr_train_id AS (SELECT train_id FROM races WHERE id = (?)) " +
-                        "SELECT * FROM railcarsintrains WHERE train_id = (SELECT * FROM curr_train_id); "
+                        "SELECT * FROM railcarsintrains WHERE train_id = (SELECT * FROM curr_train_id) LIMIT (?); "
         )) {
-            statement.setLong(1, ticket.race().id());
+            statement.setLong(1, ((Number) ticket.race().id()).longValue());
+            statement.setInt(2, ticket.railcar());
             try (var resultSet = statement.executeQuery()) {
                 for (var i = 0; i < ticket.railcar(); ++i) {
                     if (!resultSet.next()) {
@@ -83,9 +84,9 @@ public final class TicketRepositoryImpl implements TicketRepository {
         try (var  statement = connection.prepareStatement(
                 "SELECT * FROM schedule WHERE race_id = (?) AND id IN ((?), (?));"
         )) {
-            statement.setLong(1, ticket.race().id());
-            statement.setLong(2, ticket.start().id().id());
-            statement.setLong(3, ticket.end().id().id());
+            statement.setLong(1, ((Number) ticket.race().id()).longValue());
+            statement.setLong(2, ((Number) ticket.start().id().id()).longValue());
+            statement.setLong(3, ((Number) ticket.end().id().id()).longValue());
             try (var resultSet = statement.executeQuery()) {
                 if (!(resultSet.next() && resultSet.next())) {
                     throw new InvalidEntityException("Invalid schedule in ticket");
@@ -95,8 +96,31 @@ public final class TicketRepositoryImpl implements TicketRepository {
     }
 
     private void checkIfNotExists(Connection connection, Ticket ticket) throws SQLException {
-        var startTimestamp = new Timestamp(ticket.start().departure().getTime());
-        var endTimestamp = new Timestamp(ticket.end().arrival().getTime());
+        var startTimestamp = (Timestamp) null;
+        var endTimestamp = (Timestamp) null;
+        try (var statement = connection.prepareStatement(
+                "SELECT arrival, departure FROM schedule WHERE id = (?) AND race_id = (?); "
+        )) {
+            statement.setLong(1, ((Number) ticket.start().id().id()).longValue());
+            statement.setLong(2, ((Number) ticket.race().id()).longValue());
+            try (var resultSet = statement.executeQuery()) {
+                if (!resultSet.next()) {
+                    throw new InvalidEntityException("Schedule not found");
+                }
+                startTimestamp = resultSet.getTimestamp(2);
+            }
+            statement.setLong(1, ((Number) ticket.end().id().id()).longValue());
+            statement.setLong(2, ((Number) ticket.race().id()).longValue());
+            try (var resultSet = statement.executeQuery()) {
+                if (!resultSet.next()) {
+                    throw new InvalidEntityException("Schedule not found");
+                }
+                endTimestamp = resultSet.getTimestamp(1);
+            }
+        }
+        if (startTimestamp == null || endTimestamp == null || startTimestamp.after(endTimestamp)) {
+            throw new InvalidEntityException("Invalid schedule");
+        }
         try (var statement = connection.prepareStatement(
                 "WITH race_tickets AS (SELECT s1.departure as start_time, s2.arrival as end_time " +
                         "FROM tickets t JOIN schedule s1 ON t.departure = s1.id JOIN schedule s2 ON t.destination = s2.id " +
@@ -104,8 +128,8 @@ public final class TicketRepositoryImpl implements TicketRepository {
                         "SELECT * FROM race_tickets WHERE " +
                         "start_time >= (?) AND start_time < (?) OR end_time > (?) AND end_time <= (?); "
         )) {
-            statement.setLong(1, ticket.race().id());
-            statement.setLong(2, ticket.place().id().id());
+            statement.setLong(1, ((Number) ticket.race().id()).longValue());
+            statement.setLong(2, ((Number) ticket.place().id().id()).longValue());
             statement.setTimestamp(3, startTimestamp);
             statement.setTimestamp(4, endTimestamp);
             statement.setTimestamp(5, startTimestamp);
@@ -124,7 +148,7 @@ public final class TicketRepositoryImpl implements TicketRepository {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM tickets WHERE user_id = (?);"
             )) {
-                statement.setLong(1, userId.id());
+                statement.setLong(1, ((Number) userId.id()).longValue());
                 return getTickets(connection, statement);
             }
         });
@@ -136,7 +160,7 @@ public final class TicketRepositoryImpl implements TicketRepository {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM tickets WHERE race_id = (?);"
             )) {
-                statement.setLong(1, raceId.id());
+                statement.setLong(1, ((Number) raceId.id()).longValue());
                 return getTickets(connection, statement);
             }
         });

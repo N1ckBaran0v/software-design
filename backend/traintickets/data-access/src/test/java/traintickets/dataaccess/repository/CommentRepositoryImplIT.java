@@ -41,7 +41,7 @@ class CommentRepositoryImplIT extends PostgresIT {
 
     @Test
     void addComment_positive_added() {
-        var comment = new Comment(null, new UserId(1), new TrainId(1), 4, "Упс, не туда нажал");
+        var comment = new Comment(null, new UserId(1L), new TrainId(1L), 4, "Упс, не туда нажал");
         commentRepository.addComment(comment);
         jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement("select * from comments where id = 3;")) {
@@ -59,9 +59,9 @@ class CommentRepositoryImplIT extends PostgresIT {
 
     @Test
     void getComments_positive_got() {
-        var trainId = new TrainId(1);
-        var comment1 = new Comment(new CommentId(1), new UserId(1), trainId, 5, "Лучший поезд");
-        var comment2 = new Comment(new CommentId(2), new UserId(2), trainId, 1, "Грубые проводники");
+        var trainId = new TrainId(1L);
+        var comment1 = new Comment(new CommentId(1L), new UserId(1L), trainId, 5, "Лучший поезд");
+        var comment2 = new Comment(new CommentId(2L), new UserId(2L), trainId, 1, "Грубые проводники");
         var result = commentRepository.getComments(trainId);
         assertNotNull(result);
         var iterator = result.iterator();
@@ -74,14 +74,14 @@ class CommentRepositoryImplIT extends PostgresIT {
 
     @Test
     void getComments_positive_empty() {
-        var result = commentRepository.getComments(new TrainId(3));
+        var result = commentRepository.getComments(new TrainId(3L));
         assertNotNull(result);
         assertFalse(result.iterator().hasNext());
     }
 
     @Test
-    void deleteComment() {
-        var commentId = new CommentId(1);
+    void deleteComment_positive_deleted() {
+        var commentId = new CommentId(1L);
         commentRepository.deleteComment(commentId);
         jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement("select * from comments where id = 1;")) {

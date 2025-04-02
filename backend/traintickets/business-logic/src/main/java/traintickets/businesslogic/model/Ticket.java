@@ -21,9 +21,6 @@ public record Ticket(TicketId ticketId,
         place.validate();
         start.validate();
         end.validate();
-        if (start.id().id() >= end.id().id()) {
-            throw new InvalidEntityException("Start id must be less than end id");
-        }
         if (cost.compareTo(BigDecimal.ZERO) < 0) {
             throw new InvalidEntityException("Invalid cost");
         }

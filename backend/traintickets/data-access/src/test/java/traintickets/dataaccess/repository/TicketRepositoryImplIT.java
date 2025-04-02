@@ -69,10 +69,10 @@ class TicketRepositoryImplIT extends PostgresIT {
 
     @Test
     void addTickets_positive_added() {
-        var ticket = new Ticket(null, new UserId(2), "adult", new RaceId(2), 1,
-                new Place(new PlaceId(2), 2, "", "universal", BigDecimal.valueOf(100)),
-                new Schedule(new ScheduleId(3), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0),
-                new Schedule(new ScheduleId(4), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5),
+        var ticket = new Ticket(null, new UserId(2L), "adult", new RaceId(2L), 1,
+                new Place(new PlaceId(2L), 2, "", "universal", BigDecimal.valueOf(100)),
+                new Schedule(new ScheduleId(3L), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0),
+                new Schedule(new ScheduleId(4L), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5),
                 BigDecimal.valueOf(500));
         ticketRepository.addTickets(List.of(ticket), paymentData);
         jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
@@ -98,10 +98,10 @@ class TicketRepositoryImplIT extends PostgresIT {
 
     @Test
     void addTickets_negative_reserved() {
-        var ticket = new Ticket(null, new UserId(2), "adult", new RaceId(2), 1,
-                new Place(new PlaceId(1), 1, "", "universal", BigDecimal.valueOf(100)),
-                new Schedule(new ScheduleId(3), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0),
-                new Schedule(new ScheduleId(4), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5),
+        var ticket = new Ticket(null, new UserId(2L), "adult", new RaceId(2L), 1,
+                new Place(new PlaceId(1L), 1, "", "universal", BigDecimal.valueOf(100)),
+                new Schedule(new ScheduleId(3L), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0),
+                new Schedule(new ScheduleId(4L), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5),
                 BigDecimal.valueOf(500));
         assertThrows(PlaceAlreadyReservedException.class,
                 () -> ticketRepository.addTickets(List.of(ticket), paymentData));
@@ -119,10 +119,10 @@ class TicketRepositoryImplIT extends PostgresIT {
 
     @Test
     void addTickets_negative_paymentRejected() {
-        var ticket = new Ticket(null, new UserId(2), "adult", new RaceId(2), 1,
-                new Place(new PlaceId(2), 2, "", "universal", BigDecimal.valueOf(100)),
-                new Schedule(new ScheduleId(3), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0),
-                new Schedule(new ScheduleId(4), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5),
+        var ticket = new Ticket(null, new UserId(2L), "adult", new RaceId(2L), 1,
+                new Place(new PlaceId(2L), 2, "", "universal", BigDecimal.valueOf(100)),
+                new Schedule(new ScheduleId(3L), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0),
+                new Schedule(new ScheduleId(4L), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5),
                 BigDecimal.valueOf(500));
         willThrow(PaymentException.class).given(paymentManager).pay(paymentData);
         assertThrows(PaymentException.class,
@@ -140,15 +140,15 @@ class TicketRepositoryImplIT extends PostgresIT {
 
     @Test
     void getTicketsByUser_positive_got() {
-        var userId = new UserId(1);
-        var place = new Place(new PlaceId(1), 1, "", "universal", BigDecimal.valueOf(100));
-        var ticket1 = new Ticket(new TicketId(1), userId, "adult", new RaceId(1), 1, place,
-                new Schedule(new ScheduleId(1), "first", null, Timestamp.valueOf("2025-04-01 10:10:00"), 0),
-                new Schedule(new ScheduleId(2), "second", Timestamp.valueOf("2025-04-01 11:40:00"), null, 5),
+        var userId = new UserId(1L);
+        var place = new Place(new PlaceId(1L), 1, "", "universal", BigDecimal.valueOf(100));
+        var ticket1 = new Ticket(new TicketId(1L), userId, "adult", new RaceId(1L), 1, place,
+                new Schedule(new ScheduleId(1L), "first", null, Timestamp.valueOf("2025-04-01 10:10:00"), 0),
+                new Schedule(new ScheduleId(2L), "second", Timestamp.valueOf("2025-04-01 11:40:00"), null, 5),
                 BigDecimal.valueOf(500));
-        var ticket2 = new Ticket(new TicketId(3), userId, "adult", new RaceId(2), 1, place,
-                new Schedule(new ScheduleId(3), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0),
-                new Schedule(new ScheduleId(4), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5),
+        var ticket2 = new Ticket(new TicketId(3L), userId, "adult", new RaceId(2L), 1, place,
+                new Schedule(new ScheduleId(3L), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0),
+                new Schedule(new ScheduleId(4L), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5),
                 BigDecimal.valueOf(500));
         var result = ticketRepository.getTicketsByUser(userId);
         assertNotNull(result);
@@ -169,16 +169,16 @@ class TicketRepositoryImplIT extends PostgresIT {
 
     @Test
     void getTicketsByRace_positive_got() {
-        var raceId = new RaceId(1);
-        var ticket1 = new Ticket(new TicketId(1), new UserId(1), "adult", raceId, 1,
-                new Place(new PlaceId(1), 1, "", "universal", BigDecimal.valueOf(100)),
-                new Schedule(new ScheduleId(1), "first", null, Timestamp.valueOf("2025-04-01 10:10:00"), 0),
-                new Schedule(new ScheduleId(2), "second", Timestamp.valueOf("2025-04-01 11:40:00"), null, 5),
+        var raceId = new RaceId(1L);
+        var ticket1 = new Ticket(new TicketId(1L), new UserId(1L), "adult", raceId, 1,
+                new Place(new PlaceId(1L), 1, "", "universal", BigDecimal.valueOf(100)),
+                new Schedule(new ScheduleId(1L), "first", null, Timestamp.valueOf("2025-04-01 10:10:00"), 0),
+                new Schedule(new ScheduleId(2L), "second", Timestamp.valueOf("2025-04-01 11:40:00"), null, 5),
                 BigDecimal.valueOf(500));
-        var ticket2 = new Ticket(new TicketId(2), new UserId(2), "adult", raceId, 1,
-                new Place(new PlaceId(2), 2, "", "universal", BigDecimal.valueOf(100)),
-                new Schedule(new ScheduleId(1), "first", null, Timestamp.valueOf("2025-04-01 10:10:00"), 0),
-                new Schedule(new ScheduleId(2), "second", Timestamp.valueOf("2025-04-01 11:40:00"), null, 5),
+        var ticket2 = new Ticket(new TicketId(2L), new UserId(2L), "adult", raceId, 1,
+                new Place(new PlaceId(2L), 2, "", "universal", BigDecimal.valueOf(100)),
+                new Schedule(new ScheduleId(1L), "first", null, Timestamp.valueOf("2025-04-01 10:10:00"), 0),
+                new Schedule(new ScheduleId(2L), "second", Timestamp.valueOf("2025-04-01 11:40:00"), null, 5),
                 BigDecimal.valueOf(500));
         var result = ticketRepository.getTicketsByRace(raceId);
         assertNotNull(result);

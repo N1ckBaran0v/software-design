@@ -43,7 +43,7 @@ public final class RaceRepositoryImpl implements RaceRepository {
             statement.setTimestamp(2, endTime);
             statement.setTimestamp(3, startTime);
             statement.setTimestamp(4, endTime);
-            statement.setLong(5, race.trainId().id());
+            statement.setLong(5, ((Number) race.trainId().id()).longValue());
             try (var resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
                     throw new TrainAlreadyReservedException(race.trainId());
@@ -57,7 +57,7 @@ public final class RaceRepositoryImpl implements RaceRepository {
                 "INSERT INTO races (train_id, finished) VALUES (?, ?);",
                 Statement.RETURN_GENERATED_KEYS
         )) {
-            statement.setLong(1, race.trainId().id());
+            statement.setLong(1, ((Number) race.trainId().id()).longValue());
             statement.setBoolean(2, false);
             statement.executeUpdate();
             var rs = statement.getGeneratedKeys();
@@ -91,7 +91,7 @@ public final class RaceRepositoryImpl implements RaceRepository {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM races WHERE id = (?);"
             )) {
-                statement.setLong(1, raceId.id());
+                statement.setLong(1, ((Number) raceId.id()).longValue());
                 try (var resultSet = statement.executeQuery()) {
                     return Optional.ofNullable(getRace(connection, resultSet));
                 }
@@ -131,7 +131,7 @@ public final class RaceRepositoryImpl implements RaceRepository {
                     "UPDATE races SET finished = (?) WHERE id = (?);"
             )) {
                 statement.setBoolean(1, race.finished());
-                statement.setLong(2, race.id().id());
+                statement.setLong(2, ((Number) race.id().id()).longValue());
                 statement.executeUpdate();
             }
         });
@@ -154,7 +154,7 @@ public final class RaceRepositoryImpl implements RaceRepository {
         try (var statement = connection.prepareStatement(
                 "SELECT * FROM schedule WHERE race_id = (?);"
         )) {
-            statement.setLong(1, raceId.id());
+            statement.setLong(1, ((Number) raceId.id()).longValue());
             try (var resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
                     var id = new ScheduleId(resultSet.getLong(1));

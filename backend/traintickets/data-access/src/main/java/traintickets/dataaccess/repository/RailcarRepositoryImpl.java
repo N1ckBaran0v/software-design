@@ -92,7 +92,7 @@ public final class RailcarRepositoryImpl implements RailcarRepository {
                     "WITH railcars_ids AS (SELECT DISTINCT railcar_id FROM railcarsintrains WHERE train_id = (?)) " +
                             "SELECT * FROM railcars WHERE id IN (SELECT * FROM railcars_ids);"
             )) {
-                statement.setLong(1, trainId.id());
+                statement.setLong(1, ((Number) trainId.id()).longValue());
                 return extractRailcars(connection, statement);
             }
         });
@@ -127,7 +127,7 @@ public final class RailcarRepositoryImpl implements RailcarRepository {
         try (var statement = connection.prepareStatement(
                 "SELECT * FROM places WHERE railcar_id = (?);"
         )) {
-            statement.setLong(1, railcarId.id());
+            statement.setLong(1, ((Number) railcarId.id()).longValue());
             try (var resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
                     var id = new PlaceId(resultSet.getLong(1));

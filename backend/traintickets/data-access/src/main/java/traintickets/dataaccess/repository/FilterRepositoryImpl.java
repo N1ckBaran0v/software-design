@@ -37,7 +37,7 @@ public final class FilterRepositoryImpl implements FilterRepository {
         try (var statement = connection.prepareStatement(
                 "SELECT * FROM filters where user_id = (?) AND filter_name = (?);"
         )) {
-            statement.setLong(1, filter.user().id());
+            statement.setLong(1, ((Number) filter.user().id()).longValue());
             statement.setString(2, filter.name());
             try (var resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
@@ -54,7 +54,7 @@ public final class FilterRepositoryImpl implements FilterRepository {
                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?);",
                 Statement.RETURN_GENERATED_KEYS
         )) {
-            statement.setLong(1, filter.user().id());
+            statement.setLong(1, ((Number) filter.user().id()).longValue());
             statement.setString(2, filter.name());
             statement.setString(3, filter.departure());
             statement.setString(4, filter.destination());
@@ -92,7 +92,7 @@ public final class FilterRepositoryImpl implements FilterRepository {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM filters WHERE user_id = (?) AND filter_name = (?);"
             )) {
-                statement.setLong(1, userId.id());
+                statement.setLong(1, ((Number) userId.id()).longValue());
                 statement.setString(2, name);
                 try (var resultSet = statement.executeQuery()) {
                     return Optional.ofNullable(getFilter(connection, resultSet));
@@ -107,7 +107,7 @@ public final class FilterRepositoryImpl implements FilterRepository {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM filters WHERE user_id = (?);"
             )) {
-                statement.setLong(1, userId.id());
+                statement.setLong(1, ((Number) userId.id()).longValue());
                 try (var resultSet = statement.executeQuery()) {
                     var list = new ArrayList<Filter>();
                     var filter = getFilter(connection, resultSet);
@@ -127,7 +127,7 @@ public final class FilterRepositoryImpl implements FilterRepository {
             try (var statement = connection.prepareStatement(
                     "DELETE FROM filters WHERE user_id = (?) AND filter_name = (?);"
             )) {
-                statement.setLong(1, userId.id());
+                statement.setLong(1, ((Number) userId.id()).longValue());
                 statement.setString(2, name);
                 statement.execute();
             }

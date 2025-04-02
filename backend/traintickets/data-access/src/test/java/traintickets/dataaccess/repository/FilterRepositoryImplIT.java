@@ -43,7 +43,7 @@ class FilterRepositoryImplIT extends PostgresIT {
 
     @Test
     void addFilter_positive_added() {
-        var filter = new Filter(new UserId(2), "first", "first", "second", "Экспресс", 0,
+        var filter = new Filter(new UserId(2L), "first", "first", "second", "Экспресс", 0,
                 List.of("adult"), null, null, BigDecimal.TEN, BigDecimal.valueOf(10000));
         filterRepository.addFilter(filter);
         jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
@@ -78,7 +78,7 @@ class FilterRepositoryImplIT extends PostgresIT {
 
     @Test
     void addFilter_negative_exists() {
-        var filter = new Filter(new UserId(1), "first", "first", "second", "Экспресс", 0,
+        var filter = new Filter(new UserId(1L), "first", "first", "second", "Экспресс", 0,
                 List.of("adult"), null, null, BigDecimal.TEN, BigDecimal.valueOf(10000));
         assertThrows(EntityAlreadyExistsException.class, () -> filterRepository.addFilter(filter));
         jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
@@ -101,7 +101,7 @@ class FilterRepositoryImplIT extends PostgresIT {
 
     @Test
     void getFilter_positive_found() {
-        var filter = new Filter(new UserId(1), "first", "first", "second", "Экспресс", 0,
+        var filter = new Filter(new UserId(1L), "first", "first", "second", "Экспресс", 0,
                 List.of("adult", "adult", "child"), null, null, BigDecimal.valueOf(100), BigDecimal.valueOf(10000));
         var result = filterRepository.getFilter(new UserId(1), "first");
         assertEquals(filter, result.orElse(null));
@@ -109,16 +109,16 @@ class FilterRepositoryImplIT extends PostgresIT {
 
     @Test
     void getFilter_positive_notFound() {
-        assertNull(filterRepository.getFilter(new UserId(1), "third").orElse(null));
+        assertNull(filterRepository.getFilter(new UserId(1L), "third").orElse(null));
     }
 
     @Test
     void getFilters_positive_got() {
-        var filter1 = new Filter(new UserId(1), "first", "first", "second", "Экспресс", 0,
+        var filter1 = new Filter(new UserId(1L), "first", "first", "second", "Экспресс", 0,
                 List.of("adult", "adult", "child"), null, null, BigDecimal.valueOf(100), BigDecimal.valueOf(10000));
-        var filter2 = new Filter(new UserId(1), "second", "first", "second", "Скорый", 1,
+        var filter2 = new Filter(new UserId(1L), "second", "first", "second", "Скорый", 1,
                 List.of("adult"), null, null, BigDecimal.valueOf(100), BigDecimal.valueOf(10000));
-        var result = filterRepository.getFilters(new UserId(1));
+        var result = filterRepository.getFilters(new UserId(1L));
         assertNotNull(result);
         var iterator = result.iterator();
         assertTrue(iterator.hasNext());
@@ -130,14 +130,14 @@ class FilterRepositoryImplIT extends PostgresIT {
 
     @Test
     void getFilters_positive_empty() {
-        var result = filterRepository.getFilters(new UserId(2));
+        var result = filterRepository.getFilters(new UserId(2L));
         assertNotNull(result);
         assertFalse(result.iterator().hasNext());
     }
 
     @Test
     void deleteFilter_positive_deleted() {
-        filterRepository.deleteFilter(new UserId(1), "first");
+        filterRepository.deleteFilter(new UserId(1L), "first");
         jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM filters WHERE id = 1;"

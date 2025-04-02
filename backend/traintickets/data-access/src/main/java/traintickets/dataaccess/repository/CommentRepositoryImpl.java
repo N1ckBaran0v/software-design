@@ -29,8 +29,8 @@ public final class CommentRepositoryImpl implements CommentRepository {
                     "INSERT INTO comments (user_id, train_id, score, comment_text) " +
                             "VALUES (?, ?, ?, ?);"
             )) {
-                statement.setLong(1, comment.author().id());
-                statement.setLong(2, comment.train().id());
+                statement.setLong(1, ((Number) comment.author().id()).longValue());
+                statement.setLong(2, ((Number) comment.train().id()).longValue());
                 statement.setInt(3, comment.score());
                 statement.setString(4, comment.text());
                 statement.execute();
@@ -44,7 +44,7 @@ public final class CommentRepositoryImpl implements CommentRepository {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM comments WHERE train_id = (?);"
             )) {
-                statement.setLong(1, trainId.id());
+                statement.setLong(1, (Long) trainId.id());
                 try (var resultSet = statement.executeQuery()) {
                     var comments = new ArrayList<Comment>();
                     var comment = getComment(resultSet);
@@ -64,7 +64,7 @@ public final class CommentRepositoryImpl implements CommentRepository {
             try (var statement = connection.prepareStatement(
                     "DELETE FROM comments WHERE id = (?);"
             )) {
-                statement.setLong(1, commentId.id());
+                statement.setLong(1, ((Number) commentId.id()).longValue());
                 statement.execute();
             }
         });

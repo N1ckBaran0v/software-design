@@ -1,4 +1,7 @@
 package traintickets.businesslogic.model;
 
-public record PlaceId(long id) {
+public final class PlaceId extends AbstractId {
+    public PlaceId(Object id) {
+        super(id);
+    }
 }

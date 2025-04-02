@@ -31,7 +31,7 @@ public final class TrainServiceImpl implements TrainService {
     @Override
     public Train getTrain(TrainId trainId) {
         return trainRepository.getTrain(trainId).orElseThrow(
-                () -> new EntityNotFoundException(String.format("Train %d not found", trainId.id())));
+                () -> new EntityNotFoundException(String.format("Train %s not found", trainId.id())));
     }
 
     @Override

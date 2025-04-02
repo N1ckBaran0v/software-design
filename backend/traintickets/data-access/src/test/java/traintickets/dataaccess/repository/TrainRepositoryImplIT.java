@@ -45,7 +45,7 @@ class TrainRepositoryImplIT extends PostgresIT {
 
     @Test
     void addTrain_positive_added() {
-        var train = new Train(null, "Скорый", List.of(new RailcarId(1)));
+        var train = new Train(null, "Скорый", List.of(new RailcarId(1L)));
         trainRepository.addTrain(train);
         jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
@@ -71,8 +71,8 @@ class TrainRepositoryImplIT extends PostgresIT {
 
     @Test
     void getTrain_positive_found() {
-        var id = new TrainId(1);
-        var train = new Train(id, "фирменный", List.of(new RailcarId(1)));
+        var id = new TrainId(1L);
+        var train = new Train(id, "фирменный", List.of(new RailcarId(1L)));
         var result = trainRepository.getTrain(id).orElse(null);
         assertNotNull(result);
         assertEquals(train, result);
@@ -80,13 +80,13 @@ class TrainRepositoryImplIT extends PostgresIT {
 
     @Test
     void getTrain_positive_notFound() {
-        var result = trainRepository.getTrain(new TrainId(3)).orElse(null);
+        var result = trainRepository.getTrain(new TrainId(3L)).orElse(null);
         assertNull(result);
     }
 
     @Test
     void getTrains_positive_got() {
-        var train = new Train(new TrainId(1), "фирменный", List.of());
+        var train = new Train(new TrainId(1L), "фирменный", List.of());
         var result = trainRepository.getTrains(Timestamp.valueOf("2025-04-01 11:50:00"),
                 Timestamp.valueOf("2025-04-01 13:20:00"));
         assertNotNull(result);

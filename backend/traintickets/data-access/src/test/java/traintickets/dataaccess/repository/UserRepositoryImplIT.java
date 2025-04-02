@@ -73,7 +73,7 @@ class UserRepositoryImplIT extends PostgresIT {
 
     @Test
     void getUser_positive_found() {
-        var user = new User(new UserId(1), "first", "qwerty123", "Иванов Иван Иванович", "userRole", true);
+        var user = new User(new UserId(1L), "first", "qwerty123", "Иванов Иван Иванович", "userRole", true);
         assertEquals(user, userRepository.getUser(user.username()).orElse(null));
     }
 
@@ -84,9 +84,9 @@ class UserRepositoryImplIT extends PostgresIT {
 
     @Test
     void getUsers_positive_allFound() {
-        var userId1 = new UserId(1);
+        var userId1 = new UserId(1L);
         var user1 = new User(userId1, "first", "qwerty123", "Иванов Иван Иванович", "userRole", true);
-        var userId2 = new UserId(2);
+        var userId2 = new UserId(2L);
         var user2 = new User(userId2, "second", "qwerty123", "Петров Пётр Петрович", "userRole", true);
         var result = userRepository.getUsers(List.of(userId1, userId2));
         assertNotNull(result);
@@ -100,7 +100,7 @@ class UserRepositoryImplIT extends PostgresIT {
 
     @Test
     void getUsers_positive_someFound() {
-        var userId1 = new UserId(1);
+        var userId1 = new UserId(1L);
         var user1 = new User(userId1, "first", "qwerty123", "Иванов Иван Иванович", "userRole", true);
         var result = userRepository.getUsers(List.of(userId1, new UserId(3)));
         assertNotNull(result);
@@ -120,7 +120,7 @@ class UserRepositoryImplIT extends PostgresIT {
 
     @Test
     void updateUser_positive_updated() {
-        var user = new User(new UserId(1), "third", "qwerty124", "Сидорович Иван Иванович", "unknownRole", false);
+        var user = new User(new UserId(1L), "third", "qwerty124", "Сидорович Иван Иванович", "unknownRole", false);
         userRepository.updateUser(user);
         jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
@@ -141,7 +141,7 @@ class UserRepositoryImplIT extends PostgresIT {
 
     @Test
     void updateUser_negative_exists() {
-        var user = new User(new UserId(1), "second", "qwerty124", "Сидорович Иван Иванович", "unknownRole", false);
+        var user = new User(new UserId(1L), "second", "qwerty124", "Сидорович Иван Иванович", "unknownRole", false);
         assertThrows(EntityAlreadyExistsException.class, () -> userRepository.updateUser(user));
         jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
@@ -162,7 +162,7 @@ class UserRepositoryImplIT extends PostgresIT {
 
     @Test
     void deleteUser_positive_banned() {
-        var id = new UserId(1);
+        var id = new UserId(1L);
         userRepository.deleteUser(id);
         jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(

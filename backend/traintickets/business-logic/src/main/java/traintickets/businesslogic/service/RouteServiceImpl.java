@@ -158,15 +158,15 @@ public final class RouteServiceImpl implements RouteService {
     @Override
     public Race getRace(RaceId raceId) {
         return raceRepository.getRace(raceId).orElseThrow(
-                () -> new EntityNotFoundException(String.format("No race with id %d found", raceId.id())));
+                () -> new EntityNotFoundException(String.format("No race with id %s found", raceId.id())));
     }
 
     @Override
     public List<List<Place>> getFreePlaces(RaceId raceId) {
         var race = raceRepository.getRace(raceId).orElseThrow(
-                () -> new EntityNotFoundException(String.format("No race with id %d found", raceId.id())));
+                () -> new EntityNotFoundException(String.format("No race with id %s found", raceId.id())));
         var train = trainRepository.getTrain(race.trainId()).orElseThrow(
-                () -> new EntityNotFoundException(String.format("No train with id %d found", race.trainId().id())));
+                () -> new EntityNotFoundException(String.format("No train with id %s found", race.trainId().id())));
         var numbers = train.railcars();
         var railcars = new HashMap<RailcarId, Railcar>();
         railcarRepository.getRailcarsByTrain(train.id()).forEach(railcar -> railcars.put(railcar.id(), railcar));

@@ -44,7 +44,7 @@ public final class TrainRepositoryImpl implements TrainRepository {
         )) {
             for (var railcar : train.railcars()) {
                 statement.setLong(1, trainId);
-                statement.setLong(2, railcar.id());
+                statement.setLong(2, ((Number) railcar.id()).longValue());
                 statement.addBatch();
             }
             statement.executeBatch();
@@ -57,7 +57,7 @@ public final class TrainRepositoryImpl implements TrainRepository {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM trains WHERE id = (?);"
             )) {
-                statement.setLong(1, trainId.id());
+                statement.setLong(1, ((Number) trainId.id()).longValue());
                 try (var resultSet = statement.executeQuery()) {
                     return Optional.ofNullable(getTrain(connection, resultSet));
                 }
@@ -110,7 +110,7 @@ public final class TrainRepositoryImpl implements TrainRepository {
         try (var statement = connection.prepareStatement(
                 "SELECT * FROM railcarsintrains WHERE train_id = (?);"
         )) {
-            statement.setLong(1, trainId.id());
+            statement.setLong(1, ((Number) trainId.id()).longValue());
             try (var resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
                     railcarIds.add(new RailcarId(resultSet.getLong(1)));

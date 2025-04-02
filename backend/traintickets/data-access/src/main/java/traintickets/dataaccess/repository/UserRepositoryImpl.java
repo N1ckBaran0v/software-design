@@ -93,7 +93,7 @@ public final class UserRepositoryImpl implements UserRepository {
                 statement.setString(3, user.name());
                 statement.setString(4, user.role());
                 statement.setBoolean(5, user.active());
-                statement.setLong(6, user.id().id());
+                statement.setLong(6, ((Number) user.id().id()).longValue());
                 statement.execute();
             }
         });
@@ -105,7 +105,7 @@ public final class UserRepositoryImpl implements UserRepository {
             try (var statement = conn.prepareStatement(
                     "DELETE FROM users_view WHERE id = (?);"
             )) {
-                statement.setLong(1, userId.id());
+                statement.setLong(1, ((Number) userId.id()).longValue());
                 statement.execute();
             }
         });

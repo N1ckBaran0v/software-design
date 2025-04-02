@@ -94,8 +94,8 @@ class RailcarRepositoryImplIT extends PostgresIT {
 
     @Test
     void getRailcarsByType_positive_got() {
-        var railcar = new Railcar(new RailcarId(2), "2", "купе",
-                List.of(new Place(new PlaceId(3), 1, "", "universal", BigDecimal.valueOf(100))));
+        var railcar = new Railcar(new RailcarId(2L), "2", "купе",
+                List.of(new Place(new PlaceId(3L), 1, "", "universal", BigDecimal.valueOf(100))));
         var result = railcarRepository.getRailcarsByType(railcar.type());
         assertNotNull(result);
         var iterator = result.iterator();
@@ -113,12 +113,12 @@ class RailcarRepositoryImplIT extends PostgresIT {
 
     @Test
     void getRailcarsByTrain_positive_got() {
-        var place1 = new Place(new PlaceId(1), 1, "", "universal", BigDecimal.valueOf(100));
-        var place2 = new Place(new PlaceId(2), 2, "", "child", BigDecimal.valueOf(50));
-        var place3 = new Place(new PlaceId(3), 1, "", "universal", BigDecimal.valueOf(100));
-        var railcar1 = new Railcar(new RailcarId(1), "1", "сидячий", List.of(place1, place2));
-        var railcar2 = new Railcar(new RailcarId(2), "2", "купе", List.of(place3));
-        var result = railcarRepository.getRailcarsByTrain(new TrainId(1));
+        var place1 = new Place(new PlaceId(1L), 1, "", "universal", BigDecimal.valueOf(100));
+        var place2 = new Place(new PlaceId(2L), 2, "", "child", BigDecimal.valueOf(50));
+        var place3 = new Place(new PlaceId(3L), 1, "", "universal", BigDecimal.valueOf(100));
+        var railcar1 = new Railcar(new RailcarId(1L), "1", "сидячий", List.of(place1, place2));
+        var railcar2 = new Railcar(new RailcarId(2L), "2", "купе", List.of(place3));
+        var result = railcarRepository.getRailcarsByTrain(new TrainId(1L));
         assertNotNull(result);
         var iterator = result.iterator();
         assertTrue(iterator.hasNext());
@@ -130,7 +130,7 @@ class RailcarRepositoryImplIT extends PostgresIT {
 
     @Test
     void getRailcarsByTrain_positive_empty() {
-        var result = railcarRepository.getRailcarsByTrain(new TrainId(2));
+        var result = railcarRepository.getRailcarsByTrain(new TrainId(2L));
         assertNotNull(result);
         assertFalse(result.iterator().hasNext());
     }
