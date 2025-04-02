@@ -34,7 +34,7 @@ public final class TrainRepositoryImpl implements TrainRepository {
             statement.executeUpdate();
             var rs = statement.getGeneratedKeys();
             rs.next();
-            return rs.getLong(1);
+            return rs.getLong("id");
         }
     }
 
@@ -97,8 +97,8 @@ public final class TrainRepositoryImpl implements TrainRepository {
     private Train getTrain(Connection connection, ResultSet resultSet) throws SQLException {
         var answer = (Train) null;
         if (resultSet.next()) {
-            var trainId = new TrainId(resultSet.getLong(1));
-            var trainClass = resultSet.getString(2);
+            var trainId = new TrainId(resultSet.getLong("id"));
+            var trainClass = resultSet.getString("train_class");
             var railcarIds = getRailcarIds(connection, trainId);
             answer = new Train(trainId, trainClass, railcarIds);
         }
@@ -113,7 +113,7 @@ public final class TrainRepositoryImpl implements TrainRepository {
             statement.setLong(1, ((Number) trainId.id()).longValue());
             try (var resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
-                    railcarIds.add(new RailcarId(resultSet.getLong(1)));
+                    railcarIds.add(new RailcarId(resultSet.getLong("railcar_id")));
                 }
             }
         }
@@ -123,8 +123,8 @@ public final class TrainRepositoryImpl implements TrainRepository {
     private Train getTrain(ResultSet resultSet) throws SQLException {
         var answer = (Train) null;
         if (resultSet.next()) {
-            var trainId = new TrainId(resultSet.getLong(1));
-            var trainClass = resultSet.getString(2);
+            var trainId = new TrainId(resultSet.getLong("id"));
+            var trainClass = resultSet.getString("train_class");
             answer = new Train(trainId, trainClass, List.of());
         }
         return answer;

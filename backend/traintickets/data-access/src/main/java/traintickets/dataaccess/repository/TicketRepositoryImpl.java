@@ -58,7 +58,7 @@ public final class TicketRepositoryImpl implements TicketRepository {
             statement.setLong(1, ((Number) ticket.place().id().id()).longValue());
             try (var resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
-                    railcarId = resultSet.getLong(1);
+                    railcarId = resultSet.getLong("railcar_id");
                 } else {
                     throw new InvalidEntityException("Place not found");
                 }
@@ -76,7 +76,7 @@ public final class TicketRepositoryImpl implements TicketRepository {
                         throw new InvalidEntityException("Railcar not found");
                     }
                 }
-                if (resultSet.getLong(1) != railcarId) {
+                if (resultSet.getLong("railcar_id") != railcarId) {
                     throw new InvalidEntityException("Invalid railcar");
                 }
             }
@@ -107,7 +107,7 @@ public final class TicketRepositoryImpl implements TicketRepository {
                 if (!resultSet.next()) {
                     throw new InvalidEntityException("Schedule not found");
                 }
-                startTimestamp = resultSet.getTimestamp(2);
+                startTimestamp = resultSet.getTimestamp("departure");
             }
             statement.setLong(1, ((Number) ticket.end().id().id()).longValue());
             statement.setLong(2, ((Number) ticket.race().id()).longValue());
@@ -115,7 +115,7 @@ public final class TicketRepositoryImpl implements TicketRepository {
                 if (!resultSet.next()) {
                     throw new InvalidEntityException("Schedule not found");
                 }
-                endTimestamp = resultSet.getTimestamp(1);
+                endTimestamp = resultSet.getTimestamp("arrival");
             }
         }
         if (startTimestamp == null || endTimestamp == null || startTimestamp.after(endTimestamp)) {
@@ -181,15 +181,15 @@ public final class TicketRepositoryImpl implements TicketRepository {
     private Ticket getTicket(Connection connection, ResultSet resultSet) throws SQLException {
         var result = (Ticket) null;
         if (resultSet.next()) {
-            var id = new TicketId(resultSet.getLong(1));
-            var owner = new UserId(resultSet.getLong(2));
-            var passenger = resultSet.getString(3);
-            var race = new RaceId(resultSet.getLong(4));
-            var railcar = resultSet.getInt(5);
-            var place = getPlace(connection, resultSet.getLong(6));
-            var start = getSchedule(connection, resultSet.getLong(7));
-            var end = getSchedule(connection, resultSet.getLong(8));
-            var cost = resultSet.getBigDecimal(9);
+            var id = new TicketId(resultSet.getLong("id"));
+            var owner = new UserId(resultSet.getLong("user_id"));
+            var passenger = resultSet.getString("passenger");
+            var race = new RaceId(resultSet.getLong("race_id"));
+            var railcar = resultSet.getInt("railcar");
+            var place = getPlace(connection, resultSet.getLong("place_id"));
+            var start = getSchedule(connection, resultSet.getLong("departure"));
+            var end = getSchedule(connection, resultSet.getLong("destination"));
+            var cost = resultSet.getBigDecimal("ticket_cost");
             result = new Ticket(id, owner, passenger, race, railcar, place, start, end, cost);
         }
         return result;
@@ -202,11 +202,11 @@ public final class TicketRepositoryImpl implements TicketRepository {
             statement.setLong(1, placeId);
             try (var resultSet = statement.executeQuery()) {
                 resultSet.next();
-                var id = new PlaceId(resultSet.getLong(1));
-                var number = resultSet.getInt(3);
-                var description = resultSet.getString(4);
-                var purpose = resultSet.getString(5);
-                var cost = resultSet.getBigDecimal(6);
+                var id = new PlaceId(resultSet.getLong("id"));
+                var number = resultSet.getInt("place_number");
+                var description = resultSet.getString("description");
+                var purpose = resultSet.getString("purpose");
+                var cost = resultSet.getBigDecimal("place_cost");
                 return new Place(id, number, description, purpose, cost);
             }
         }
@@ -219,11 +219,11 @@ public final class TicketRepositoryImpl implements TicketRepository {
             statement.setLong(1, scheduleId);
             try (var resultSet = statement.executeQuery()) {
                 resultSet.next();
-                var id = new ScheduleId(resultSet.getLong(1));
-                var name = resultSet.getString(3);
-                var arrival = resultSet.getTimestamp(4);
-                var departure = resultSet.getTimestamp(5);
-                var multiplier = resultSet.getDouble(6);
+                var id = new ScheduleId(resultSet.getLong("id"));
+                var name = resultSet.getString("station_name");
+                var arrival = resultSet.getTimestamp("arrival");
+                var departure = resultSet.getTimestamp("departure");
+                var multiplier = resultSet.getDouble("multiplier");
                 return new Schedule(id, name, arrival, departure, multiplier);
             }
         }

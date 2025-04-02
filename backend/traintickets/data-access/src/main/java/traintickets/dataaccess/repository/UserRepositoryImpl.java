@@ -129,12 +129,12 @@ public final class UserRepositoryImpl implements UserRepository {
     private User getUser(ResultSet resultSet) throws SQLException {
         var result = (User) null;
         if (resultSet.next()) {
-            var id = new UserId(resultSet.getLong(1));
-            var username = resultSet.getString(2);
-            var password = resultSet.getString(3);
-            var name = resultSet.getString(4);
-            var role = resultSet.getString(5);
-            var active = resultSet.getBoolean(6);
+            var id = new UserId(resultSet.getLong("id"));
+            var username = resultSet.getString("user_name");
+            var password = resultSet.getString("pass_word");
+            var name = resultSet.getString("real_name");
+            var role = resultSet.getString("user_role");
+            var active = resultSet.getBoolean("is_active");
             result = new User(id, username, password, name, role, active);
         }
         return result;

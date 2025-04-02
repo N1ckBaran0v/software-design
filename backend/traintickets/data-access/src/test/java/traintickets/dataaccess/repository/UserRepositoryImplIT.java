@@ -45,11 +45,11 @@ class UserRepositoryImplIT extends PostgresIT {
             )) {
                 try (var resultSet = statement.executeQuery()) {
                     assertTrue(resultSet.next());
-                    assertEquals(user.username(), resultSet.getString(2));
-                    assertEquals(user.password(), resultSet.getString(3));
-                    assertEquals(user.name(), resultSet.getString(4));
-                    assertEquals(user.role(), resultSet.getString(5));
-                    assertTrue(resultSet.getBoolean(6));
+                    assertEquals(user.username(), resultSet.getString("user_name"));
+                    assertEquals(user.password(), resultSet.getString("pass_word"));
+                    assertEquals(user.name(), resultSet.getString("real_name"));
+                    assertEquals(user.role(), resultSet.getString("user_role"));
+                    assertTrue(resultSet.getBoolean("is_active"));
                     assertFalse(resultSet.next());
                 }
             }
@@ -128,11 +128,11 @@ class UserRepositoryImplIT extends PostgresIT {
             )) {
                 try (var resultSet = statement.executeQuery()) {
                     assertTrue(resultSet.next());
-                    assertEquals(user.username(), resultSet.getString(2));
-                    assertEquals(user.password(), resultSet.getString(3));
-                    assertEquals(user.name(), resultSet.getString(4));
-                    assertEquals(user.role(), resultSet.getString(5));
-                    assertFalse(resultSet.getBoolean(6));
+                    assertEquals(user.username(), resultSet.getString("user_name"));
+                    assertEquals(user.password(), resultSet.getString("pass_word"));
+                    assertEquals(user.name(), resultSet.getString("real_name"));
+                    assertEquals(user.role(), resultSet.getString("user_role"));
+                    assertFalse(resultSet.getBoolean("is_active"));
                     assertFalse(resultSet.next());
                 }
             }
@@ -149,11 +149,11 @@ class UserRepositoryImplIT extends PostgresIT {
             )) {
                 try (var resultSet = statement.executeQuery()) {
                     assertTrue(resultSet.next());
-                    assertEquals("first", resultSet.getString(2));
-                    assertEquals("qwerty123", resultSet.getString(3));
-                    assertEquals("Иванов Иван Иванович", resultSet.getString(4));
-                    assertEquals("userRole", resultSet.getString(5));
-                    assertTrue(resultSet.getBoolean(6));
+                    assertEquals("first", resultSet.getString("user_name"));
+                    assertEquals("qwerty123", resultSet.getString("pass_word"));
+                    assertEquals("Иванов Иван Иванович", resultSet.getString("real_name"));
+                    assertEquals("userRole", resultSet.getString("user_role"));
+                    assertTrue(resultSet.getBoolean("is_active"));
                     assertFalse(resultSet.next());
                 }
             }
@@ -170,7 +170,7 @@ class UserRepositoryImplIT extends PostgresIT {
             )) {
                 try (var resultSet = statement.executeQuery()) {
                     assertTrue(resultSet.next());
-                    assertFalse(resultSet.getBoolean(6));
+                    assertFalse(resultSet.getBoolean("is_active"));
                     assertFalse(resultSet.next());
                 }
             }

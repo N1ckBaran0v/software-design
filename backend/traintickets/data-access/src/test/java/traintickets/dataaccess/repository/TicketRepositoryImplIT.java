@@ -81,14 +81,14 @@ class TicketRepositoryImplIT extends PostgresIT {
             )) {
                 try (var resultSet = statement.executeQuery()) {
                     assertTrue(resultSet.next());
-                    assertEquals(ticket.owner().id(), resultSet.getLong(2));
-                    assertEquals(ticket.passenger(), resultSet.getString(3));
-                    assertEquals(ticket.race().id(), resultSet.getLong(4));
-                    assertEquals(ticket.railcar(), resultSet.getInt(5));
-                    assertEquals(ticket.place().id().id(), resultSet.getLong(6));
-                    assertEquals(ticket.start().id().id(), resultSet.getLong(7));
-                    assertEquals(ticket.end().id().id(), resultSet.getLong(8));
-                    assertEquals(ticket.cost(), resultSet.getBigDecimal(9));
+                    assertEquals(ticket.owner().id(), resultSet.getLong("user_id"));
+                    assertEquals(ticket.passenger(), resultSet.getString("passenger"));
+                    assertEquals(ticket.race().id(), resultSet.getLong("race_id"));
+                    assertEquals(ticket.railcar(), resultSet.getInt("railcar"));
+                    assertEquals(ticket.place().id().id(), resultSet.getLong("place_id"));
+                    assertEquals(ticket.start().id().id(), resultSet.getLong("departure"));
+                    assertEquals(ticket.end().id().id(), resultSet.getLong("destination"));
+                    assertEquals(ticket.cost(), resultSet.getBigDecimal("ticket_cost"));
                     assertFalse(resultSet.next());
                 }
             }

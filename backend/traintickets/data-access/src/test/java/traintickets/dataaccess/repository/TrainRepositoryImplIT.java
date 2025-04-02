@@ -53,7 +53,7 @@ class TrainRepositoryImplIT extends PostgresIT {
             )) {
                 try (var resultSet = statement.executeQuery()) {
                     assertTrue(resultSet.next());
-                    assertEquals(train.trainClass(), resultSet.getString(2));
+                    assertEquals(train.trainClass(), resultSet.getString("train_class"));
                     assertFalse(resultSet.next());
                 }
             }
@@ -62,7 +62,7 @@ class TrainRepositoryImplIT extends PostgresIT {
             )) {
                 try (var resultSet = statement.executeQuery()) {
                     assertTrue(resultSet.next());
-                    assertEquals(train.railcars().getFirst().id(), resultSet.getLong(3));
+                    assertEquals(train.railcars().getFirst().id(), resultSet.getLong("railcar_id"));
                     assertFalse(resultSet.next());
                 }
             }
