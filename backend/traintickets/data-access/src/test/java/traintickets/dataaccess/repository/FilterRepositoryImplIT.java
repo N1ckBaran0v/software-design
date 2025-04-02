@@ -52,14 +52,14 @@ class FilterRepositoryImplIT extends PostgresIT {
             )) {
                 try (var resultSet = statement.executeQuery()) {
                     assertTrue(resultSet.next());
-                    assertEquals(2, resultSet.getLong(2));
-                    assertEquals("first", resultSet.getString(3));
-                    assertEquals("first", resultSet.getString(4));
-                    assertEquals("second", resultSet.getString(5));
-                    assertEquals("Экспресс", resultSet.getString(6));
-                    assertEquals(0, resultSet.getInt(7));
-                    assertEquals(BigDecimal.TEN, resultSet.getBigDecimal(8));
-                    assertEquals(BigDecimal.valueOf(10000), resultSet.getBigDecimal(9));
+                    assertEquals(filter.user().id(), resultSet.getLong("user_id"));
+                    assertEquals("first", resultSet.getString("filter_name"));
+                    assertEquals("first", resultSet.getString("departure"));
+                    assertEquals("second", resultSet.getString("destination"));
+                    assertEquals("Экспресс", resultSet.getString("train_class"));
+                    assertEquals(0, resultSet.getInt("transfers"));
+                    assertEquals(BigDecimal.TEN, resultSet.getBigDecimal("min_cost"));
+                    assertEquals(BigDecimal.valueOf(10000), resultSet.getBigDecimal("max_cost"));
                     assertFalse(resultSet.next());
                 }
             }
@@ -68,8 +68,8 @@ class FilterRepositoryImplIT extends PostgresIT {
             )) {
                 try (var resultSet = statement.executeQuery()) {
                     assertTrue(resultSet.next());
-                    assertEquals("adult", resultSet.getString(3));
-                    assertEquals(1, resultSet.getInt(4));
+                    assertEquals("adult", resultSet.getString("passengers_type"));
+                    assertEquals(1, resultSet.getInt("passengers_count"));
                     assertFalse(resultSet.next());
                 }
             }

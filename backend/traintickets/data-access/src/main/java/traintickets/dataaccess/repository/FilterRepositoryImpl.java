@@ -137,16 +137,16 @@ public final class FilterRepositoryImpl implements FilterRepository {
     private Filter getFilter(Connection connection, ResultSet resultSet) throws SQLException {
         var answer = (Filter) null;
         if (resultSet.next()) {
-            var userId = new UserId(resultSet.getLong(2));
-            var name = resultSet.getString(3);
-            var departure = resultSet.getString(4);
-            var destination = resultSet.getString(5);
-            var trainClass = resultSet.getString(6);
-            var transfers = resultSet.getInt(7);
-            var minCost = resultSet.getBigDecimal(8);
-            var maxCost = resultSet.getBigDecimal(9);
+            var userId = new UserId(resultSet.getLong("user_id"));
+            var name = resultSet.getString("filter_name");
+            var departure = resultSet.getString("departure");
+            var destination = resultSet.getString("destination");
+            var trainClass = resultSet.getString("train_class");
+            var transfers = resultSet.getInt("transfers");
+            var minCost = resultSet.getBigDecimal("min_cost");
+            var maxCost = resultSet.getBigDecimal("max_cost");
             var passengers = new ArrayList<String>();
-            getPassengers(connection, resultSet.getLong(1), passengers);
+            getPassengers(connection, resultSet.getLong("id"), passengers);
             answer = new Filter(userId, name, departure, destination, trainClass,
                     transfers, passengers, null, null, minCost, maxCost);
         }
@@ -161,8 +161,8 @@ public final class FilterRepositoryImpl implements FilterRepository {
             statement.setLong(1, filterId);
             try (var resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
-                    var passengerType = resultSet.getString(3);
-                    var passengerCount = resultSet.getInt(4);
+                    var passengerType = resultSet.getString("passengers_type");
+                    var passengerCount = resultSet.getInt("passengers_count");
                     for (var i = 0; i < passengerCount; ++i) {
                         passengers.add(passengerType);
                     }

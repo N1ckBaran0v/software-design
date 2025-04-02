@@ -47,10 +47,10 @@ class CommentRepositoryImplIT extends PostgresIT {
             try (var statement = connection.prepareStatement("select * from comments where id = 3;")) {
                 try (var resultSet = statement.executeQuery()) {
                     assertTrue(resultSet.next());
-                    assertEquals(comment.author().id(), resultSet.getLong(2));
-                    assertEquals(comment.train().id(), resultSet.getLong(3));
-                    assertEquals(comment.score(), resultSet.getInt(4));
-                    assertEquals(comment.text(), resultSet.getString(5));
+                    assertEquals(comment.author().id(), resultSet.getLong("user_id"));
+                    assertEquals(comment.train().id(), resultSet.getLong("train_id"));
+                    assertEquals(comment.score(), resultSet.getInt("score"));
+                    assertEquals(comment.text(), resultSet.getString("comment_text"));
                     assertFalse(resultSet.next());
                 }
             }

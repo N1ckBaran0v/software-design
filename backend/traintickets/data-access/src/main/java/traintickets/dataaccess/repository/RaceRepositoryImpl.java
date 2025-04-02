@@ -62,7 +62,7 @@ public final class RaceRepositoryImpl implements RaceRepository {
             statement.executeUpdate();
             var rs = statement.getGeneratedKeys();
             rs.next();
-            return rs.getLong(1);
+            return rs.getLong("id");
         }
     }
 
@@ -140,9 +140,9 @@ public final class RaceRepositoryImpl implements RaceRepository {
     private Race getRace(Connection connection, ResultSet resultSet) throws SQLException {
         var answer = (Race) null;
         if (resultSet.next()) {
-            var raceId = new RaceId(resultSet.getLong(1));
-            var trainId = new TrainId(resultSet.getLong(2));
-            var finished = resultSet.getBoolean(3);
+            var raceId = new RaceId(resultSet.getLong("id"));
+            var trainId = new TrainId(resultSet.getLong("train_id"));
+            var finished = resultSet.getBoolean("finished");
             var schedule = getSchedule(connection, raceId);
             answer = new Race(raceId, trainId, schedule, finished);
         }
@@ -157,11 +157,11 @@ public final class RaceRepositoryImpl implements RaceRepository {
             statement.setLong(1, ((Number) raceId.id()).longValue());
             try (var resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
-                    var id = new ScheduleId(resultSet.getLong(1));
-                    var name = resultSet.getString(3);
-                    var arrival = resultSet.getTimestamp(4);
-                    var departure = resultSet.getTimestamp(5);
-                    var multiplier = resultSet.getDouble(6);
+                    var id = new ScheduleId(resultSet.getLong("id"));
+                    var name = resultSet.getString("station_name");
+                    var arrival = resultSet.getTimestamp("arrival");
+                    var departure = resultSet.getTimestamp("departure");
+                    var multiplier = resultSet.getDouble("multiplier");
                     schedule.add(new Schedule(id, name, arrival, departure, multiplier));
                 }
             }

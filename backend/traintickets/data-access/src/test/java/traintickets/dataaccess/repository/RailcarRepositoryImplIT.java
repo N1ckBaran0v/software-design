@@ -50,8 +50,8 @@ class RailcarRepositoryImplIT extends PostgresIT {
             )) {
                 try (var resultSet = statement.executeQuery()) {
                     assertTrue(resultSet.next());
-                    assertEquals(railcar.model(), resultSet.getString(2));
-                    assertEquals(railcar.type(), resultSet.getString(3));
+                    assertEquals(railcar.model(), resultSet.getString("railcar_model"));
+                    assertEquals(railcar.type(), resultSet.getString("railcar_type"));
                     assertFalse(resultSet.next());
                 }
             }
@@ -60,10 +60,10 @@ class RailcarRepositoryImplIT extends PostgresIT {
             )) {
                 try (var resultSet = statement.executeQuery()) {
                     assertTrue(resultSet.next());
-                    assertEquals(place.number(), resultSet.getInt(3));
-                    assertEquals(place.description(), resultSet.getString(4));
-                    assertEquals(place.purpose(), resultSet.getString(5));
-                    assertEquals(place.cost(), resultSet.getBigDecimal(6));
+                    assertEquals(place.number(), resultSet.getInt("place_number"));
+                    assertEquals(place.description(), resultSet.getString("description"));
+                    assertEquals(place.purpose(), resultSet.getString("purpose"));
+                    assertEquals(place.cost(), resultSet.getBigDecimal("place_cost"));
                     assertFalse(resultSet.next());
                 }
             }

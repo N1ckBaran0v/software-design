@@ -52,7 +52,7 @@ public final class RailcarRepositoryImpl implements RailcarRepository {
             statement.executeUpdate();
             var rs = statement.getGeneratedKeys();
             rs.next();
-            return rs.getLong(1);
+            return rs.getLong("id");
         }
     }
 
@@ -113,9 +113,9 @@ public final class RailcarRepositoryImpl implements RailcarRepository {
     private Railcar getRailcar(Connection connection, ResultSet resultSet) throws SQLException {
         var answer = (Railcar) null;
         if (resultSet.next()) {
-            var railcarId = new RailcarId(resultSet.getLong(1));
-            var model = resultSet.getString(2);
-            var type = resultSet.getString(3);
+            var railcarId = new RailcarId(resultSet.getLong("id"));
+            var model = resultSet.getString("railcar_model");
+            var type = resultSet.getString("railcar_type");
             var places = getPlaces(connection, railcarId);
             answer = new Railcar(railcarId, model, type, places);
         }
@@ -130,11 +130,11 @@ public final class RailcarRepositoryImpl implements RailcarRepository {
             statement.setLong(1, ((Number) railcarId.id()).longValue());
             try (var resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
-                    var id = new PlaceId(resultSet.getLong(1));
-                    var number = resultSet.getInt(3);
-                    var description = resultSet.getString(4);
-                    var purpose = resultSet.getString(5);
-                    var cost = resultSet.getBigDecimal(6);
+                    var id = new PlaceId(resultSet.getLong("id"));
+                    var number = resultSet.getInt("place_number");
+                    var description = resultSet.getString("description");
+                    var purpose = resultSet.getString("purpose");
+                    var cost = resultSet.getBigDecimal("place_cost");
                     places.add(new Place(id, number, description, purpose, cost));
                 }
             }

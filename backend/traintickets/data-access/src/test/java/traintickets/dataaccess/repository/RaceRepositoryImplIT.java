@@ -54,8 +54,8 @@ class RaceRepositoryImplIT extends PostgresIT {
             )) {
                 try (var resultSet = statement.executeQuery()) {
                     assertTrue(resultSet.next());
-                    assertEquals(race.trainId().id(), resultSet.getLong(2));
-                    assertFalse(resultSet.getBoolean(3));
+                    assertEquals(race.trainId().id(), resultSet.getLong("train_id"));
+                    assertFalse(resultSet.getBoolean("finished"));
                     assertFalse(resultSet.next());
                 }
             }
@@ -64,15 +64,15 @@ class RaceRepositoryImplIT extends PostgresIT {
             )) {
                 try (var resultSet = statement.executeQuery()) {
                     assertTrue(resultSet.next());
-                    assertEquals(sched1.name(), resultSet.getString(3));
-                    assertEquals(sched1.arrival(), resultSet.getTimestamp(4));
-                    assertEquals(sched1.departure(), resultSet.getTimestamp(5));
-                    assertEquals(sched1.multiplier(), resultSet.getDouble(6));
+                    assertEquals(sched1.name(), resultSet.getString("station_name"));
+                    assertEquals(sched1.arrival(), resultSet.getTimestamp("arrival"));
+                    assertEquals(sched1.departure(), resultSet.getTimestamp("departure"));
+                    assertEquals(sched1.multiplier(), resultSet.getDouble("multiplier"));
                     assertTrue(resultSet.next());
-                    assertEquals(sched2.name(), resultSet.getString(3));
-                    assertEquals(sched2.arrival(), resultSet.getTimestamp(4));
-                    assertEquals(sched2.departure(), resultSet.getTimestamp(5));
-                    assertEquals(sched2.multiplier(), resultSet.getDouble(6));
+                    assertEquals(sched2.name(), resultSet.getString("station_name"));
+                    assertEquals(sched2.arrival(), resultSet.getTimestamp("arrival"));
+                    assertEquals(sched2.departure(), resultSet.getTimestamp("departure"));
+                    assertEquals(sched2.multiplier(), resultSet.getDouble("multiplier"));
                     assertFalse(resultSet.next());
                 }
             }
@@ -154,8 +154,8 @@ class RaceRepositoryImplIT extends PostgresIT {
             )) {
                 try (var resultSet = statement.executeQuery()) {
                     assertTrue(resultSet.next());
-                    assertEquals(race.trainId().id(), resultSet.getLong(2));
-                    assertTrue(resultSet.getBoolean(3));
+                    assertEquals(race.trainId().id(), resultSet.getLong("train_id"));
+                    assertTrue(resultSet.getBoolean("finished"));
                     assertFalse(resultSet.next());
                 }
             }
@@ -164,15 +164,15 @@ class RaceRepositoryImplIT extends PostgresIT {
             )) {
                 try (var resultSet = statement.executeQuery()) {
                     assertTrue(resultSet.next());
-                    assertEquals(sched1.name(), resultSet.getString(3));
-                    assertEquals(sched1.arrival(), resultSet.getTimestamp(4));
-                    assertEquals(sched1.departure(), resultSet.getTimestamp(5));
-                    assertEquals(sched1.multiplier(), resultSet.getDouble(6));
+                    assertEquals(sched1.name(), resultSet.getString("station_name"));
+                    assertEquals(sched1.arrival(), resultSet.getTimestamp("arrival"));
+                    assertEquals(sched1.departure(), resultSet.getTimestamp("departure"));
+                    assertEquals(sched1.multiplier(), resultSet.getDouble("multiplier"));
                     assertTrue(resultSet.next());
-                    assertEquals(sched2.name(), resultSet.getString(3));
-                    assertEquals(sched2.arrival(), resultSet.getTimestamp(4));
-                    assertEquals(sched2.departure(), resultSet.getTimestamp(5));
-                    assertEquals(sched2.multiplier(), resultSet.getDouble(6));
+                    assertEquals(sched2.name(), resultSet.getString("station_name"));
+                    assertEquals(sched2.arrival(), resultSet.getTimestamp("arrival"));
+                    assertEquals(sched2.departure(), resultSet.getTimestamp("departure"));
+                    assertEquals(sched2.multiplier(), resultSet.getDouble("multiplier"));
                     assertFalse(resultSet.next());
                 }
             }
