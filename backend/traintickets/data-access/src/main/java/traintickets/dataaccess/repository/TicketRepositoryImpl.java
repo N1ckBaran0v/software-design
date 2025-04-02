@@ -51,17 +51,32 @@ public final class TicketRepositoryImpl implements TicketRepository {
     }
 
     private void checkIfCorrect(Connection connection, Ticket ticket) throws SQLException {
+        var railcarId = 0L;
+        try (var statement = connection.prepareStatement(
+                "SELECT railcar_id FROM places WHERE id = (?);"
+        )) {
+            statement.setLong(1, ticket.place().id().id());
+            try (var resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    railcarId = resultSet.getLong(1);
+                } else {
+                    throw new InvalidEntityException("Place not found");
+                }
+            }
+        }
         try (var  statement = connection.prepareStatement(
-                "WITH curr_train_id AS (SELECT train_id FROM races WHERE id = (?)), " +
-                        "curr_railcar_id AS (SELECT railcar_id FROM places WHERE id = (?)) " +
-                        "SELECT * FROM railcarsintrains WHERE train_id = (SELECT * FROM curr_train_id) " +
-                        "AND railcar_id = (SELECT * FROM curr_railcar_id); "
+                "WITH curr_train_id AS (SELECT train_id FROM races WHERE id = (?)) " +
+                        "SELECT * FROM railcarsintrains WHERE train_id = (SELECT * FROM curr_train_id); "
         )) {
             statement.setLong(1, ticket.race().id());
-            statement.setLong(2, ticket.place().id().id());
             try (var resultSet = statement.executeQuery()) {
-                if (!resultSet.next()) {
-                    throw new InvalidEntityException("Invalid place in ticket");
+                for (var i = 0; i < ticket.railcar(); ++i) {
+                    if (!resultSet.next()) {
+                        throw new InvalidEntityException("Railcar not found");
+                    }
+                }
+                if (resultSet.getLong(1) != railcarId) {
+                    throw new InvalidEntityException("Invalid railcar");
                 }
             }
         }
