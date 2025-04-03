@@ -14,9 +14,7 @@ CREATE table if not exists Filters (
                                        departure TEXT,
                                        destination TEXT,
                                        train_class TEXT,
-                                       transfers INT,
-                                       min_cost DECIMAL,
-                                       max_cost DECIMAL
+                                       transfers INT
 );
 
 CREATE table if not exists Passengers (
@@ -107,9 +105,7 @@ ALTER TABLE Filters
 --	departure TEXT,
 --	destination TEXT,
 --	train_class TEXT,
---	transfers INT,
---	min_cost DECIMAL,
---	max_cost DECIMAL
+--	transfers INT
 --);
 
 ALTER TABLE Passengers

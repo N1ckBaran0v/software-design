@@ -2,40 +2,51 @@ package traintickets.businesslogic.service;
 
 import traintickets.businesslogic.api.FilterService;
 import traintickets.businesslogic.exception.EntityNotFoundException;
+import traintickets.businesslogic.exception.InvalidEntityException;
 import traintickets.businesslogic.model.Filter;
-import traintickets.businesslogic.model.UserId;
 import traintickets.businesslogic.repository.FilterRepository;
+import traintickets.businesslogic.session.SessionManager;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.StreamSupport;
 
 public final class FilterServiceImpl implements FilterService {
-//    private final FilterRepository filterRepository;
-//
-//    public FilterServiceImpl(FilterRepository filterRepository) {
-//        this.filterRepository = Objects.requireNonNull(filterRepository);
-//    }
-//
-//    @Override
-//    public void addFilter(Filter filter) {
-//        filter.validate();
-//        filterRepository.addFilter(filter);
-//    }
-//
-//    @Override
-//    public Filter getFilter(UserId userId, String filterName) {
-//        return filterRepository.getFilter(userId, filterName).orElseThrow(
-//                () -> new EntityNotFoundException(String.format("Filter %s not found", filterName)));
-//    }
-//
-//    @Override
-//    public List<Filter> getFilters(UserId userId) {
-//        return StreamSupport.stream(filterRepository.getFilters(userId).spliterator(), false).toList();
-//    }
-//
-//    @Override
-//    public void deleteFilter(UserId userId, String filterName) {
-//        filterRepository.deleteFilter(userId, filterName);
-//    }
+    private final FilterRepository filterRepository;
+    private final SessionManager sessionManager;
+
+    public FilterServiceImpl(FilterRepository filterRepository, SessionManager sessionManager) {
+        this.filterRepository = Objects.requireNonNull(filterRepository);
+        this.sessionManager = Objects.requireNonNull(sessionManager);
+    }
+
+    @Override
+    public void addFilter(UUID sessionId, Filter filter) {
+        filter.validate();
+        var userInfo = sessionManager.getUserInfo(sessionId);
+        if (!userInfo.userId().equals(filter.user())) {
+            throw new InvalidEntityException("Invalid userId");
+        }
+        filterRepository.addFilter(userInfo.role(), filter);
+    }
+
+    @Override
+    public Filter getFilter(UUID sessionId, String filterName) {
+        var userInfo = sessionManager.getUserInfo(sessionId);
+        return filterRepository.getFilter(userInfo.role(), userInfo.userId(), filterName).orElseThrow(
+                () -> new EntityNotFoundException(String.format("Filter %s not found", filterName)));
+    }
+
+    @Override
+    public List<Filter> getFilters(UUID sessionId) {
+        var userInfo = sessionManager.getUserInfo(sessionId);
+        return StreamSupport.stream(filterRepository.getFilters(userInfo.role(), userInfo.userId()).spliterator(), false).toList();
+    }
+
+    @Override
+    public void deleteFilter(UUID sessionId, String filterName) {
+        var userInfo = sessionManager.getUserInfo(sessionId);
+        filterRepository.deleteFilter(userInfo.role(), userInfo.userId(), filterName);
+    }
 }

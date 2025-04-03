@@ -49,6 +49,7 @@ class CommentServiceImplTest {
     void addComment_negative_invalid() {
         var comment = new Comment(null, new UserId(1), new TrainId(737), 6, "good");
         assertThrows(InvalidEntityException.class, () -> commentService.addComment(UUID.randomUUID(), comment));
+        verify(sessionManager, never()).getUserInfo(any());
         verify(commentRepository, never()).addComment(any(), any());
     }
 

@@ -2,7 +2,6 @@ package traintickets.businesslogic.model;
 
 import traintickets.businesslogic.exception.InvalidEntityException;
 
-import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -14,14 +13,10 @@ public record Filter(UserId user,
                      int transfers,
                      List<String> passengers,
                      Date start,
-                     Date end,
-                     BigDecimal minCost,
-                     BigDecimal maxCost) {
-
+                     Date end) {
     public void validate() {
         if (user == null || name == null || departure == null || destination == null || trainClass == null ||
-                transfers < 0 || passengers == null || start== null || end == null ||
-                minCost == null || maxCost == null) {
+                transfers < 0 || passengers == null || start== null || end == null) {
             throw new InvalidEntityException("Invalid parameters");
         }
         if (departure.equals(destination)) {
@@ -32,9 +27,6 @@ public record Filter(UserId user,
         }
         if (end.before(start)) {
             throw new InvalidEntityException("Start date cannot be after end date");
-        }
-        if (minCost.compareTo(maxCost) > 0) {
-            throw new InvalidEntityException("Min cost cannot be greater than max cost");
         }
     }
 }

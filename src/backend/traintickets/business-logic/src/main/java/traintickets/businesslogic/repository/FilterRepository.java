@@ -6,8 +6,8 @@ import traintickets.businesslogic.model.UserId;
 import java.util.Optional;
 
 public interface FilterRepository {
-    void addFilter(Filter filter);
-    Optional<Filter> getFilter(UserId userId, String name);
-    Iterable<Filter> getFilters(UserId userId);
-    void deleteFilter(UserId userId, String name);
+    void addFilter(String role, Filter filter);
+    Optional<Filter> getFilter(String role, UserId userId, String name);
+    Iterable<Filter> getFilters(String role, UserId userId);
+    void deleteFilter(String role, UserId userId, String name);
 }

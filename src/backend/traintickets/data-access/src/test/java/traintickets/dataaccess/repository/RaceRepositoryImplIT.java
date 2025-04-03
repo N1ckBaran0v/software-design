@@ -121,7 +121,7 @@ class RaceRepositoryImplIT extends PostgresIT {
     @Test
     void getRaces_positive_got() {
         var filter = new Filter(null, null, null, null, null, 1, null, Timestamp.valueOf("2025-04-01 10:00:00"),
-                Timestamp.valueOf("2025-04-01 11:59:59"), null, null);
+                Timestamp.valueOf("2025-04-01 11:59:59"));
         var sched1 = new Schedule(new ScheduleId(1L), "first", null, Timestamp.valueOf("2025-04-01 10:10:00"), 0);
         var sched2 = new Schedule(new ScheduleId(2L), "second", Timestamp.valueOf("2025-04-01 11:40:00"), null, 5);
         var race = new Race(new RaceId(1L), new TrainId(1L), List.of(sched1, sched2), true);
@@ -136,7 +136,7 @@ class RaceRepositoryImplIT extends PostgresIT {
     @Test
     void getRaces_positive_empty() {
         var filter = new Filter(null, null, null, null, null, 1, null, Timestamp.valueOf("2025-04-01 00:00:00"),
-                Timestamp.valueOf("2025-04-01 11:11:11"), null, null);
+                Timestamp.valueOf("2025-04-01 11:11:11"));
         var result = raceRepository.getRaces(filter);
         assertNotNull(result);
         assertFalse(result.iterator().hasNext());

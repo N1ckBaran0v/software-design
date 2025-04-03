@@ -17,16 +17,14 @@ import java.util.Optional;
 
 public final class FilterRepositoryImpl implements FilterRepository {
     private final JdbcTemplate jdbcTemplate;
-    private final String userRoleName;
 
-    public FilterRepositoryImpl(JdbcTemplate jdbcTemplate, String userRoleName) {
+    public FilterRepositoryImpl(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = Objects.requireNonNull(jdbcTemplate);
-        this.userRoleName = Objects.requireNonNull(userRoleName);
     }
 
     @Override
-    public void addFilter(Filter filter) {
-        jdbcTemplate.executeCons(userRoleName, Connection.TRANSACTION_SERIALIZABLE, connection -> {
+    public void addFilter(String role, Filter filter) {
+        jdbcTemplate.executeCons(role, Connection.TRANSACTION_SERIALIZABLE, connection -> {
             checkIfExists(filter, connection);
             var filterId = saveFilter(filter, connection);
             savePassengers(filter, connection, filterId);
@@ -50,8 +48,8 @@ public final class FilterRepositoryImpl implements FilterRepository {
 
     private long saveFilter(Filter filter, Connection connection) throws SQLException {
         try (var statement = connection.prepareStatement(
-                "INSERT INTO filters (user_id, filter_name, departure, destination, train_class, transfers, min_cost, max_cost) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?);",
+                "INSERT INTO filters (user_id, filter_name, departure, destination, train_class, transfers) " +
+                        "VALUES (?, ?, ?, ?, ?, ?);",
                 Statement.RETURN_GENERATED_KEYS
         )) {
             statement.setLong(1, ((Number) filter.user().id()).longValue());
@@ -60,8 +58,6 @@ public final class FilterRepositoryImpl implements FilterRepository {
             statement.setString(4, filter.destination());
             statement.setString(5, filter.trainClass());
             statement.setInt(6, filter.transfers());
-            statement.setBigDecimal(7, filter.minCost());
-            statement.setBigDecimal(8, filter.maxCost());
             statement.executeUpdate();
             var rs = statement.getGeneratedKeys();
             rs.next();
@@ -87,8 +83,8 @@ public final class FilterRepositoryImpl implements FilterRepository {
     }
 
     @Override
-    public Optional<Filter> getFilter(UserId userId, String name) {
-        return jdbcTemplate.executeFunc(userRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+    public Optional<Filter> getFilter(String role, UserId userId, String name) {
+        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM filters WHERE user_id = (?) AND filter_name = (?);"
             )) {
@@ -102,8 +98,8 @@ public final class FilterRepositoryImpl implements FilterRepository {
     }
 
     @Override
-    public Iterable<Filter> getFilters(UserId userId) {
-        return jdbcTemplate.executeFunc(userRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+    public Iterable<Filter> getFilters(String role, UserId userId) {
+        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM filters WHERE user_id = (?);"
             )) {
@@ -122,8 +118,8 @@ public final class FilterRepositoryImpl implements FilterRepository {
     }
 
     @Override
-    public void deleteFilter(UserId userId, String name) {
-        jdbcTemplate.executeCons(userRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+    public void deleteFilter(String role, UserId userId, String name) {
+        jdbcTemplate.executeCons(role, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
                     "DELETE FROM filters WHERE user_id = (?) AND filter_name = (?);"
             )) {
@@ -143,12 +139,10 @@ public final class FilterRepositoryImpl implements FilterRepository {
             var destination = resultSet.getString("destination");
             var trainClass = resultSet.getString("train_class");
             var transfers = resultSet.getInt("transfers");
-            var minCost = resultSet.getBigDecimal("min_cost");
-            var maxCost = resultSet.getBigDecimal("max_cost");
             var passengers = new ArrayList<String>();
             getPassengers(connection, resultSet.getLong("id"), passengers);
             answer = new Filter(userId, name, departure, destination, trainClass,
-                    transfers, passengers, null, null, minCost, maxCost);
+                    transfers, passengers, null, null);
         }
         return answer;
     }
