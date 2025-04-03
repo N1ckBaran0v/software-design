@@ -7,6 +7,6 @@ import traintickets.businesslogic.payment.PaymentData;
 import java.util.List;
 
 public interface TicketService {
-    void buyTickets(List<Ticket> tickets, PaymentData paymentData);
-    List<Ticket> getTickets(UserId userId);
+//    void buyTickets(List<Ticket> tickets, PaymentData paymentData);
+//    List<Ticket> getTickets(UserId userId);
 }

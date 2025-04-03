@@ -11,25 +11,25 @@ import java.util.Objects;
 import java.util.stream.StreamSupport;
 
 public final class CommentServiceImpl implements CommentService {
-    private final CommentRepository commentRepository;
-
-    public CommentServiceImpl(CommentRepository commentRepository) {
-        this.commentRepository = Objects.requireNonNull(commentRepository);
-    }
-
-    @Override
-    public void addComment(Comment comment) {
-        comment.validate();
-        commentRepository.addComment(comment);
-    }
-
-    @Override
-    public List<Comment> getComments(TrainId trainId) {
-        return StreamSupport.stream(commentRepository.getComments(trainId).spliterator(), false).toList();
-    }
-
-    @Override
-    public void deleteComment(CommentId commentId) {
-        commentRepository.deleteComment(commentId);
-    }
+//    private final CommentRepository commentRepository;
+//
+//    public CommentServiceImpl(CommentRepository commentRepository) {
+//        this.commentRepository = Objects.requireNonNull(commentRepository);
+//    }
+//
+//    @Override
+//    public void addComment(Comment comment) {
+//        comment.validate();
+//        commentRepository.addComment(comment);
+//    }
+//
+//    @Override
+//    public List<Comment> getComments(TrainId trainId) {
+//        return StreamSupport.stream(commentRepository.getComments(trainId).spliterator(), false).toList();
+//    }
+//
+//    @Override
+//    public void deleteComment(CommentId commentId) {
+//        commentRepository.deleteComment(commentId);
+//    }
 }

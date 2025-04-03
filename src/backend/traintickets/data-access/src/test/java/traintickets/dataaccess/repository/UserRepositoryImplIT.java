@@ -19,7 +19,7 @@ class UserRepositoryImplIT extends PostgresIT {
     @Override
     void setUp() {
         super.setUp();
-        userRepository = new UserRepositoryImpl(jdbcTemplate, roleName);
+        userRepository = new UserRepositoryImpl(jdbcTemplate);
     }
 
     @Override
@@ -28,7 +28,7 @@ class UserRepositoryImplIT extends PostgresIT {
             try (var statement = connection.prepareStatement(
                     "insert into users_view (user_name, pass_word, real_name, user_role, is_active) values " +
                             "('first', 'qwerty123', 'Иванов Иван Иванович', 'userRole', TRUE), " +
-                            "('second', 'qwerty123', 'Петров Пётр Петрович', 'userRole', TRUE); "
+                            "('second', 'qwerty123', 'Петров Пётр Петрович', 'userRole', FALSE); "
             )) {
                 statement.execute();
             }
@@ -38,7 +38,7 @@ class UserRepositoryImplIT extends PostgresIT {
     @Test
     void addUser_positive_added() {
         var user = new User(null, "random_username", "qwerty123", "Зубенко Михаил Петрович", "userRole", true);
-        userRepository.addUser(user);
+        userRepository.addUser(roleName, user);
         jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "select * from users_view where user_name = 'random_username';"
@@ -59,7 +59,7 @@ class UserRepositoryImplIT extends PostgresIT {
     @Test
     void addUser_negative_exists() {
         var user = new User(null, "first", "qwerty123", "Зубенко Михаил Петрович", "userRole", true);
-        assertThrows(EntityAlreadyExistsException.class, () -> userRepository.addUser(user));
+        assertThrows(EntityAlreadyExistsException.class, () -> userRepository.addUser(roleName, user));
         jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, conn -> {
             try (var statement = conn.prepareStatement(
                     "SELECT * FROM users_view WHERE id = 3;"
@@ -74,12 +74,12 @@ class UserRepositoryImplIT extends PostgresIT {
     @Test
     void getUser_positive_found() {
         var user = new User(new UserId(1L), "first", "qwerty123", "Иванов Иван Иванович", "userRole", true);
-        assertEquals(user, userRepository.getUser(user.username()).orElse(null));
+        assertEquals(user, userRepository.getUser(roleName, user.username()).orElse(null));
     }
 
     @Test
     void getUser_positive_notFound() {
-        assertTrue(userRepository.getUser("third").isEmpty());
+        assertTrue(userRepository.getUser(roleName, "third").isEmpty());
     }
 
     @Test
@@ -87,8 +87,8 @@ class UserRepositoryImplIT extends PostgresIT {
         var userId1 = new UserId(1L);
         var user1 = new User(userId1, "first", "qwerty123", "Иванов Иван Иванович", "userRole", true);
         var userId2 = new UserId(2L);
-        var user2 = new User(userId2, "second", "qwerty123", "Петров Пётр Петрович", "userRole", true);
-        var result = userRepository.getUsers(List.of(userId1, userId2));
+        var user2 = new User(userId2, "second", "qwerty123", "Петров Пётр Петрович", "userRole", false);
+        var result = userRepository.getUsers(roleName, List.of(userId1, userId2));
         assertNotNull(result);
         var iterator = result.iterator();
         assertTrue(iterator.hasNext());
@@ -102,7 +102,7 @@ class UserRepositoryImplIT extends PostgresIT {
     void getUsers_positive_someFound() {
         var userId1 = new UserId(1L);
         var user1 = new User(userId1, "first", "qwerty123", "Иванов Иван Иванович", "userRole", true);
-        var result = userRepository.getUsers(List.of(userId1, new UserId(3)));
+        var result = userRepository.getUsers(roleName, List.of(userId1, new UserId(3)));
         assertNotNull(result);
         var iterator = result.iterator();
         assertTrue(iterator.hasNext());
@@ -112,7 +112,7 @@ class UserRepositoryImplIT extends PostgresIT {
 
     @Test
     void getUsers_positive_noFound() {
-        var result = userRepository.getUsers(List.of(new UserId(3), new UserId(4)));
+        var result = userRepository.getUsers(roleName, List.of(new UserId(3), new UserId(4)));
         assertNotNull(result);
         var iterator = result.iterator();
         assertFalse(iterator.hasNext());
@@ -121,7 +121,7 @@ class UserRepositoryImplIT extends PostgresIT {
     @Test
     void updateUser_positive_updated() {
         var user = new User(new UserId(1L), "third", "qwerty124", "Сидорович Иван Иванович", "unknownRole", false);
-        userRepository.updateUser(user);
+        userRepository.updateUser(roleName, user);
         jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "select * from users_view where user_name = 'third';"
@@ -142,7 +142,7 @@ class UserRepositoryImplIT extends PostgresIT {
     @Test
     void updateUser_negative_exists() {
         var user = new User(new UserId(1L), "second", "qwerty124", "Сидорович Иван Иванович", "unknownRole", false);
-        assertThrows(EntityAlreadyExistsException.class, () -> userRepository.updateUser(user));
+        assertThrows(EntityAlreadyExistsException.class, () -> userRepository.updateUser(roleName, user));
         jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "select * from users_view where id = 1;"
@@ -163,10 +163,33 @@ class UserRepositoryImplIT extends PostgresIT {
     @Test
     void deleteUser_positive_banned() {
         var id = new UserId(1L);
-        userRepository.deleteUser(id);
+        userRepository.deleteUser(roleName, id);
         jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "select * from users_view where user_name = 'first';"
+            )) {
+                try (var resultSet = statement.executeQuery()) {
+                    assertTrue(resultSet.next());
+                    assertFalse(resultSet.getBoolean("is_active"));
+                    assertFalse(resultSet.next());
+                }
+            }
+        });
+    }
+
+    @Test
+    void deleteUser_positive_notFound() {
+        var id = new UserId(3L);
+        userRepository.deleteUser(roleName, id);
+    }
+
+    @Test
+    void deleteUser_positive_alreadyBanned() {
+        var id = new UserId(2L);
+        userRepository.deleteUser(roleName, id);
+        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+            try (var statement = connection.prepareStatement(
+                    "select * from users_view where user_name = 'second';"
             )) {
                 try (var resultSet = statement.executeQuery()) {
                     assertTrue(resultSet.next());

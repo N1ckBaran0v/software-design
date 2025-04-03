@@ -16,16 +16,14 @@ import java.util.stream.StreamSupport;
 
 public final class UserRepositoryImpl implements UserRepository {
     private final JdbcTemplate jdbcTemplate;
-    private final String systemRoleName;
 
-    public UserRepositoryImpl(JdbcTemplate jdbcTemplate, String systemRoleName) {
+    public UserRepositoryImpl(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = Objects.requireNonNull(jdbcTemplate);
-        this.systemRoleName = Objects.requireNonNull(systemRoleName);
     }
 
     @Override
-    public void addUser(User user) {
-        jdbcTemplate.executeCons(systemRoleName, Connection.TRANSACTION_SERIALIZABLE, connection -> {
+    public void addUser(String role, User user) {
+        jdbcTemplate.executeCons(role, Connection.TRANSACTION_SERIALIZABLE, connection -> {
             checkIfExists(user, connection);
             try (var statement = connection.prepareStatement(
                     "INSERT INTO users_view (user_name, pass_word, real_name, user_role, is_active)\n" +
@@ -42,8 +40,8 @@ public final class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public Optional<User> getUser(String username) {
-        return jdbcTemplate.executeFunc(systemRoleName, Connection.TRANSACTION_READ_COMMITTED, connection -> {
+    public Optional<User> getUser(String role, String username) {
+        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_READ_COMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM users_view WHERE user_name = (?);"
             )) {
@@ -56,8 +54,8 @@ public final class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public Iterable<User> getUsers(Iterable<UserId> userIds) {
-        return jdbcTemplate.executeFunc(systemRoleName, Connection.TRANSACTION_READ_COMMITTED, connection -> {
+    public Iterable<User> getUsers(String role, Iterable<UserId> userIds) {
+        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_READ_COMMITTED, connection -> {
             var ids = StreamSupport.stream(userIds.spliterator(), false).map(id -> String.valueOf(id.id())).toList();
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM users_view WHERE id IN ('" + String.join("', '", ids) + "');"
@@ -76,8 +74,8 @@ public final class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public void updateUser(User user) {
-        jdbcTemplate.executeCons(systemRoleName, Connection.TRANSACTION_SERIALIZABLE, connection -> {
+    public void updateUser(String role, User user) {
+        jdbcTemplate.executeCons(role, Connection.TRANSACTION_SERIALIZABLE, connection -> {
             checkIfExists(user, connection);
             try (var statement = connection.prepareStatement(
                     "UPDATE users_view SET " +
@@ -100,8 +98,8 @@ public final class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public void deleteUser(UserId userId) {
-        jdbcTemplate.executeCons(systemRoleName, Connection.TRANSACTION_READ_COMMITTED, conn -> {
+    public void deleteUser(String role, UserId userId) {
+        jdbcTemplate.executeCons(role, Connection.TRANSACTION_READ_COMMITTED, conn -> {
             try (var statement = conn.prepareStatement(
                     "DELETE FROM users_view WHERE id = (?);"
             )) {

@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.Map;
 
 public interface RaceService {
-    void addRace(Race race) throws TrainAlreadyReservedException;
-    Race getRace(RaceId raceId);
-    void finishRace(RaceId raceId);
-    Map<String, List<String>> getPassengers(RaceId raceId);
+//    void addRace(Race race) throws TrainAlreadyReservedException;
+//    Race getRace(RaceId raceId);
+//    void finishRace(RaceId raceId);
+//    Map<String, List<String>> getPassengers(RaceId raceId);
 }

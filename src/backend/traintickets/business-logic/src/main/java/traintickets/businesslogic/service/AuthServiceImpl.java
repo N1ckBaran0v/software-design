@@ -15,11 +15,16 @@ public final class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final SessionManager sessionManager;
     private final String clientRole;
+    private final String systemRole;
 
-    public AuthServiceImpl(UserRepository userRepository, SessionManager sessionManager, String clientRole) {
+    public AuthServiceImpl(UserRepository userRepository,
+                           SessionManager sessionManager,
+                           String clientRole,
+                           String systemRole) {
         this.userRepository = Objects.requireNonNull(userRepository);
         this.sessionManager = Objects.requireNonNull(sessionManager);
         this.clientRole = Objects.requireNonNull(clientRole);
+        this.systemRole = Objects.requireNonNull(systemRole);
     }
 
     @Override
@@ -36,13 +41,13 @@ public final class AuthServiceImpl implements AuthService {
         var name = form.name();
         var user = new User(null, username, password, name, clientRole, true);
         user.validate();
-        userRepository.addUser(user);
+        userRepository.addUser(systemRole, user);
         sessionManager.startSession(sessionId, user);
     }
 
     @Override
     public void login(UUID sessionId, LoginForm form) {
-        var user = userRepository.getUser(form.username()).orElseThrow(
+        var user = userRepository.getUser(systemRole, form.username()).orElseThrow(
                 () -> new EntityNotFoundException(String.format("User %s not found", form.username())));
         if (!user.password().equals(form.password())) {
             throw new InvalidPasswordException();

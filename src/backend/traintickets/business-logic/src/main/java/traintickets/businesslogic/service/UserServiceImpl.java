@@ -16,27 +16,29 @@ import java.util.UUID;
 public final class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final SessionManager sessionManager;
+    private final String systemRole;
 
-    public UserServiceImpl(UserRepository userRepository, SessionManager sessionManager) {
+    public UserServiceImpl(UserRepository userRepository, SessionManager sessionManager, String systemRole) {
         this.userRepository = Objects.requireNonNull(userRepository);
         this.sessionManager = Objects.requireNonNull(sessionManager);
+        this.systemRole = Objects.requireNonNull(systemRole);
     }
 
     @Override
     public void createUser(User user) {
         user.validate();
-        userRepository.addUser(user);
+        userRepository.addUser(systemRole, user);
     }
 
     @Override
     public void deleteUser(UserId userId) {
-        userRepository.deleteUser(userId);
+        userRepository.deleteUser(systemRole, userId);
         sessionManager.endSessions(userId);
     }
 
     @Override
     public User getUser(String username) {
-        var result = userRepository.getUser(username).orElseThrow(
+        var result = userRepository.getUser(systemRole, username).orElseThrow(
                 () -> new EntityNotFoundException(String.format("User with username '%s' not found", username)));
         if (!result.active()) {
             throw new UserWasBannedException(username);
@@ -46,7 +48,7 @@ public final class UserServiceImpl implements UserService {
 
     @Override
     public User getUserByAdmin(String username) {
-        return userRepository.getUser(username).orElseThrow(
+        return userRepository.getUser(systemRole, username).orElseThrow(
                 () -> new EntityNotFoundException(String.format("User with username '%s' not found", username)));
     }
 
@@ -63,7 +65,7 @@ public final class UserServiceImpl implements UserService {
         if (!userInfo.role().equals(user.role())) {
             throw new InvalidEntityException("User role may be changed only by admin");
         }
-        userRepository.updateUser(user);
+        userRepository.updateUser(systemRole, user);
     }
 
     @Override
@@ -73,6 +75,6 @@ public final class UserServiceImpl implements UserService {
             throw new InvalidEntityException("All data required");
         }
         sessionManager.updateUserInfo(new UserInfo(user.id(), user.role()));
-        userRepository.updateUser(user);
+        userRepository.updateUser(systemRole, user);
     }
 }
