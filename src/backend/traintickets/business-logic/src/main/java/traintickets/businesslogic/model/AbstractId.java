@@ -18,6 +18,6 @@ public abstract class AbstractId {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AbstractId that = (AbstractId) o;
-        return Objects.equals(id, that.id);
+        return Objects.equals(id.toString(), that.id.toString());
     }
 }

@@ -19,7 +19,7 @@ class CommentRepositoryImplIT extends PostgresIT {
     @Override
     void setUp() {
         super.setUp();
-        commentRepository = new CommentRepositoryImpl(jdbcTemplate, roleName);
+        commentRepository = new CommentRepositoryImpl(jdbcTemplate);
     }
 
     @Override
@@ -42,7 +42,7 @@ class CommentRepositoryImplIT extends PostgresIT {
     @Test
     void addComment_positive_added() {
         var comment = new Comment(null, new UserId(1L), new TrainId(1L), 4, "Упс, не туда нажал");
-        commentRepository.addComment(comment);
+        commentRepository.addComment(roleName, comment);
         jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement("select * from comments where id = 3;")) {
                 try (var resultSet = statement.executeQuery()) {
@@ -62,7 +62,7 @@ class CommentRepositoryImplIT extends PostgresIT {
         var trainId = new TrainId(1L);
         var comment1 = new Comment(new CommentId(1L), new UserId(1L), trainId, 5, "Лучший поезд");
         var comment2 = new Comment(new CommentId(2L), new UserId(2L), trainId, 1, "Грубые проводники");
-        var result = commentRepository.getComments(trainId);
+        var result = commentRepository.getComments(roleName, trainId);
         assertNotNull(result);
         var iterator = result.iterator();
         assertTrue(iterator.hasNext());
@@ -74,7 +74,7 @@ class CommentRepositoryImplIT extends PostgresIT {
 
     @Test
     void getComments_positive_empty() {
-        var result = commentRepository.getComments(new TrainId(3L));
+        var result = commentRepository.getComments(roleName, new TrainId(3L));
         assertNotNull(result);
         assertFalse(result.iterator().hasNext());
     }
@@ -82,7 +82,7 @@ class CommentRepositoryImplIT extends PostgresIT {
     @Test
     void deleteComment_positive_deleted() {
         var commentId = new CommentId(1L);
-        commentRepository.deleteComment(commentId);
+        commentRepository.deleteComment(roleName, commentId);
         jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement("select * from comments where id = 1;")) {
                 try (var resultSet = statement.executeQuery()) {

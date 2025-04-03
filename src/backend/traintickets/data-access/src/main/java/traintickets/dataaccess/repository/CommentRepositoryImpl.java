@@ -15,16 +15,14 @@ import java.util.Objects;
 
 public final class CommentRepositoryImpl implements CommentRepository {
     private final JdbcTemplate jdbcTemplate;
-    private final String userRoleName;
 
-    public CommentRepositoryImpl(JdbcTemplate jdbcTemplate, String userRoleName) {
+    public CommentRepositoryImpl(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = Objects.requireNonNull(jdbcTemplate);
-        this.userRoleName = Objects.requireNonNull(userRoleName);
     }
 
     @Override
-    public void addComment(Comment comment) {
-        jdbcTemplate.executeCons(userRoleName, Connection.TRANSACTION_READ_COMMITTED, connection -> {
+    public void addComment(String role, Comment comment) {
+        jdbcTemplate.executeCons(role, Connection.TRANSACTION_READ_COMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "INSERT INTO comments (user_id, train_id, score, comment_text) " +
                             "VALUES (?, ?, ?, ?);"
@@ -39,8 +37,8 @@ public final class CommentRepositoryImpl implements CommentRepository {
     }
 
     @Override
-    public Iterable<Comment> getComments(TrainId trainId) {
-        return jdbcTemplate.executeFunc(userRoleName, Connection.TRANSACTION_READ_COMMITTED, connection -> {
+    public Iterable<Comment> getComments(String role, TrainId trainId) {
+        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_READ_COMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM comments WHERE train_id = (?);"
             )) {
@@ -59,8 +57,8 @@ public final class CommentRepositoryImpl implements CommentRepository {
     }
 
     @Override
-    public void deleteComment(CommentId commentId) {
-        jdbcTemplate.executeCons(userRoleName, Connection.TRANSACTION_READ_COMMITTED, connection -> {
+    public void deleteComment(String role, CommentId commentId) {
+        jdbcTemplate.executeCons(role, Connection.TRANSACTION_READ_COMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "DELETE FROM comments WHERE id = (?);"
             )) {
