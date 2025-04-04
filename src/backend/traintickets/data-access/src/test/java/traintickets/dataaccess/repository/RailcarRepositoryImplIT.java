@@ -19,7 +19,7 @@ class RailcarRepositoryImplIT extends PostgresIT {
     @Override
     void setUp() {
         super.setUp();
-        railcarRepository = new RailcarRepositoryImpl(jdbcTemplate, roleName);
+        railcarRepository = new RailcarRepositoryImpl(jdbcTemplate);
     }
 
     @Override
@@ -43,7 +43,7 @@ class RailcarRepositoryImplIT extends PostgresIT {
     void addRailcar_positive_added() {
         var place = new Place(null, 1, "", "universal", BigDecimal.valueOf(100));
         var railcar = new Railcar(null, "3", "купе", List.of(place));
-        railcarRepository.addRailcar(railcar);
+        railcarRepository.addRailcar(roleName, railcar);
         jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM railcars WHERE id = 3;"
@@ -73,7 +73,7 @@ class RailcarRepositoryImplIT extends PostgresIT {
     @Test
     void addRailcar_negative_exists() {
         assertThrows(EntityAlreadyExistsException.class,
-                () -> railcarRepository.addRailcar(new Railcar(null, "2", "купе", List.of())));
+                () -> railcarRepository.addRailcar(roleName, new Railcar(null, "2", "купе", List.of())));
         jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM railcars WHERE id = 3;"
@@ -96,7 +96,7 @@ class RailcarRepositoryImplIT extends PostgresIT {
     void getRailcarsByType_positive_got() {
         var railcar = new Railcar(new RailcarId(2L), "2", "купе",
                 List.of(new Place(new PlaceId(3L), 1, "", "universal", BigDecimal.valueOf(100))));
-        var result = railcarRepository.getRailcarsByType(railcar.type());
+        var result = railcarRepository.getRailcarsByType(roleName, railcar.type());
         assertNotNull(result);
         var iterator = result.iterator();
         assertTrue(iterator.hasNext());
@@ -106,7 +106,7 @@ class RailcarRepositoryImplIT extends PostgresIT {
 
     @Test
     void getRailcarsByType_positive_empty() {
-        var result = railcarRepository.getRailcarsByType("unexpexted");
+        var result = railcarRepository.getRailcarsByType(roleName, "unexpexted");
         assertNotNull(result);
         assertFalse(result.iterator().hasNext());
     }
@@ -118,7 +118,7 @@ class RailcarRepositoryImplIT extends PostgresIT {
         var place3 = new Place(new PlaceId(3L), 1, "", "universal", BigDecimal.valueOf(100));
         var railcar1 = new Railcar(new RailcarId(1L), "1", "сидячий", List.of(place1, place2));
         var railcar2 = new Railcar(new RailcarId(2L), "2", "купе", List.of(place3));
-        var result = railcarRepository.getRailcarsByTrain(new TrainId(1L));
+        var result = railcarRepository.getRailcarsByTrain(roleName, new TrainId(1L));
         assertNotNull(result);
         var iterator = result.iterator();
         assertTrue(iterator.hasNext());
@@ -130,7 +130,7 @@ class RailcarRepositoryImplIT extends PostgresIT {
 
     @Test
     void getRailcarsByTrain_positive_empty() {
-        var result = railcarRepository.getRailcarsByTrain(new TrainId(2L));
+        var result = railcarRepository.getRailcarsByTrain(roleName, new TrainId(2L));
         assertNotNull(result);
         assertFalse(result.iterator().hasNext());
     }
