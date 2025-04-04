@@ -20,7 +20,7 @@ class TrainRepositoryImplIT extends PostgresIT {
     @Override
     void setUp() {
         super.setUp();
-        trainRepository = new TrainRepositoryImpl(jdbcTemplate, roleName);
+        trainRepository = new TrainRepositoryImpl(jdbcTemplate);
     }
 
     @Override
@@ -46,7 +46,7 @@ class TrainRepositoryImplIT extends PostgresIT {
     @Test
     void addTrain_positive_added() {
         var train = new Train(null, "Скорый", List.of(new RailcarId(1L)));
-        trainRepository.addTrain(train);
+        trainRepository.addTrain(roleName, train);
         jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM trains WHERE id = 3;"
@@ -73,21 +73,21 @@ class TrainRepositoryImplIT extends PostgresIT {
     void getTrain_positive_found() {
         var id = new TrainId(1L);
         var train = new Train(id, "фирменный", List.of(new RailcarId(1L)));
-        var result = trainRepository.getTrain(id).orElse(null);
+        var result = trainRepository.getTrain(roleName, id).orElse(null);
         assertNotNull(result);
         assertEquals(train, result);
     }
 
     @Test
     void getTrain_positive_notFound() {
-        var result = trainRepository.getTrain(new TrainId(3L)).orElse(null);
+        var result = trainRepository.getTrain(roleName, new TrainId(3L)).orElse(null);
         assertNull(result);
     }
 
     @Test
     void getTrains_positive_got() {
         var train = new Train(new TrainId(1L), "фирменный", List.of());
-        var result = trainRepository.getTrains(Timestamp.valueOf("2025-04-01 11:50:00"),
+        var result = trainRepository.getTrains(roleName, Timestamp.valueOf("2025-04-01 11:50:00"),
                 Timestamp.valueOf("2025-04-01 13:20:00"));
         assertNotNull(result);
         var iterator = result.iterator();
@@ -98,7 +98,7 @@ class TrainRepositoryImplIT extends PostgresIT {
 
     @Test
     void getTrains_positive_empty() {
-        var result = trainRepository.getTrains(Timestamp.valueOf("2025-04-01 11:30:00"),
+        var result = trainRepository.getTrains(roleName, Timestamp.valueOf("2025-04-01 11:30:00"),
                 Timestamp.valueOf("2025-04-01 12:30:00"));
         assertNotNull(result);
         assertFalse(result.iterator().hasNext());

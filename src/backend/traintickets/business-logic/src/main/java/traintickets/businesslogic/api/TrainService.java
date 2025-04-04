@@ -6,11 +6,12 @@ import traintickets.businesslogic.model.TrainId;
 
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 public interface TrainService {
-//    void addTrain(Train train);
-//    Train getTrain(TrainId trainId);
-//    List<Train> getTrains(Date start, Date end);
-//    void addRailcar(Railcar railcar);
-//    List<Railcar> getRailcars(String type);
+    void addTrain(UUID sessionId, Train train);
+    Train getTrain(UUID sessionId, TrainId trainId);
+    List<Train> getTrains(UUID sessionId, Date start, Date end);
+    void addRailcar(UUID sessionId, Railcar railcar);
+    List<Railcar> getRailcars(UUID sessionId, String type);
 }
