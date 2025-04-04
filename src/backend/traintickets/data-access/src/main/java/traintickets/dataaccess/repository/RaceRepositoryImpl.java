@@ -13,16 +13,14 @@ import java.util.Optional;
 
 public final class RaceRepositoryImpl implements RaceRepository {
     private final JdbcTemplate jdbcTemplate;
-    private final String carrierRoleName;
 
-    public RaceRepositoryImpl(JdbcTemplate jdbcTemplate, String carrierRoleName) {
+    public RaceRepositoryImpl(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = Objects.requireNonNull(jdbcTemplate);
-        this.carrierRoleName = Objects.requireNonNull(carrierRoleName);
     }
 
     @Override
-    public void addRace(Race race) {
-        jdbcTemplate.executeCons(carrierRoleName, Connection.TRANSACTION_SERIALIZABLE, connection -> {
+    public void addRace(String role, Race race) {
+        jdbcTemplate.executeCons(role, Connection.TRANSACTION_SERIALIZABLE, connection -> {
             var startTime = new Timestamp(race.schedule().getFirst().departure().getTime());
             var endTime = new Timestamp(race.schedule().getLast().arrival().getTime());
             checkIfReserved(race, connection, startTime, endTime);
@@ -86,8 +84,8 @@ public final class RaceRepositoryImpl implements RaceRepository {
     }
 
     @Override
-    public Optional<Race> getRace(RaceId raceId) {
-        return jdbcTemplate.executeFunc(carrierRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+    public Optional<Race> getRace(String role, RaceId raceId) {
+        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM races WHERE id = (?);"
             )) {
@@ -100,8 +98,8 @@ public final class RaceRepositoryImpl implements RaceRepository {
     }
 
     @Override
-    public Iterable<Race> getRaces(Filter filter) {
-        return jdbcTemplate.executeFunc(carrierRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+    public Iterable<Race> getRaces(String role, Filter filter) {
+        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
                     "WITH races_time AS (SELECT race_id, MIN(departure) as start_time, MAX(arrival) as end_time " +
                             "FROM schedule GROUP BY race_id), " +
@@ -125,13 +123,13 @@ public final class RaceRepositoryImpl implements RaceRepository {
     }
 
     @Override
-    public void updateRace(Race race) {
-        jdbcTemplate.executeCons(carrierRoleName, Connection.TRANSACTION_READ_COMMITTED, connection -> {
+    public void updateRace(String role, RaceId raceId, boolean isFinished) {
+        jdbcTemplate.executeCons(role, Connection.TRANSACTION_READ_COMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "UPDATE races SET finished = (?) WHERE id = (?);"
             )) {
-                statement.setBoolean(1, race.finished());
-                statement.setLong(2, ((Number) race.id().id()).longValue());
+                statement.setBoolean(1, isFinished);
+                statement.setLong(2, ((Number) raceId.id()).longValue());
                 statement.executeUpdate();
             }
         });

@@ -37,7 +37,7 @@ class TicketRepositoryImplIT extends PostgresIT {
     @Override
     public void setUp() {
         super.setUp();
-        ticketRepository = new TicketRepositoryImpl(jdbcTemplate, paymentManager, roleName);
+        ticketRepository = new TicketRepositoryImpl(jdbcTemplate, paymentManager);
     }
 
     @Override
@@ -74,7 +74,7 @@ class TicketRepositoryImplIT extends PostgresIT {
                 new Schedule(new ScheduleId(3L), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0),
                 new Schedule(new ScheduleId(4L), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5),
                 BigDecimal.valueOf(500));
-        ticketRepository.addTickets(List.of(ticket), paymentData);
+        ticketRepository.addTickets(roleName, List.of(ticket), paymentData);
         jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM tickets WHERE id = 4;"
@@ -104,7 +104,7 @@ class TicketRepositoryImplIT extends PostgresIT {
                 new Schedule(new ScheduleId(4L), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5),
                 BigDecimal.valueOf(500));
         assertThrows(PlaceAlreadyReservedException.class,
-                () -> ticketRepository.addTickets(List.of(ticket), paymentData));
+                () -> ticketRepository.addTickets(roleName, List.of(ticket), paymentData));
         verify(paymentManager, never()).pay(any());
         jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
@@ -126,7 +126,7 @@ class TicketRepositoryImplIT extends PostgresIT {
                 BigDecimal.valueOf(500));
         willThrow(PaymentException.class).given(paymentManager).pay(paymentData);
         assertThrows(PaymentException.class,
-                () -> ticketRepository.addTickets(List.of(ticket), paymentData));
+                () -> ticketRepository.addTickets(roleName, List.of(ticket), paymentData));
         jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM tickets WHERE id = 4;"
@@ -150,7 +150,7 @@ class TicketRepositoryImplIT extends PostgresIT {
                 new Schedule(new ScheduleId(3L), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0),
                 new Schedule(new ScheduleId(4L), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5),
                 BigDecimal.valueOf(500));
-        var result = ticketRepository.getTicketsByUser(userId);
+        var result = ticketRepository.getTicketsByUser(roleName, userId);
         assertNotNull(result);
         var iterator = result.iterator();
         assertTrue(iterator.hasNext());
@@ -162,7 +162,7 @@ class TicketRepositoryImplIT extends PostgresIT {
 
     @Test
     void getTicketsByUser_positive_empty() {
-        var result = ticketRepository.getTicketsByUser(new UserId(3));
+        var result = ticketRepository.getTicketsByUser(roleName, new UserId(3));
         assertNotNull(result);
         assertFalse(result.iterator().hasNext());
     }
@@ -180,7 +180,7 @@ class TicketRepositoryImplIT extends PostgresIT {
                 new Schedule(new ScheduleId(1L), "first", null, Timestamp.valueOf("2025-04-01 10:10:00"), 0),
                 new Schedule(new ScheduleId(2L), "second", Timestamp.valueOf("2025-04-01 11:40:00"), null, 5),
                 BigDecimal.valueOf(500));
-        var result = ticketRepository.getTicketsByRace(raceId);
+        var result = ticketRepository.getTicketsByRace(roleName, raceId);
         assertNotNull(result);
         var iterator = result.iterator();
         assertTrue(iterator.hasNext());
@@ -192,7 +192,7 @@ class TicketRepositoryImplIT extends PostgresIT {
 
     @Test
     void getTicketsByRace_positive_empty() {
-        var result = ticketRepository.getTicketsByRace(new RaceId(3));
+        var result = ticketRepository.getTicketsByRace(roleName, new RaceId(3));
         assertNotNull(result);
         assertFalse(result.iterator().hasNext());
     }

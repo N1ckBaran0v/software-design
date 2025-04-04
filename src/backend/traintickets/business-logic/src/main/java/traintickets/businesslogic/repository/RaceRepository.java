@@ -7,8 +7,8 @@ import traintickets.businesslogic.model.RaceId;
 import java.util.Optional;
 
 public interface RaceRepository {
-    void addRace(Race race);
-    Optional<Race> getRace(RaceId raceId);
-    Iterable<Race> getRaces(Filter filter);
-    void updateRace(Race race);
+    void addRace(String role, Race race);
+    Optional<Race> getRace(String role, RaceId raceId);
+    Iterable<Race> getRaces(String role, Filter filter);
+    void updateRace(String role, RaceId raceId, boolean isFinished);
 }
