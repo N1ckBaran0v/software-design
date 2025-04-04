@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import traintickets.businesslogic.exception.InvalidEntityException;
 import traintickets.businesslogic.exception.PaymentException;
 import traintickets.businesslogic.exception.PlaceAlreadyReservedException;
 import traintickets.businesslogic.model.*;
@@ -94,6 +95,27 @@ class TicketRepositoryImplIT extends PostgresIT {
             }
         });
         verify(paymentManager).pay(paymentData);
+    }
+
+    @Test
+    void addTickets_negative_finished() {
+        var ticket = new Ticket(null, new UserId(2L), "adult", new RaceId(1L), 1,
+                new Place(new PlaceId(1L), 1, "", "universal", BigDecimal.valueOf(100)),
+                new Schedule(new ScheduleId(3L), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0),
+                new Schedule(new ScheduleId(4L), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5),
+                BigDecimal.valueOf(500));
+        assertThrows(InvalidEntityException.class,
+                () -> ticketRepository.addTickets(roleName, List.of(ticket), paymentData));
+        verify(paymentManager, never()).pay(any());
+        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+            try (var statement = connection.prepareStatement(
+                    "SELECT * FROM tickets WHERE id = 4;"
+            )) {
+                try (var resultSet = statement.executeQuery()) {
+                    assertFalse(resultSet.next());
+                }
+            }
+        });
     }
 
     @Test

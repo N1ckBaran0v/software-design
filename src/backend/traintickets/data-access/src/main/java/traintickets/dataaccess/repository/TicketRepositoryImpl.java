@@ -94,6 +94,16 @@ public final class TicketRepositoryImpl implements TicketRepository {
     }
 
     private void checkIfNotExists(Connection connection, Ticket ticket) throws SQLException {
+        try (var statement = connection.prepareStatement(
+                "SELECT * FROM races WHERE id = (?) AND finished = FALSE;"
+        )) {
+            statement.setLong(1, ((Number) ticket.race().id()).longValue());
+            try (var resultSet = statement.executeQuery()) {
+                if (!resultSet.next()) {
+                    throw new InvalidEntityException("Race already finished");
+                }
+            }
+        }
         var startTimestamp = (Timestamp) null;
         var endTimestamp = (Timestamp) null;
         try (var statement = connection.prepareStatement(
