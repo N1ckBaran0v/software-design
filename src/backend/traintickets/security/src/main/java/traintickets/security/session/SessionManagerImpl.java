@@ -13,8 +13,8 @@ import java.util.UUID;
 public final class SessionManagerImpl implements SessionManager, Closeable {
     private final JedisPool jedisPool;
 
-    public SessionManagerImpl(String redisHost, int redisPort) {
-        jedisPool = new JedisPool(redisHost, redisPort);
+    public SessionManagerImpl(String redisHost, int redisPort, String redisUsername, String redisPassword) {
+        jedisPool = new JedisPool(redisHost, redisPort, redisUsername, redisPassword);
     }
 
     @Override

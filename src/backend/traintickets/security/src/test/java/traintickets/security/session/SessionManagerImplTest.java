@@ -28,7 +28,8 @@ class SessionManagerImplTest {
     void setUp() {
         redisContainer = new RedisContainer(DockerImageName.parse("redis:7.0.15"));
         redisContainer.start();
-        sessionManager = new SessionManagerImpl(redisContainer.getRedisHost(), redisContainer.getRedisPort());
+        sessionManager =
+                new SessionManagerImpl(redisContainer.getRedisHost(), redisContainer.getRedisPort(), null, null);
         insertData();
     }
 
