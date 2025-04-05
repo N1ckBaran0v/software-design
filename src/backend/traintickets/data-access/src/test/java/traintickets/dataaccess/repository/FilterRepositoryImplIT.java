@@ -7,9 +7,9 @@ import traintickets.businesslogic.model.Filter;
 import traintickets.businesslogic.model.UserId;
 import traintickets.businesslogic.repository.FilterRepository;
 
-import java.math.BigDecimal;
+
 import java.sql.Connection;
-import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -30,9 +30,9 @@ class FilterRepositoryImplIT extends PostgresIT {
                     "insert into users_view (user_name, pass_word, real_name, user_role, is_active) values " +
                             "('first', 'qwerty123', 'Иванов Иван Иванович', 'userRole', TRUE), " +
                             "('second', 'qwerty123', 'Петров Пётр Петрович', 'userRole', TRUE); " +
-                            "insert into filters (user_id, filter_name, departure, destination, train_class, transfers, min_cost, max_cost) values " +
-                            "(1, 'first', 'first', 'second', 'Экспресс', 0), " +
-                            "(1, 'second', 'first', 'second', 'Скорый', 1); " +
+                            "insert into filters (user_id, filter_name, departure, destination, transfers) values " +
+                            "(1, 'first', 'first', 'second', 0), " +
+                            "(1, 'second', 'first', 'second', 1); " +
                             "insert into passengers (filter_id, passengers_type, passengers_count) values " +
                             "(1, 'adult', 2), (1, 'child', 1), (2, 'adult', 1); "
             )) {
@@ -43,8 +43,7 @@ class FilterRepositoryImplIT extends PostgresIT {
 
     @Test
     void addFilter_positive_added() {
-        var filter = new Filter(new UserId(2L), "first", "first", "second", "Экспресс", 0,
-                List.of("adult"), null, null);
+        var filter = new Filter(new UserId(2L), "first", "first", "second", 0, Map.of("adult", 1), null, null);
         filterRepository.addFilter(roleName, filter);
         jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
@@ -56,7 +55,6 @@ class FilterRepositoryImplIT extends PostgresIT {
                     assertEquals("first", resultSet.getString("filter_name"));
                     assertEquals("first", resultSet.getString("departure"));
                     assertEquals("second", resultSet.getString("destination"));
-                    assertEquals("Экспресс", resultSet.getString("train_class"));
                     assertEquals(0, resultSet.getInt("transfers"));
                     assertFalse(resultSet.next());
                 }
@@ -76,8 +74,7 @@ class FilterRepositoryImplIT extends PostgresIT {
 
     @Test
     void addFilter_negative_exists() {
-        var filter = new Filter(new UserId(1L), "first", "first", "second", "Экспресс", 0,
-                List.of("adult"), null, null);
+        var filter = new Filter(new UserId(1L), "first", "first", "second", 0, Map.of("adult", 1), null, null);
         assertThrows(EntityAlreadyExistsException.class, () -> filterRepository.addFilter(roleName, filter));
         jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
@@ -99,8 +96,7 @@ class FilterRepositoryImplIT extends PostgresIT {
 
     @Test
     void getFilter_positive_found() {
-        var filter = new Filter(new UserId(1L), "first", "first", "second", "Экспресс", 0,
-                List.of("adult", "adult", "child"), null, null);
+        var filter = new Filter(new UserId(1L), "first", "first", "second", 0, Map.of("adult", 2, "child", 1), null, null);
         var result = filterRepository.getFilter(roleName, new UserId(1), "first");
         assertEquals(filter, result.orElse(null));
     }
@@ -112,10 +108,8 @@ class FilterRepositoryImplIT extends PostgresIT {
 
     @Test
     void getFilters_positive_got() {
-        var filter1 = new Filter(new UserId(1L), "first", "first", "second", "Экспресс", 0,
-                List.of("adult", "adult", "child"), null, null);
-        var filter2 = new Filter(new UserId(1L), "second", "first", "second", "Скорый", 1,
-                List.of("adult"), null, null);
+        var filter1 = new Filter(new UserId(1L), "first", "first", "second", 0, Map.of("adult", 2, "child", 1), null, null);
+        var filter2 = new Filter(new UserId(1L), "second", "first", "second", 1, Map.of("adult", 1), null, null);
         var result = filterRepository.getFilters(roleName, new UserId(1L));
         assertNotNull(result);
         var iterator = result.iterator();

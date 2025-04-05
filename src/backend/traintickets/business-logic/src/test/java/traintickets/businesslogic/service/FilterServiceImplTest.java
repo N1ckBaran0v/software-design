@@ -15,6 +15,7 @@ import traintickets.businesslogic.transport.UserInfo;
 
 import java.sql.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -37,8 +38,7 @@ class FilterServiceImplTest {
 
     @Test
     void addFilter_positive_saved() {
-        var filter = new Filter(new UserId(1), "filter", "first", "second",
-                "express", 0, List.of("adult", "adult", "child"),
+        var filter = new Filter(new UserId(1), "filter", "first", "second", 0, Map.of("adult", 2, "child", 1),
                 Date.valueOf("2025-03-19"), Date.valueOf("2025-10-11"));
         var userInfo = new UserInfo(new UserId(1L), "user_role");
         var sessionId = UUID.randomUUID();
@@ -49,8 +49,7 @@ class FilterServiceImplTest {
 
     @Test
     void addFilter_negative_invalid() {
-        var filter = new Filter(new UserId(1), "filter", "first", "second",
-                "express", 0, List.of(),
+        var filter = new Filter(new UserId(1), "filter", "first", "second", 0, Map.of(),
                 Date.valueOf("2025-03-19"), Date.valueOf("2025-10-11"));
         assertThrows(InvalidEntityException.class, () -> filterService.addFilter(UUID.randomUUID(), filter));
         verify(filterRepository, never()).addFilter(any(), any());
@@ -59,8 +58,7 @@ class FilterServiceImplTest {
 
     @Test
     void addFilter_negative_userIdMismatched() {
-        var filter = new Filter(new UserId(2), "filter", "first", "second",
-                "express", 0, List.of("adult", "adult", "child"),
+        var filter = new Filter(new UserId(2), "filter", "first", "second", 0, Map.of("adult", 2, "child", 1),
                 Date.valueOf("2025-03-19"), Date.valueOf("2025-10-11"));
         var userInfo = new UserInfo(new UserId(1L), "user_role");
         var sessionId = UUID.randomUUID();
@@ -73,8 +71,7 @@ class FilterServiceImplTest {
     void getFilter_positive_found() {
         var userId = new UserId(1);
         var name = "filter";
-        var filter = new Filter(userId, name, "first", "second",
-                "express", 0, List.of("adult", "adult", "child"),
+        var filter = new Filter(userId, name, "first", "second", 0, Map.of("adult", 2, "child", 1),
                 Date.valueOf("2025-03-19"), Date.valueOf("2025-10-11"));
         var userInfo = new UserInfo(new UserId(1L), "user_role");
         var sessionId = UUID.randomUUID();
@@ -98,11 +95,9 @@ class FilterServiceImplTest {
     @Test
     void getFilters_positive_got() {
         var userId = new UserId(1);
-        var filter1 = new Filter(userId, "filter1", "first", "second",
-                "regular", 0, List.of("adult"),
+        var filter1 = new Filter(userId, "filter1", "first", "second", 0, Map.of("adult", 1),
                 Date.valueOf("2025-03-19"), Date.valueOf("2025-10-11"));
-        var filter2 = new Filter(userId, "filter2", "first", "second",
-                "express", 0, List.of("adult", "child"),
+        var filter2 = new Filter(userId, "filter2", "first", "second", 0, Map.of("adult", 1, "child", 1),
                 Date.valueOf("2025-03-19"), Date.valueOf("2025-10-11"));
         var userInfo = new UserInfo(new UserId(1L), "user_role");
         var sessionId = UUID.randomUUID();

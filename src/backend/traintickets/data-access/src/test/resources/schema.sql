@@ -13,7 +13,6 @@ CREATE table if not exists Filters (
                                        filter_name TEXT,
                                        departure TEXT,
                                        destination TEXT,
-                                       train_class TEXT,
                                        transfers INT
 );
 
