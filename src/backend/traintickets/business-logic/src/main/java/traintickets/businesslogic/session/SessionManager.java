@@ -12,4 +12,5 @@ public interface SessionManager {
     void updateUserInfo(UserInfo userInfo);
     void endSession(UUID sessionId);
     void endSessions(UserId userId);
+    UUID generateSessionId();
 }
