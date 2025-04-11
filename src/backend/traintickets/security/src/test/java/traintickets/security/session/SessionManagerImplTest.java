@@ -22,7 +22,7 @@ class SessionManagerImplTest {
     private SessionManager sessionManager;
     private RedisContainer redisContainer;
     private JedisPool jedisPool;
-    private List<UUID> uuids;
+    private List<String> uuids;
 
     @BeforeEach
     void setUp() {
@@ -35,9 +35,9 @@ class SessionManagerImplTest {
 
     void insertData() {
         uuids = new ArrayList<>();
-        uuids.add(UUID.randomUUID());
-        uuids.add(UUID.randomUUID());
-        uuids.add(UUID.randomUUID());
+        uuids.add(UUID.randomUUID().toString());
+        uuids.add(UUID.randomUUID().toString());
+        uuids.add(UUID.randomUUID().toString());
         var userId = "1";
         var role = "user_role";
         jedisPool = new JedisPool(redisContainer.getRedisHost(), redisContainer.getRedisPort());

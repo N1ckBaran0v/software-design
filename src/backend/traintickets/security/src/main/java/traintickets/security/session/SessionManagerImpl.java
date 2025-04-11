@@ -15,10 +15,11 @@ public final class SessionManagerImpl implements SessionManager, Closeable {
 
     public SessionManagerImpl(String redisHost, int redisPort, String redisUsername, String redisPassword) {
         jedisPool = new JedisPool(redisHost, redisPort, redisUsername, redisPassword);
+        Runtime.getRuntime().addShutdownHook(new Thread(this::close));
     }
 
     @Override
-    public void startSession(UUID sessionId, User user) {
+    public void startSession(String sessionId, User user) {
         try (var connection = jedisPool.getResource()) {
             var userId = user.id().id().toString();
             var hash = new HashMap<String, String>();
@@ -34,7 +35,7 @@ public final class SessionManagerImpl implements SessionManager, Closeable {
     }
 
     @Override
-    public UserInfo getUserInfo(UUID sessionId) {
+    public UserInfo getUserInfo(String sessionId) {
         try (var connection = jedisPool.getResource()) {
             var sessionKey = String.format("session:%s", sessionId);
             var userId = (UserId) null;
@@ -72,7 +73,7 @@ public final class SessionManagerImpl implements SessionManager, Closeable {
     }
 
     @Override
-    public void endSession(UUID sessionId) {
+    public void endSession(String sessionId) {
         try (var connection = jedisPool.getResource()) {
             var sessionKey = String.format("session:%s", sessionId);
             var userKey = String.format("user:%s", connection.hgetAll(sessionKey).get("id"));
@@ -94,7 +95,7 @@ public final class SessionManagerImpl implements SessionManager, Closeable {
     }
 
     @Override
-    public UUID generateSessionId() {
+    public String generateSessionId() {
         try (var connection = jedisPool.getResource()) {
             var uuid = UUID.randomUUID();
             var sessionKey = String.format("session:%s", uuid);
@@ -102,7 +103,7 @@ public final class SessionManagerImpl implements SessionManager, Closeable {
                 uuid = UUID.randomUUID();
                 sessionKey = String.format("session:%s", uuid);
             }
-            return uuid;
+            return uuid.toString();
         }
     }
 
