@@ -62,7 +62,7 @@ class SessionManagerImplTest {
     @Test
     void startSession_positive_startedUnknown() {
         var sessionId = sessionManager.generateSessionId();
-        var user = new User(new UserId(2), "random_username", "qwerty123", "Zubenko Mikhail", "user_role", true);
+        var user = new User(new UserId("2"), "random_username", "qwerty123", "Zubenko Mikhail", "user_role", true);
         sessionManager.startSession(sessionId, user);
         try (var connection = jedisPool.getResource()) {
             var sessionKey = String.format("session:%s", sessionId);
@@ -84,7 +84,7 @@ class SessionManagerImplTest {
     @Test
     void startSession_positive_startedKnown() {
         var sessionId = sessionManager.generateSessionId();
-        var user = new User(new UserId(1), "random_username", "qwerty123", "Zubenko Mikhail", "user_role", true);
+        var user = new User(new UserId("1"), "random_username", "qwerty123", "Zubenko Mikhail", "user_role", true);
         sessionManager.startSession(sessionId, user);
         try (var connection = jedisPool.getResource()) {
             var sessionKey = String.format("session:%s", sessionId);
@@ -111,7 +111,7 @@ class SessionManagerImplTest {
         var sessionId = uuids.getFirst();
         var userInfo = sessionManager.getUserInfo(sessionId);
         assertNotNull(userInfo);
-        assertEquals(new UserId(1), userInfo.userId());
+        assertEquals(new UserId("1"), userInfo.userId());
         assertEquals("user_role", userInfo.role());
     }
 
@@ -126,7 +126,7 @@ class SessionManagerImplTest {
 
     @Test
     void updateUserInfo_positive_updated() {
-        var userInfo = new UserInfo(new UserId(1), "admin_role");
+        var userInfo = new UserInfo(new UserId("1"), "admin_role");
         sessionManager.updateUserInfo(userInfo);
         try (var connection = jedisPool.getResource()) {
             var userKey = String.format("user:%s", userInfo.userId().id());
@@ -158,7 +158,7 @@ class SessionManagerImplTest {
 
     @Test
     void updateUserInfo_positive_notFound() {
-        var userInfo = new UserInfo(new UserId(2), "admin_role");
+        var userInfo = new UserInfo(new UserId("2"), "admin_role");
         sessionManager.updateUserInfo(userInfo);
         try (var connection = jedisPool.getResource()) {
             var userKey = String.format("user:%s", userInfo.userId().id());
@@ -198,7 +198,7 @@ class SessionManagerImplTest {
 
     @Test
     void endSessions_positive_ended() {
-        sessionManager.endSessions(new UserId(1));
+        sessionManager.endSessions(new UserId("1"));
         try (var connection = jedisPool.getResource()) {
             var userKey = "user:1";
             var hash = connection.hgetAll(userKey);
@@ -213,7 +213,7 @@ class SessionManagerImplTest {
 
     @Test
     void endSessions_positive_notFound() {
-        sessionManager.endSessions(new UserId(2));
+        sessionManager.endSessions(new UserId("2"));
         try (var connection = jedisPool.getResource()) {
             var userKey = "user:2";
             var hash = connection.hgetAll(userKey);

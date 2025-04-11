@@ -6,6 +6,7 @@ import traintickets.businesslogic.exception.EntityAlreadyExistsException;
 import traintickets.businesslogic.model.User;
 import traintickets.businesslogic.model.UserId;
 import traintickets.businesslogic.repository.UserRepository;
+import traintickets.businesslogic.transport.TransportUser;
 
 import java.sql.Connection;
 import java.util.List;
@@ -73,7 +74,7 @@ class UserRepositoryImplIT extends PostgresIT {
 
     @Test
     void getUser_positive_found() {
-        var user = new User(new UserId(1L), "first", "qwerty123", "Иванов Иван Иванович", "userRole", true);
+        var user = new User(new UserId("1"), "first", "qwerty123", "Иванов Иван Иванович", "userRole", true);
         assertEquals(user, userRepository.getUser(roleName, user.username()).orElse(null));
     }
 
@@ -84,9 +85,9 @@ class UserRepositoryImplIT extends PostgresIT {
 
     @Test
     void getUsers_positive_allFound() {
-        var userId1 = new UserId(1L);
+        var userId1 = new UserId("1");
         var user1 = new User(userId1, "first", "qwerty123", "Иванов Иван Иванович", "userRole", true);
-        var userId2 = new UserId(2L);
+        var userId2 = new UserId("2");
         var user2 = new User(userId2, "second", "qwerty123", "Петров Пётр Петрович", "userRole", false);
         var result = userRepository.getUsers(roleName, List.of(userId1, userId2));
         assertNotNull(result);
@@ -100,9 +101,9 @@ class UserRepositoryImplIT extends PostgresIT {
 
     @Test
     void getUsers_positive_someFound() {
-        var userId1 = new UserId(1L);
+        var userId1 = new UserId("1");
         var user1 = new User(userId1, "first", "qwerty123", "Иванов Иван Иванович", "userRole", true);
-        var result = userRepository.getUsers(roleName, List.of(userId1, new UserId(3)));
+        var result = userRepository.getUsers(roleName, List.of(userId1, new UserId("3")));
         assertNotNull(result);
         var iterator = result.iterator();
         assertTrue(iterator.hasNext());
@@ -112,16 +113,16 @@ class UserRepositoryImplIT extends PostgresIT {
 
     @Test
     void getUsers_positive_noFound() {
-        var result = userRepository.getUsers(roleName, List.of(new UserId(3), new UserId(4)));
+        var result = userRepository.getUsers(roleName, List.of(new UserId("3"), new UserId("3")));
         assertNotNull(result);
         var iterator = result.iterator();
         assertFalse(iterator.hasNext());
     }
 
     @Test
-    void updateUser_positive_updated() {
-        var user = new User(new UserId(1L), "third", "qwerty124", "Сидорович Иван Иванович", "unknownRole", false);
-        userRepository.updateUser(roleName, user);
+    void updateUserCompletely_positive_updated() {
+        var user = new User(new UserId("1"), "third", "qwerty124", "Сидорович Иван Иванович", "unknownRole", false);
+        userRepository.updateUserCompletely(roleName, user);
         jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "select * from users_view where user_name = 'third';"
@@ -140,9 +141,51 @@ class UserRepositoryImplIT extends PostgresIT {
     }
 
     @Test
-    void updateUser_negative_exists() {
-        var user = new User(new UserId(1L), "second", "qwerty124", "Сидорович Иван Иванович", "unknownRole", false);
-        assertThrows(EntityAlreadyExistsException.class, () -> userRepository.updateUser(roleName, user));
+    void updateUserCompletely_negative_exists() {
+        var user = new User(new UserId("1"), "second", "qwerty124", "Сидорович Иван Иванович", "unknownRole", false);
+        assertThrows(EntityAlreadyExistsException.class, () -> userRepository.updateUserCompletely(roleName, user));
+        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+            try (var statement = connection.prepareStatement(
+                    "select * from users_view where id = 1;"
+            )) {
+                try (var resultSet = statement.executeQuery()) {
+                    assertTrue(resultSet.next());
+                    assertEquals("first", resultSet.getString("user_name"));
+                    assertEquals("qwerty123", resultSet.getString("pass_word"));
+                    assertEquals("Иванов Иван Иванович", resultSet.getString("real_name"));
+                    assertEquals("userRole", resultSet.getString("user_role"));
+                    assertTrue(resultSet.getBoolean("is_active"));
+                    assertFalse(resultSet.next());
+                }
+            }
+        });
+    }
+
+    @Test
+    void updateUserPartially_positive_updated() {
+        var user = new TransportUser(new UserId("1"), "third", "qwerty124", "Сидорович Иван Иванович");
+        userRepository.updateUserPartially(roleName, user);
+        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+            try (var statement = connection.prepareStatement(
+                    "select * from users_view where user_name = 'third';"
+            )) {
+                try (var resultSet = statement.executeQuery()) {
+                    assertTrue(resultSet.next());
+                    assertEquals(user.username(), resultSet.getString("user_name"));
+                    assertEquals(user.password(), resultSet.getString("pass_word"));
+                    assertEquals(user.name(), resultSet.getString("real_name"));
+                    assertEquals("userRole", resultSet.getString("user_role"));
+                    assertTrue(resultSet.getBoolean("is_active"));
+                    assertFalse(resultSet.next());
+                }
+            }
+        });
+    }
+
+    @Test
+    void updateUserPartially_negative_exists() {
+        var user = new TransportUser(new UserId("1"), "second", "qwerty124", "Сидорович Иван Иванович");
+        assertThrows(EntityAlreadyExistsException.class, () -> userRepository.updateUserPartially(roleName, user));
         jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "select * from users_view where id = 1;"
@@ -162,7 +205,7 @@ class UserRepositoryImplIT extends PostgresIT {
 
     @Test
     void deleteUser_positive_banned() {
-        var id = new UserId(1L);
+        var id = new UserId("1");
         userRepository.deleteUser(roleName, id);
         jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
@@ -179,13 +222,13 @@ class UserRepositoryImplIT extends PostgresIT {
 
     @Test
     void deleteUser_positive_notFound() {
-        var id = new UserId(3L);
+        var id = new UserId("3");
         userRepository.deleteUser(roleName, id);
     }
 
     @Test
     void deleteUser_positive_alreadyBanned() {
-        var id = new UserId(2L);
+        var id = new UserId("2");
         userRepository.deleteUser(roleName, id);
         jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(

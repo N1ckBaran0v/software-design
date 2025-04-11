@@ -9,57 +9,56 @@ import traintickets.businesslogic.transport.LoginForm;
 import traintickets.businesslogic.transport.RegisterForm;
 
 import java.util.Objects;
-import java.util.UUID;
 
 public final class AuthServiceImpl implements AuthService {
-//    private final UserRepository userRepository;
-//    private final SessionManager sessionManager;
-//    private final String clientRole;
-//    private final String systemRole;
-//
-//    public AuthServiceImpl(UserRepository userRepository,
-//                           SessionManager sessionManager,
-//                           String clientRole,
-//                           String systemRole) {
-//        this.userRepository = Objects.requireNonNull(userRepository);
-//        this.sessionManager = Objects.requireNonNull(sessionManager);
-//        this.clientRole = Objects.requireNonNull(clientRole);
-//        this.systemRole = Objects.requireNonNull(systemRole);
-//    }
-//
-//    @Override
-//    public void register(UUID sessionId, RegisterForm form) {
-//        var username = form.username();
-//        var password = form.password();
-//        var confirmPassword = form.confirmPassword();
-//        if (password == null) {
-//            throw new InvalidEntityException("All data required");
-//        }
-//        if (!password.equals(confirmPassword)) {
-//            throw new PasswordsMismatchesException();
-//        }
-//        var name = form.name();
-//        var user = new User(null, username, password, name, clientRole, true);
-//        user.validate();
-//        userRepository.addUser(systemRole, user);
-//        sessionManager.startSession(sessionId, user);
-//    }
-//
-//    @Override
-//    public void login(UUID sessionId, LoginForm form) {
-//        var user = userRepository.getUser(systemRole, form.username()).orElseThrow(
-//                () -> new EntityNotFoundException(String.format("User %s not found", form.username())));
-//        if (!user.password().equals(form.password())) {
-//            throw new InvalidPasswordException();
-//        }
-//        if (!user.active()) {
-//            throw new UserWasBannedException(user.username());
-//        }
-//        sessionManager.startSession(sessionId, user);
-//    }
-//
-//    @Override
-//    public void logout(UUID sessionId) {
-//        sessionManager.endSession(sessionId);
-//    }
+    private final UserRepository userRepository;
+    private final SessionManager sessionManager;
+    private final String clientRole;
+    private final String systemRole;
+
+    public AuthServiceImpl(UserRepository userRepository,
+                           SessionManager sessionManager,
+                           String defaultRole,
+                           String systemRole) {
+        this.userRepository = Objects.requireNonNull(userRepository);
+        this.sessionManager = Objects.requireNonNull(sessionManager);
+        this.clientRole = Objects.requireNonNull(defaultRole);
+        this.systemRole = Objects.requireNonNull(systemRole);
+    }
+
+    @Override
+    public void register(String sessionId, RegisterForm form) {
+        var username = form.username();
+        var password = form.password();
+        var confirmPassword = form.confirmPassword();
+        if (password == null) {
+            throw new InvalidEntityException("All data required");
+        }
+        if (!password.equals(confirmPassword)) {
+            throw new PasswordsMismatchesException();
+        }
+        var name = form.name();
+        var user = new User(null, username, password, name, clientRole, true);
+        user.validate();
+        userRepository.addUser(systemRole, user);
+        sessionManager.startSession(sessionId, user);
+    }
+
+    @Override
+    public void login(String sessionId, LoginForm form) {
+        var user = userRepository.getUser(systemRole, form.username()).orElseThrow(
+                () -> new EntityNotFoundException(String.format("User %s not found", form.username())));
+        if (!user.password().equals(form.password())) {
+            throw new InvalidPasswordException();
+        }
+        if (!user.active()) {
+            throw new UserWasBannedException(user.username());
+        }
+        sessionManager.startSession(sessionId, user);
+    }
+
+    @Override
+    public void logout(String sessionId) {
+        sessionManager.endSession(sessionId);
+    }
 }

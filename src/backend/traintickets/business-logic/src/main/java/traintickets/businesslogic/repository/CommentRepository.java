@@ -5,7 +5,7 @@ import traintickets.businesslogic.model.Comment;
 import traintickets.businesslogic.model.TrainId;
 
 public interface CommentRepository {
-    void addComment(String role, Comment comment);
-    Iterable<Comment> getComments(String role, TrainId trainId);
-    void deleteComment(String role, CommentId commentId);
+//    void addComment(String role, Comment comment);
+//    Iterable<Comment> getComments(String role, TrainId trainId);
+//    void deleteComment(String role, CommentId commentId);
 }

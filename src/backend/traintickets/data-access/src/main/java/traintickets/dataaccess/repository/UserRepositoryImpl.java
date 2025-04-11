@@ -4,6 +4,7 @@ import traintickets.businesslogic.exception.EntityAlreadyExistsException;
 import traintickets.businesslogic.model.User;
 import traintickets.businesslogic.model.UserId;
 import traintickets.businesslogic.repository.UserRepository;
+import traintickets.businesslogic.transport.TransportUser;
 import traintickets.jdbc.api.JdbcTemplate;
 
 import java.sql.Connection;
@@ -24,7 +25,7 @@ public final class UserRepositoryImpl implements UserRepository {
     @Override
     public void addUser(String role, User user) {
         jdbcTemplate.executeCons(role, Connection.TRANSACTION_SERIALIZABLE, connection -> {
-            checkIfExists(user, connection);
+            checkIfExists(user.id(), user.username(), connection);
             try (var statement = connection.prepareStatement(
                     "INSERT INTO users_view (user_name, pass_word, real_name, user_role, is_active)\n" +
                             "VALUES (?, ?, ?, ?, ?);"
@@ -74,9 +75,9 @@ public final class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public void updateUser(String role, User user) {
+    public void updateUserCompletely(String role, User user) {
         jdbcTemplate.executeCons(role, Connection.TRANSACTION_SERIALIZABLE, connection -> {
-            checkIfExists(user, connection);
+            checkIfExists(user.id(), user.username(), connection);
             try (var statement = connection.prepareStatement(
                     "UPDATE users_view SET " +
                             "user_name = (?), " +
@@ -91,7 +92,27 @@ public final class UserRepositoryImpl implements UserRepository {
                 statement.setString(3, user.name());
                 statement.setString(4, user.role());
                 statement.setBoolean(5, user.active());
-                statement.setLong(6, ((Number) user.id().id()).longValue());
+                statement.setLong(6, Long.parseLong(user.id().id()));
+                statement.execute();
+            }
+        });
+    }
+
+    @Override
+    public void updateUserPartially(String role, TransportUser user) {
+        jdbcTemplate.executeCons(role, Connection.TRANSACTION_SERIALIZABLE, connection -> {
+            checkIfExists(user.id(), user.username(), connection);
+            try (var statement = connection.prepareStatement(
+                    "UPDATE users_view SET " +
+                            "user_name = (?), " +
+                            "pass_word = (?), " +
+                            "real_name = (?) " +
+                            "WHERE id = (?);"
+            )) {
+                statement.setString(1, user.username());
+                statement.setString(2, user.password());
+                statement.setString(3, user.name());
+                statement.setLong(4, Long.parseLong(user.id().id()));
                 statement.execute();
             }
         });
@@ -103,22 +124,21 @@ public final class UserRepositoryImpl implements UserRepository {
             try (var statement = conn.prepareStatement(
                     "DELETE FROM users_view WHERE id = (?);"
             )) {
-                statement.setLong(1, ((Number) userId.id()).longValue());
+                statement.setLong(1, Long.parseLong(userId.id()));
                 statement.execute();
             }
         });
     }
 
-    private void checkIfExists(User user, Connection connection) throws SQLException {
+    private void checkIfExists(UserId userId, String username, Connection connection) throws SQLException {
         try (var statement = connection.prepareStatement(
                 "SELECT * FROM users_view WHERE user_name = (?);"
         )) {
-            statement.setString(1, user.username());
+            statement.setString(1, username);
             try (var resultSet = statement.executeQuery()) {
                 var found = getUser(resultSet);
-                if (found != null && !found.id().equals(user.id())) {
-                    throw new EntityAlreadyExistsException(String.format(
-                            "User %s already exists", user.username()));
+                if (found != null && !found.id().equals(userId)) {
+                    throw new EntityAlreadyExistsException(String.format("User %s already exists", username));
                 }
             }
         }
@@ -127,7 +147,7 @@ public final class UserRepositoryImpl implements UserRepository {
     private User getUser(ResultSet resultSet) throws SQLException {
         var result = (User) null;
         if (resultSet.next()) {
-            var id = new UserId(resultSet.getLong("id"));
+            var id = new UserId(String.valueOf(resultSet.getLong("id")));
             var username = resultSet.getString("user_name");
             var password = resultSet.getString("pass_word");
             var name = resultSet.getString("real_name");
