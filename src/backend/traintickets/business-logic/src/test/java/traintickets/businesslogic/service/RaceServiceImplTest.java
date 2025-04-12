@@ -29,119 +29,119 @@ import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class RaceServiceImplTest {
-//    @Mock
-//    private RaceRepository raceRepository;
-//
-//    @Mock
-//    private UserRepository userRepository;
-//
-//    @Mock
-//    private TicketRepository ticketRepository;
-//
-//    @Mock
-//    private SessionManager sessionManager;
-//
-//    @InjectMocks
-//    private RaceServiceImpl raceService;
-//
-//    @Test
-//    void addRace_positive_added() throws TrainAlreadyReservedException {
-//        var start = new Schedule(null, "start", null, Timestamp.valueOf("2001-09-11 08:46:26"), 0);
-//        var end = new Schedule(null, "end", Timestamp.valueOf("2001-09-11 09:03:02"), null, 100);
-//        var race = new Race(null, new TrainId(1), List.of(start, end), false);
-//        var userInfo = new UserInfo(new UserId(1), "carrier_role");
-//        var sessionId = UUID.randomUUID();
-//        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
-//        raceService.addRace(sessionId, race);
-//        verify(raceRepository).addRace(userInfo.role(), race);
-//    }
-//
-//    @Test
-//    void addRace_negative_invalid() throws TrainAlreadyReservedException {
-//        var start = new Schedule(null, "start", null, Timestamp.valueOf("2001-09-11 09:03:02"), 0);
-//        var end = new Schedule(null, "end", Timestamp.valueOf("2001-09-11 08:46:26"), null, 100);
-//        var race = new Race(null, new TrainId(1), List.of(start, end), false);
-//        assertThrows(InvalidEntityException.class, () -> raceService.addRace(UUID.randomUUID(), race));
-//        verify(raceRepository, never()).addRace(any(), any());
-//    }
-//
-//    @Test
-//    void getRace_positive_found() {
-//        var start = new Schedule(new ScheduleId(1), "start", null, Timestamp.valueOf("2001-09-11 08:46:26"), 0);
-//        var end = new Schedule(new ScheduleId(2), "start", null, Timestamp.valueOf("2001-09-11 09:03:02"), 100);
-//        var raceId = new RaceId(1);
-//        var race = new Race(raceId, new TrainId(1), List.of(start, end), false);
-//        var userInfo = new UserInfo(new UserId(1), "carrier_role");
-//        var sessionId = UUID.randomUUID();
-//        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
-//        given(raceRepository.getRace(userInfo.role(), raceId)).willReturn(Optional.of(race));
-//        var result = raceService.getRace(sessionId, raceId);
-//        assertSame(race, result);
-//    }
-//
-//    @Test
-//    void getRace_negative_notFound() {
-//        var raceId = new RaceId(1);
-//        var userInfo = new UserInfo(new UserId(1), "carrier_role");
-//        var sessionId = UUID.randomUUID();
-//        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
-//        given(raceRepository.getRace(userInfo.role(), raceId)).willReturn(Optional.empty());
-//        assertThrows(EntityNotFoundException.class, () -> raceService.getRace(sessionId, raceId));
-//    }
-//
-//    @Test
-//    void finishRace_positive_finished() {
-//        var raceId = new RaceId(1);
-//        var userInfo = new UserInfo(new UserId(1), "carrier_role");
-//        var sessionId = UUID.randomUUID();
-//        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
-//        raceService.finishRace(sessionId, raceId);
-//        verify(raceRepository).updateRace(userInfo.role(), raceId, true);
-//    }
-//
-//    @Test
-//    void getPassengers_positive_got() {
-//        var raceId = new RaceId(1);
-//        var userId1 = new UserId(1);
-//        var userId2 = new UserId(2);
-//        var start = new Schedule(new ScheduleId(1), "start", null, Timestamp.valueOf("2001-09-11 08:46:26"), 0);
-//        var end = new Schedule(new ScheduleId(2), "end", Timestamp.valueOf("2001-09-11 09:03:02"), null, 100);
-//        var ticket1 = new Ticket(new TicketId(1), userId1, "adult", raceId, 1, new Place(
-//                new PlaceId(1), 1, null, "any_human", BigDecimal.TEN), start, end, BigDecimal.valueOf(10 * 100));
-//        var ticket2 = new Ticket(new TicketId(2), userId2, "invalid", raceId, 1, new Place(
-//                new PlaceId(2), 2, null, "any_human", BigDecimal.TEN), start, end, BigDecimal.valueOf(10 * 100));
-//        var username1 = "username1";
-//        var username2 = "username2";
-//        var user1 = new User(userId1, username1, "qwerty123", "Zubenko Mikhail", "clientRole", true);
-//        var user2 = new User(userId2, username2, "qwerty123", "Zubenko Mikhail", "clientRole", true);
-//        var userInfo = new UserInfo(new UserId(1), "carrier_role");
-//        var sessionId = UUID.randomUUID();
-//        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
-//        given(ticketRepository.getTicketsByRace(userInfo.role(), raceId)).willReturn(List.of(ticket1, ticket2));
-//        given(userRepository.getUsers(any(), any())).willReturn(List.of(user1, user2));
-//        var result = raceService.getPassengers(sessionId, raceId);
-//        assertNotNull(result);
-//        assertEquals(2, result.size());
-//        var first = result.get(username1);
-//        assertNotNull(first);
-//        assertEquals(1, first.size());
-//        assertEquals("adult", first.getFirst());
-//        var second = result.get(username2);
-//        assertNotNull(second);
-//        assertEquals(1, second.size());
-//        assertEquals("invalid", second.getFirst());
-//    }
-//
-//    @Test
-//    void getPassengersList_positive_empty() {
-//        var raceId = new RaceId(1);
-//        var userInfo = new UserInfo(new UserId(1), "carrier_role");
-//        var sessionId = UUID.randomUUID();
-//        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
-//        given(ticketRepository.getTicketsByRace(userInfo.role(), raceId)).willReturn(List.of());
-//        given(userRepository.getUsers(any(), any())).willReturn(List.of());
-//        var result = raceService.getPassengers(sessionId, raceId);
-//        assertNotNull(result);
-//        assertTrue(result.isEmpty());
-//    }
+    @Mock
+    private RaceRepository raceRepository;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private TicketRepository ticketRepository;
+
+    @Mock
+    private SessionManager sessionManager;
+
+    @InjectMocks
+    private RaceServiceImpl raceService;
+
+    @Test
+    void addRace_positive_added() throws TrainAlreadyReservedException {
+        var start = new Schedule(null, "start", null, Timestamp.valueOf("2001-09-11 08:46:26"), 0);
+        var end = new Schedule(null, "end", Timestamp.valueOf("2001-09-11 09:03:02"), null, 100);
+        var race = new Race(null, new TrainId("1"), List.of(start, end), false);
+        var userInfo = new UserInfo(new UserId("1"), "carrier_role");
+        var sessionId = UUID.randomUUID().toString();
+        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
+        raceService.addRace(sessionId, race);
+        verify(raceRepository).addRace(userInfo.role(), race);
+    }
+
+    @Test
+    void addRace_negative_invalid() throws TrainAlreadyReservedException {
+        var start = new Schedule(null, "start", null, Timestamp.valueOf("2001-09-11 09:03:02"), 0);
+        var end = new Schedule(null, "end", Timestamp.valueOf("2001-09-11 08:46:26"), null, 100);
+        var race = new Race(null, new TrainId("1"), List.of(start, end), false);
+        assertThrows(InvalidEntityException.class, () -> raceService.addRace(UUID.randomUUID().toString(), race));
+        verify(raceRepository, never()).addRace(any(), any());
+    }
+
+    @Test
+    void getRace_positive_found() {
+        var start = new Schedule(new ScheduleId("1"), "start", null, Timestamp.valueOf("2001-09-11 08:46:26"), 0);
+        var end = new Schedule(new ScheduleId("2"), "start", null, Timestamp.valueOf("2001-09-11 09:03:02"), 100);
+        var raceId = new RaceId("1");
+        var race = new Race(raceId, new TrainId("1"), List.of(start, end), false);
+        var userInfo = new UserInfo(new UserId("1"), "carrier_role");
+        var sessionId = UUID.randomUUID().toString();
+        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
+        given(raceRepository.getRace(userInfo.role(), raceId)).willReturn(Optional.of(race));
+        var result = raceService.getRace(sessionId, raceId);
+        assertSame(race, result);
+    }
+
+    @Test
+    void getRace_negative_notFound() {
+        var raceId = new RaceId("1");
+        var userInfo = new UserInfo(new UserId("1"), "carrier_role");
+        var sessionId = UUID.randomUUID().toString();
+        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
+        given(raceRepository.getRace(userInfo.role(), raceId)).willReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class, () -> raceService.getRace(sessionId, raceId));
+    }
+
+    @Test
+    void finishRace_positive_finished() {
+        var raceId = new RaceId("1");
+        var userInfo = new UserInfo(new UserId("1"), "carrier_role");
+        var sessionId = UUID.randomUUID().toString();
+        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
+        raceService.finishRace(sessionId, raceId);
+        verify(raceRepository).updateRace(userInfo.role(), raceId, true);
+    }
+
+    @Test
+    void getPassengers_positive_got() {
+        var raceId = new RaceId("1");
+        var userId1 = new UserId("1");
+        var userId2 = new UserId("2");
+        var start = new Schedule(new ScheduleId("1"), "start", null, Timestamp.valueOf("2001-09-11 08:46:26"), 0);
+        var end = new Schedule(new ScheduleId("2"), "end", Timestamp.valueOf("2001-09-11 09:03:02"), null, 100);
+        var ticket1 = new Ticket(new TicketId("1"), userId1, "adult", raceId, 1, new Place(
+                new PlaceId("1"), 1, null, "any_human", BigDecimal.TEN), start, end, BigDecimal.valueOf(10 * 100));
+        var ticket2 = new Ticket(new TicketId("2"), userId2, "invalid", raceId, 1, new Place(
+                new PlaceId("2"), 2, null, "any_human", BigDecimal.TEN), start, end, BigDecimal.valueOf(10 * 100));
+        var username1 = "username1";
+        var username2 = "username2";
+        var user1 = new User(userId1, username1, "qwerty123", "Zubenko Mikhail", "clientRole", true);
+        var user2 = new User(userId2, username2, "qwerty123", "Zubenko Mikhail", "clientRole", true);
+        var userInfo = new UserInfo(new UserId("1"), "carrier_role");
+        var sessionId = UUID.randomUUID().toString();
+        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
+        given(ticketRepository.getTicketsByRace(userInfo.role(), raceId)).willReturn(List.of(ticket1, ticket2));
+        given(userRepository.getUsers(any(), any())).willReturn(List.of(user1, user2));
+        var result = raceService.getPassengers(sessionId, raceId);
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        var first = result.get(username1);
+        assertNotNull(first);
+        assertEquals(1, first.size());
+        assertEquals("adult", first.getFirst());
+        var second = result.get(username2);
+        assertNotNull(second);
+        assertEquals(1, second.size());
+        assertEquals("invalid", second.getFirst());
+    }
+
+    @Test
+    void getPassengersList_positive_empty() {
+        var raceId = new RaceId("1");
+        var userInfo = new UserInfo(new UserId("1"), "carrier_role");
+        var sessionId = UUID.randomUUID().toString();
+        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
+        given(ticketRepository.getTicketsByRace(userInfo.role(), raceId)).willReturn(List.of());
+        given(userRepository.getUsers(any(), any())).willReturn(List.of());
+        var result = raceService.getPassengers(sessionId, raceId);
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
 }
