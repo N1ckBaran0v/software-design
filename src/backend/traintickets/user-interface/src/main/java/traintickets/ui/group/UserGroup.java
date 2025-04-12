@@ -18,7 +18,7 @@ public final class UserGroup extends AbstractEndpointGroup {
     public void addEndpoints() {
         post(userController::createUser);
         delete("/{userId}", userController::deleteUser);
-        get(userController::getUser);
+        get(userController::getUsers);
         put("/{userId}", userController::updateUser);
     }
 }
