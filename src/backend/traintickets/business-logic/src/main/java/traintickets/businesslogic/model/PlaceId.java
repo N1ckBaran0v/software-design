@@ -1,7 +1,9 @@
 package traintickets.businesslogic.model;
 
-public final class PlaceId extends AbstractId {
-    public PlaceId(Object id) {
-        super(id);
+import java.util.Objects;
+
+public record PlaceId(String id) {
+    public PlaceId(String id) {
+        this.id = Objects.requireNonNull(id);
     }
 }

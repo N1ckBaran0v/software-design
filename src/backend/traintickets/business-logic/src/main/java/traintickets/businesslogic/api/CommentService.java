@@ -5,10 +5,9 @@ import traintickets.businesslogic.model.Comment;
 import traintickets.businesslogic.model.TrainId;
 
 import java.util.List;
-import java.util.UUID;
 
 public interface CommentService {
-//    void addComment(UUID sessionId, Comment comment);
-//    List<Comment> getComments(UUID sessionId, TrainId trainId);
-//    void deleteComment(UUID sessionId, CommentId commentId);
+    void addComment(String sessionId, Comment comment);
+    List<Comment> getComments(String sessionId, TrainId trainId);
+    void deleteComment(String sessionId, CommentId commentId);
 }

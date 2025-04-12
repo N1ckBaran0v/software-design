@@ -14,33 +14,33 @@ import java.util.UUID;
 import java.util.stream.StreamSupport;
 
 public final class CommentServiceImpl implements CommentService {
-//    private final CommentRepository commentRepository;
-//    private final SessionManager sessionManager;
-//
-//    public CommentServiceImpl(CommentRepository commentRepository, SessionManager sessionManager) {
-//        this.commentRepository = Objects.requireNonNull(commentRepository);
-//        this.sessionManager = Objects.requireNonNull(sessionManager);
-//    }
-//
-//    @Override
-//    public void addComment(UUID sessionId, Comment comment) {
-//        comment.validate();
-//        var userInfo = sessionManager.getUserInfo(sessionId);
-//        if (!userInfo.userId().equals(comment.author())) {
-//            throw new InvalidEntityException("Invalid userId");
-//        }
-//        commentRepository.addComment(userInfo.role(), comment);
-//    }
-//
-//    @Override
-//    public List<Comment> getComments(UUID sessionId, TrainId trainId) {
-//        var role = sessionManager.getUserInfo(sessionId).role();
-//        return StreamSupport.stream(commentRepository.getComments(role, trainId).spliterator(), false).toList();
-//    }
-//
-//    @Override
-//    public void deleteComment(UUID sessionId, CommentId commentId) {
-//        var role = sessionManager.getUserInfo(sessionId).role();
-//        commentRepository.deleteComment(role, commentId);
-//    }
+    private final CommentRepository commentRepository;
+    private final SessionManager sessionManager;
+
+    public CommentServiceImpl(CommentRepository commentRepository, SessionManager sessionManager) {
+        this.commentRepository = Objects.requireNonNull(commentRepository);
+        this.sessionManager = Objects.requireNonNull(sessionManager);
+    }
+
+    @Override
+    public void addComment(String sessionId, Comment comment) {
+        comment.validate();
+        var userInfo = sessionManager.getUserInfo(sessionId);
+        if (!userInfo.userId().equals(comment.author())) {
+            throw new InvalidEntityException("Invalid userId");
+        }
+        commentRepository.addComment(userInfo.role(), comment);
+    }
+
+    @Override
+    public List<Comment> getComments(String sessionId, TrainId trainId) {
+        var role = sessionManager.getUserInfo(sessionId).role();
+        return StreamSupport.stream(commentRepository.getComments(role, trainId).spliterator(), false).toList();
+    }
+
+    @Override
+    public void deleteComment(String sessionId, CommentId commentId) {
+        var role = sessionManager.getUserInfo(sessionId).role();
+        commentRepository.deleteComment(role, commentId);
+    }
 }
