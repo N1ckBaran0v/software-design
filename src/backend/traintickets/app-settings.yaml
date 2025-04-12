@@ -1,0 +1,19 @@
+server:
+    host: localhost
+    port: 8080
+database:
+    url: jdbc:postgresql://localhost:5432/testtrain1
+    users:
+        test: test
+    poolSize: 20
+security:
+    roles:
+        userRole: test
+        carrierRole: test
+        adminRole: test
+        systemRole: test
+redis:
+    host: hz:)
+    port: 228
+    username: tozhe
+    password: qwerty123

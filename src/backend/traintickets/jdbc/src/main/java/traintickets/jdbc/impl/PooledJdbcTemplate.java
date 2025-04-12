@@ -22,6 +22,7 @@ public final class PooledJdbcTemplate extends AbstractJdbcTemplate {
             var pool = new ConnectionPool(provider, poolSize);
             pools.put(user, pool);
         });
+        Runtime.getRuntime().addShutdownHook(new Thread(this::close));
     }
 
     @Override
@@ -36,5 +37,10 @@ public final class PooledJdbcTemplate extends AbstractJdbcTemplate {
     @Override
     protected void releaseConnection(String user, Connection connection) {
         pools.get(user).releaseConnection(connection);
+    }
+
+    @Override
+    public void close() {
+        pools.values().forEach(ConnectionPool::close);
     }
 }

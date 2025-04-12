@@ -1,6 +1,6 @@
 package traintickets.ui.api;
 
-public interface RestServer {
+public interface Server {
     void start();
     void stop();
 }

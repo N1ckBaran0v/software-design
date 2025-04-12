@@ -1,8 +1,8 @@
 CREATE table if not exists Users (
                                      id BIGSERIAL,
-                                     user_name VARCHAR(50),
-                                     pass_word VARCHAR(50),
-                                     real_name VARCHAR(50),
+                                     user_name TEXT,
+                                     pass_word TEXT,
+                                     real_name TEXT,
                                      user_role TEXT,
                                      is_active BOOLEAN
 );

@@ -1,11 +1,11 @@
 package traintickets.ui.javalin;
 
 import io.javalin.Javalin;
-import traintickets.ui.api.RestServer;
+import traintickets.ui.api.Server;
 
 import java.util.Objects;
 
-public final class JavalinServer implements RestServer {
+public final class JavalinServer implements Server {
     private final Javalin javalin;
 
     public JavalinServer(Javalin javalin) {

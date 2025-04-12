@@ -1,9 +1,13 @@
 package traintickets.control;
 
 import traintickets.control.configuration.ApplicationContextCreator;
+import traintickets.ui.api.Server;
 
 public final class Main {
     public static void main(String[] args) {
-        ApplicationContextCreator.create(args);
+        var ctx = ApplicationContextCreator.create(args);
+        var server = ctx.getInstance(Server.class);
+        Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
+        server.start();
     }
 }
