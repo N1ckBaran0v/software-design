@@ -9,7 +9,6 @@ import traintickets.businesslogic.session.SessionManager;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.stream.StreamSupport;
 
 public final class FilterServiceImpl implements FilterService {
