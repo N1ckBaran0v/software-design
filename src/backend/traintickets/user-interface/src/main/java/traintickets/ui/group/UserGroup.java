@@ -10,15 +10,15 @@ public final class UserGroup extends AbstractEndpointGroup {
     private final UserController userController;
 
     public UserGroup(UserController userController) {
-        super("/users");
+        super("/api/users");
         this.userController = Objects.requireNonNull(userController);
     }
 
     @Override
     public void addEndpoints() {
-        get(userController::getUser);
         post(userController::createUser);
-        put(userController::updateUser);
         delete("/{userId}", userController::deleteUser);
+        get(userController::getUser);
+        put("/{userId}", userController::updateUser);
     }
 }

@@ -7,7 +7,7 @@ import java.util.Objects;
 public abstract class AbstractEndpointGroup implements EndpointGroup {
     private final String path;
 
-    public AbstractEndpointGroup(String path) {
+    protected AbstractEndpointGroup(String path) {
         this.path = Objects.requireNonNull(path);
     }
 

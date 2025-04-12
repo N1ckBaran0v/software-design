@@ -10,7 +10,7 @@ public final class AuthGroup extends AbstractEndpointGroup {
     private final AuthController authController;
 
     public AuthGroup(AuthController authController) {
-        super("/");
+        super("/auth");
         this.authController = Objects.requireNonNull(authController);
     }
 
