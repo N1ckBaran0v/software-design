@@ -1,6 +1,5 @@
 package traintickets.businesslogic.api;
 
-import traintickets.businesslogic.model.Railcar;
 import traintickets.businesslogic.model.Train;
 import traintickets.businesslogic.model.TrainId;
 
@@ -11,6 +10,4 @@ public interface TrainService {
     void addTrain(String sessionId, Train train);
     Train getTrain(String sessionId, TrainId trainId);
     List<Train> getTrains(String sessionId, Date start, Date end);
-    void addRailcar(String sessionId, Railcar railcar);
-    List<Railcar> getRailcars(String sessionId, String type);
 }

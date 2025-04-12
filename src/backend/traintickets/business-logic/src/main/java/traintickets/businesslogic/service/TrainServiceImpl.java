@@ -2,10 +2,8 @@ package traintickets.businesslogic.service;
 
 import traintickets.businesslogic.api.TrainService;
 import traintickets.businesslogic.exception.EntityNotFoundException;
-import traintickets.businesslogic.model.Railcar;
 import traintickets.businesslogic.model.Train;
 import traintickets.businesslogic.model.TrainId;
-import traintickets.businesslogic.repository.RailcarRepository;
 import traintickets.businesslogic.repository.TrainRepository;
 import traintickets.businesslogic.session.SessionManager;
 
@@ -16,14 +14,10 @@ import java.util.stream.StreamSupport;
 
 public final class TrainServiceImpl implements TrainService {
     private final TrainRepository trainRepository;
-    private final RailcarRepository railcarRepository;
     private final SessionManager sessionManager;
 
-    public TrainServiceImpl(TrainRepository trainRepository,
-                            RailcarRepository railcarRepository,
-                            SessionManager sessionManager) {
+    public TrainServiceImpl(TrainRepository trainRepository, SessionManager sessionManager) {
         this.trainRepository = Objects.requireNonNull(trainRepository);
-        this.railcarRepository = Objects.requireNonNull(railcarRepository);
         this.sessionManager = Objects.requireNonNull(sessionManager);
     }
 
@@ -43,17 +37,5 @@ public final class TrainServiceImpl implements TrainService {
     public List<Train> getTrains(String sessionId, Date start, Date end) {
         var role = sessionManager.getUserInfo(sessionId).role();
         return StreamSupport.stream(trainRepository.getTrains(role, start, end).spliterator(), false).toList();
-    }
-
-    @Override
-    public void addRailcar(String sessionId, Railcar railcar) {
-        railcar.validate();
-        railcarRepository.addRailcar(sessionManager.getUserInfo(sessionId).role(), railcar);
-    }
-
-    @Override
-    public List<Railcar> getRailcars(String sessionId, String type) {
-        var role = sessionManager.getUserInfo(sessionId).role();
-        return StreamSupport.stream(railcarRepository.getRailcarsByType(role, type).spliterator(), false).toList();
     }
 }
