@@ -11,6 +11,6 @@ public interface UserService {
     void deleteUser(UserId userId);
     TransportUser getUser(String username);
     User getUserByAdmin(String username);
-    void updateUser(TransportUser user);
+    void updateUser(String sessionId, TransportUser user);
     void updateUserByAdmin(User user);
 }

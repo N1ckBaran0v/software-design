@@ -53,10 +53,15 @@ public final class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updateUser(TransportUser user) {
+    public void updateUser(String sessionId, TransportUser user) {
         user.toUser("someRole", true).validate();
         if (user.id() == null) {
             throw new InvalidEntityException("All data required");
+        }
+        var userId = sessionManager.getUserInfo(sessionId).userId();
+        if (!userId.equals(user.id())) {
+            throw new InvalidEntityException(
+                    String.format("Invalid userId: expected '%s', but got '%s'", userId.id(), user.id().id()));
         }
         userRepository.updateUserPartially(systemRole, user);
     }

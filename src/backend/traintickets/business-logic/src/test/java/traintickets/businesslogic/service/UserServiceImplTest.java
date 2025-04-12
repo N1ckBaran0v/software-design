@@ -16,6 +16,7 @@ import traintickets.businesslogic.transport.TransportUser;
 import traintickets.businesslogic.transport.UserInfo;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -114,15 +115,20 @@ class UserServiceImplTest {
     void updateUser_positive_updated() {
         var userId = new UserId("1");
         var user = new TransportUser(userId, "random_username", "qwerty123", "Zubenko Mikhail");
-        userService.updateUser(user);
+        var userInfo = new UserInfo(new UserId("1"), "user_role");
+        var sessionId = UUID.randomUUID().toString();
+        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
+        userService.updateUser(sessionId, user);
         verify(userRepository).updateUserPartially(systemRole, user);
     }
 
     @Test
     void updateUser_negative_invalid() {
-        var user = new TransportUser(new UserId("1"), "random_username_long", "qwerty123", "Zubenko Mikhail");
-        assertThrows(InvalidEntityException.class, () -> userService.updateUser(user));
-        verify(sessionManager, never()).getUserInfo(any());
+        var user = new TransportUser(new UserId("1"), "random_username", "qwerty123", "Zubenko Mikhail");
+        var userInfo = new UserInfo(new UserId("2"), "user_role");
+        var sessionId = UUID.randomUUID().toString();
+        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
+        assertThrows(InvalidEntityException.class, () -> userService.updateUser(sessionId ,user));
         verify(userRepository, never()).updateUserPartially(any(), any());
     }
 

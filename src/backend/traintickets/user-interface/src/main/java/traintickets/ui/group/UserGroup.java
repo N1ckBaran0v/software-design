@@ -1,0 +1,24 @@
+package traintickets.ui.group;
+
+import traintickets.ui.controller.UserController;
+
+import java.util.Objects;
+
+import static io.javalin.apibuilder.ApiBuilder.*;
+
+public final class UserGroup extends AbstractEndpointGroup {
+    private final UserController userController;
+
+    public UserGroup(UserController userController) {
+        super("/users");
+        this.userController = Objects.requireNonNull(userController);
+    }
+
+    @Override
+    public void addEndpoints() {
+        get(userController::getUser);
+        post(userController::createUser);
+        put(userController::updateUser);
+        delete("/{userId}", userController::deleteUser);
+    }
+}
