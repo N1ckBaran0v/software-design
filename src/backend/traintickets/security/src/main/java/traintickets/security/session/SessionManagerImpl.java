@@ -6,22 +6,21 @@ import traintickets.businesslogic.model.UserId;
 import traintickets.businesslogic.session.SessionManager;
 import traintickets.businesslogic.transport.UserInfo;
 
-import java.io.Closeable;
 import java.util.HashMap;
 import java.util.UUID;
 
-public final class SessionManagerImpl implements SessionManager, Closeable {
+public final class SessionManagerImpl implements SessionManager {
     private final JedisPool jedisPool;
 
     public SessionManagerImpl(String redisHost, int redisPort, String redisUsername, String redisPassword) {
         jedisPool = new JedisPool(redisHost, redisPort, redisUsername, redisPassword);
-        Runtime.getRuntime().addShutdownHook(new Thread(this::close));
+        Runtime.getRuntime().addShutdownHook(new Thread(jedisPool::close));
     }
 
     @Override
     public void startSession(String sessionId, User user) {
         try (var connection = jedisPool.getResource()) {
-            var userId = user.id().id().toString();
+            var userId = user.id().id();
             var hash = new HashMap<String, String>();
             hash.put("id", userId);
             hash.put("role", user.role());
@@ -52,7 +51,7 @@ public final class SessionManagerImpl implements SessionManager, Closeable {
     @Override
     public void updateUserInfo(UserInfo userInfo) {
         try (var connection = jedisPool.getResource()) {
-            var userId = userInfo.userId().id().toString();
+            var userId = userInfo.userId().id();
             var hash = new HashMap<String, String>();
             hash.put("id", userId);
             hash.put("role", userInfo.role());
@@ -105,10 +104,5 @@ public final class SessionManagerImpl implements SessionManager, Closeable {
             }
             return uuid.toString();
         }
-    }
-
-    @Override
-    public void close() {
-        jedisPool.close();
     }
 }
