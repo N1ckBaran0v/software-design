@@ -239,12 +239,6 @@ public final class RouteServiceImpl implements RouteService {
     }
 
     @Override
-    public Race getRace(RaceId raceId) {
-        return raceRepository.getRace(systemRole, raceId).orElseThrow(
-                () -> new EntityNotFoundException(String.format("No race with id %s found", raceId.id())));
-    }
-
-    @Override
     public List<List<Place>> getFreePlaces(RaceId raceId, ScheduleId departureId, ScheduleId destinationId) {
         var race = raceRepository.getRace(systemRole, raceId).orElseThrow(
                 () -> new EntityNotFoundException(String.format("No race with id %s found", raceId.id())));

@@ -116,24 +116,6 @@ class RouteServiceImplTest {
     }
 
     @Test
-    void getRace_positive_found() {
-        var raceId = new RaceId("1");
-        var start = new Schedule(new ScheduleId("1"), "start", null, Timestamp.valueOf("2025-03-19 08:30:00"), 0);
-        var end = new Schedule(new ScheduleId("2"), "end", Timestamp.valueOf("2025-03-19 10:00:00"), null, 100);
-        var race = new Race(raceId, new TrainId("1"), List.of(start, end), false);
-        given(raceRepository.getRace(systemRole, raceId)).willReturn(Optional.of(race));
-        var result = routeService.getRace(raceId);
-        assertSame(race, result);
-    }
-
-    @Test
-    void getRace_negative_notFound() {
-        var raceId = new RaceId("1");
-        given(raceRepository.getRace(systemRole, raceId)).willReturn(Optional.empty());
-        assertThrows(EntityNotFoundException.class, () -> routeService.getRace(raceId));
-    }
-
-    @Test
     void getFreePlaces_positive_got() {
         var raceId = new RaceId("1");
         var trainId = new TrainId("1");
