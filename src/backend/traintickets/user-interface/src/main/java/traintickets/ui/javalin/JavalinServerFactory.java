@@ -3,11 +3,12 @@ package traintickets.ui.javalin;
 import com.google.gson.Gson;
 import io.javalin.Javalin;
 import io.javalin.json.JavalinGson;
+import traintickets.businesslogic.logger.UniLoggerFactory;
 import traintickets.ui.api.Server;
 import traintickets.ui.api.ServerFactory;
 import traintickets.ui.api.ServerParams;
 import traintickets.ui.group.AbstractEndpointGroup;
-import traintickets.ui.security.ExceptionHandler;
+import traintickets.ui.security.RuntimeExceptionHandler;
 import traintickets.ui.security.SecurityConfiguration;
 
 import java.util.Objects;
@@ -17,11 +18,17 @@ import static io.javalin.apibuilder.ApiBuilder.path;
 public final class JavalinServerFactory implements ServerFactory {
     private final Iterable<AbstractEndpointGroup> endpointGroups;
     private final SecurityConfiguration securityConfiguration;
+    private final RuntimeExceptionHandler runtimeExceptionHandler;
+    private final UniLoggerFactory loggerFactory;
 
     public JavalinServerFactory(Iterable<AbstractEndpointGroup> endpointGroups,
-                                SecurityConfiguration securityConfiguration) {
+                                SecurityConfiguration securityConfiguration,
+                                RuntimeExceptionHandler runtimeExceptionHandler,
+                                UniLoggerFactory loggerFactory) {
         this.endpointGroups = Objects.requireNonNull(endpointGroups);
         this.securityConfiguration = Objects.requireNonNull(securityConfiguration);
+        this.runtimeExceptionHandler = Objects.requireNonNull(runtimeExceptionHandler);
+        this.loggerFactory = Objects.requireNonNull(loggerFactory);
     }
 
     @Override
@@ -38,7 +45,7 @@ public final class JavalinServerFactory implements ServerFactory {
             javalinConfig.jsonMapper(new JavalinGson(new Gson(), true));
         });
         javalin.before(securityConfiguration::checkSessionId);
-        javalin.exception(RuntimeException.class, ExceptionHandler::handle);
-        return new JavalinServer(javalin);
+        javalin.exception(RuntimeException.class, runtimeExceptionHandler);
+        return new JavalinServer(javalin, loggerFactory);
     }
 }

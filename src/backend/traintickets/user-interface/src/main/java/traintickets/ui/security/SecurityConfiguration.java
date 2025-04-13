@@ -1,6 +1,8 @@
 package traintickets.ui.security;
 
 import io.javalin.http.Context;
+import traintickets.businesslogic.logger.UniLogger;
+import traintickets.businesslogic.logger.UniLoggerFactory;
 import traintickets.businesslogic.session.SessionManager;
 import traintickets.security.exception.ForbiddenException;
 import traintickets.security.exception.UnauthorizedException;
@@ -9,10 +11,16 @@ import java.util.Objects;
 
 public final class SecurityConfiguration {
     private final SessionManager sessionManager;
+    private final UniLogger logger;
     private final String userRole, carrierRole, adminRole;
 
-    public SecurityConfiguration(SessionManager sessionManager, String userRole, String carrierRole, String adminRole) {
+    public SecurityConfiguration(SessionManager sessionManager,
+                                 UniLoggerFactory loggerFactory,
+                                 String userRole,
+                                 String carrierRole,
+                                 String adminRole) {
         this.sessionManager = Objects.requireNonNull(sessionManager);
+        this.logger = Objects.requireNonNull(loggerFactory).getLogger(SecurityConfiguration.class);
         this.userRole = Objects.requireNonNull(userRole);
         this.carrierRole = Objects.requireNonNull(carrierRole);
         this.adminRole = Objects.requireNonNull(adminRole);
@@ -22,6 +30,7 @@ public final class SecurityConfiguration {
         if (ctx.cookie("sessionId") == null) {
             ctx.cookieStore().set("sessionId", sessionManager.generateSessionId());
         }
+        logger.debug("%s called %s:%s", ctx.cookie("sessionId"), ctx.method(), ctx.path());
     }
 
     public void unauthorizedOnly(Context ctx) {

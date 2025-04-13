@@ -22,7 +22,6 @@ public final class PooledJdbcTemplate extends AbstractJdbcTemplate {
             var pool = new ConnectionPool(provider, poolSize);
             pools.put(user, pool);
         });
-        Runtime.getRuntime().addShutdownHook(new Thread(this::close));
     }
 
     @Override

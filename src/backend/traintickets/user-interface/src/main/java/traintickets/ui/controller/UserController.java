@@ -3,6 +3,8 @@ package traintickets.ui.controller;
 import io.javalin.http.Context;
 import traintickets.businesslogic.api.RaceService;
 import traintickets.businesslogic.api.UserService;
+import traintickets.businesslogic.logger.UniLogger;
+import traintickets.businesslogic.logger.UniLoggerFactory;
 import traintickets.businesslogic.model.RaceId;
 import traintickets.businesslogic.model.User;
 import traintickets.businesslogic.model.UserId;
@@ -15,46 +17,65 @@ public final class UserController {
     private final UserService userService;
     private final RaceService raceService;
     private final SessionManager sessionManager;
+    private final UniLogger logger;
     private final String adminRole;
 
     public UserController(UserService userService,
                           RaceService raceService,
                           SessionManager sessionManager,
+                          UniLoggerFactory loggerFactory,
                           String adminRole) {
         this.userService = Objects.requireNonNull(userService);
         this.raceService = Objects.requireNonNull(raceService);
         this.sessionManager = Objects.requireNonNull(sessionManager);
+        this.logger = Objects.requireNonNull(loggerFactory).getLogger(UserController.class);
         this.adminRole = Objects.requireNonNull(adminRole);
     }
 
     public void createUser(Context ctx) {
-        userService.createUser(ctx.bodyAsClass(User.class));
+        var user = ctx.bodyAsClass(User.class);
+        logger.debug("user: %s", user);
+        userService.createUser(user);
+        logger.debug("user created");
     }
 
     public void deleteUser(Context ctx) {
-        userService.deleteUser(new UserId(ctx.pathParam("userId")));
+        var userId = ctx.pathParam("userId");
+        logger.debug("user: %s", userId);
+        userService.deleteUser(new UserId(userId));
+        logger.debug("user deleted");
     }
 
     public void getUsers(Context ctx) {
         var username = ctx.queryParam("username");
         if (username == null) {
             var raceId = ctx.queryParam("raceId");
+            logger.debug("raceId: %s", raceId);
             ctx.json(raceService.getRace(ctx.cookie("sessionId"), new RaceId(raceId)));
-        }
-        var role = sessionManager.getUserInfo(ctx.cookie("sessionId")).role();
-        if (role.equals(adminRole)) {
-            ctx.json(userService.getUserByAdmin(username));
+            logger.debug("users got");
         } else {
-            ctx.json(userService.getUser(username));
+            logger.debug("username: %s", username);
+            var role = sessionManager.getUserInfo(ctx.cookie("sessionId")).role();
+            if (role.equals(adminRole)) {
+                ctx.json(userService.getUserByAdmin(username));
+            } else {
+                ctx.json(userService.getUser(username));
+            }
+            logger.debug("user got");
         }
     }
 
     public void updateUser(Context ctx) {
         var role = sessionManager.getUserInfo(ctx.cookie("sessionId")).role();
         if (role.equals(adminRole)) {
-            userService.updateUserByAdmin(ctx.bodyAsClass(User.class));
+            var user = ctx.bodyAsClass(User.class);
+            logger.debug("user: %s", user);
+            userService.updateUserByAdmin(user);
         } else {
-            userService.updateUser(ctx.cookie("sessionId"), ctx.bodyAsClass(TransportUser.class));
+            var user = ctx.bodyAsClass(TransportUser.class);
+            logger.debug("user: %s", user);
+            userService.updateUser(ctx.cookie("sessionId"), user);
         }
+        logger.debug("user updated");
     }
 }

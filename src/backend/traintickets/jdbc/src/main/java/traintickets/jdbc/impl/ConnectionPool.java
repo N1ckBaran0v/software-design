@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Semaphore;
 
-final class ConnectionPool implements AutoCloseable {
+final class ConnectionPool {
     private final List<Connection> connections;
     private final List<Connection> pool;
     private final Semaphore semaphore;
@@ -46,7 +46,6 @@ final class ConnectionPool implements AutoCloseable {
         }
     }
 
-    @Override
     public void close() {
         connections.forEach(connection -> {
             try {
