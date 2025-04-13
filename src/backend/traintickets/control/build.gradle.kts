@@ -10,6 +10,7 @@ dependencies {
     api(project(":data-access"))
     api(project(":di"))
     api(project(":jdbc"))
+    api(project(":logger"))
     api(project(":payment"))
     api(project(":security"))
     api(project(":user-interface"))

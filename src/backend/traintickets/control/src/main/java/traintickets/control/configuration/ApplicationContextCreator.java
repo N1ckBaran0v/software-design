@@ -13,6 +13,7 @@ public final class ApplicationContextCreator {
                 .addModule(new BusinessLogicModule(appParams.getSecurity()))
                 .addModule(new DataAccessModule())
                 .addModule(new JdbcTemplateModule(appParams.getDatabase()))
+                .addModule(new LoggerModule())
                 .addModule(new PaymentModule())
                 .addModule(new SecurityModule(appParams.getRedis()))
                 .addModule(new UserInterfaceModule(appParams.getServer(), appParams.getSecurity()))
