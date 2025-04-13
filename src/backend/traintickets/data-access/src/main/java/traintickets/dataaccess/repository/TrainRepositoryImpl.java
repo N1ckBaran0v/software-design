@@ -38,7 +38,7 @@ public final class TrainRepositoryImpl implements TrainRepository {
 
     private void saveRailcars(Train train, Connection connection, long trainId) throws SQLException {
         try (var statement = connection.prepareStatement(
-                "INSERT INTO railcarsintrains (train_id, railcar_id) VALUES (?, ?);"
+                "INSERT INTO railcars_in_trains (train_id, railcar_id) VALUES (?, ?);"
         )) {
             for (var railcar : train.railcars()) {
                 statement.setLong(1, trainId);
@@ -106,7 +106,7 @@ public final class TrainRepositoryImpl implements TrainRepository {
     private List<RailcarId> getRailcarIds(Connection connection, TrainId trainId) throws SQLException {
         var railcarIds = new ArrayList<RailcarId>();
         try (var statement = connection.prepareStatement(
-                "SELECT * FROM railcarsintrains WHERE train_id = (?);"
+                "SELECT * FROM railcars_in_trains WHERE train_id = (?);"
         )) {
             statement.setLong(1, Long.parseLong(trainId.id()));
             try (var resultSet = statement.executeQuery()) {

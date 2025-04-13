@@ -35,7 +35,7 @@ class RaceRepositoryImplIT extends PostgresIT {
                             "(2, 'first', null, '2025-04-01 11:00:00+03', 0), " +
                             "(2, 'second', '2025-04-01 12:00:00+03', null, 5); " +
                             "insert into railcars (railcar_model, railcar_type) values (1, 'сидячий'); " +
-                            "insert into railcarsintrains (train_id, railcar_id) values (1, 1); "
+                            "insert into railcars_in_trains (train_id, railcar_id) values (1, 1); "
             )) {
                 statement.execute();
             }

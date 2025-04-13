@@ -30,7 +30,7 @@ class CommentRepositoryImplIT extends PostgresIT {
                             "('first', 'qwerty123', 'Иванов Иван Иванович', 'userRole', TRUE), " +
                             "('second', 'qwerty123', 'Петров Пётр Петрович', 'userRole', TRUE); " +
                             "insert into trains (train_class) values ('Скорый'); " +
-                            "insert into comments (user_id, train_id, score, comment_text) values " +
+                            "insert into train_comments (user_id, train_id, score, comment_text) values " +
                             "(1, 1, 5, 'Лучший поезд'), " +
                             "(2, 1, 1, 'Грубые проводники'); "
             )) {
@@ -44,7 +44,7 @@ class CommentRepositoryImplIT extends PostgresIT {
         var comment = new Comment(null, new UserId("1"), new TrainId("1"), 4, "Упс, не туда нажал");
         commentRepository.addComment(roleName, comment);
         jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
-            try (var statement = connection.prepareStatement("select * from comments where id = 3;")) {
+            try (var statement = connection.prepareStatement("select * from train_comments where id = 3;")) {
                 try (var resultSet = statement.executeQuery()) {
                     assertTrue(resultSet.next());
                     assertEquals(comment.author().id(), String.valueOf(resultSet.getLong("user_id")));
@@ -84,7 +84,7 @@ class CommentRepositoryImplIT extends PostgresIT {
         var commentId = new CommentId("1");
         commentRepository.deleteComment(roleName, commentId);
         jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
-            try (var statement = connection.prepareStatement("select * from comments where id = 1;")) {
+            try (var statement = connection.prepareStatement("select * from train_comments where id = 1;")) {
                 try (var resultSet = statement.executeQuery()) {
                     assertFalse(resultSet.next());
                 }

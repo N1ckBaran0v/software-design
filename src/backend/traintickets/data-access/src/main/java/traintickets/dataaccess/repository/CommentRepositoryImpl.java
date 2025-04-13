@@ -24,7 +24,7 @@ public final class CommentRepositoryImpl implements CommentRepository {
     public void addComment(String role, Comment comment) {
         jdbcTemplate.executeCons(role, Connection.TRANSACTION_READ_COMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
-                    "INSERT INTO comments (user_id, train_id, score, comment_text) " +
+                    "INSERT INTO train_comments (user_id, train_id, score, comment_text) " +
                             "VALUES (?, ?, ?, ?);"
             )) {
                 statement.setLong(1, Long.parseLong(comment.author().id()));
@@ -40,7 +40,7 @@ public final class CommentRepositoryImpl implements CommentRepository {
     public Iterable<Comment> getComments(String role, TrainId trainId) {
         return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_READ_COMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
-                    "SELECT * FROM comments WHERE train_id = (?);"
+                    "SELECT * FROM train_comments WHERE train_id = (?);"
             )) {
                 statement.setLong(1, Long.parseLong(trainId.id()));
                 try (var resultSet = statement.executeQuery()) {
@@ -60,7 +60,7 @@ public final class CommentRepositoryImpl implements CommentRepository {
     public void deleteComment(String role, CommentId commentId) {
         jdbcTemplate.executeCons(role, Connection.TRANSACTION_READ_COMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
-                    "DELETE FROM comments WHERE id = (?);"
+                    "DELETE FROM train_comments WHERE id = (?);"
             )) {
                 statement.setLong(1, Long.parseLong(commentId.id()));
                 statement.execute();

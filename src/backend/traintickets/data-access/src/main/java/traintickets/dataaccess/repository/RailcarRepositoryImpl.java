@@ -87,7 +87,7 @@ public final class RailcarRepositoryImpl implements RailcarRepository {
     public Iterable<Railcar> getRailcarsByTrain(String role, TrainId trainId) {
         return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
-                    "WITH railcars_ids AS (SELECT DISTINCT railcar_id FROM railcarsintrains WHERE train_id = (?)) " +
+                    "WITH railcars_ids AS (SELECT DISTINCT railcar_id FROM railcars_in_trains WHERE train_id = (?)) " +
                             "SELECT * FROM railcars WHERE id IN (SELECT * FROM railcars_ids);"
             )) {
                 statement.setLong(1, Long.parseLong(trainId.id()));

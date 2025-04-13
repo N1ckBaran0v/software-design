@@ -29,7 +29,7 @@ class RailcarRepositoryImplIT extends PostgresIT {
                     "insert into trains (train_class) values ('Скорый'); " +
                             "insert into railcars (railcar_model, railcar_type) values " +
                             "('1', 'сидячий'), ('2', 'купе'); " +
-                            "insert into railcarsintrains (train_id, railcar_id) values " +
+                            "insert into railcars_in_trains (train_id, railcar_id) values " +
                             "(1, 1), (1, 1), (1, 1), (1, 2); " +
                             "insert into places (railcar_id, place_number, description, purpose, place_cost) values " +
                             "(1, 1, '', 'universal', 100), (1, 2, '', 'child', 50), (2, 1, '', 'universal', 100);"

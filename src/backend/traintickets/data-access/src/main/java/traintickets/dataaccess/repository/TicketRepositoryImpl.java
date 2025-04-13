@@ -64,7 +64,7 @@ public final class TicketRepositoryImpl implements TicketRepository {
         }
         try (var  statement = connection.prepareStatement(
                 "WITH curr_train_id AS (SELECT train_id FROM races WHERE id = (?)) " +
-                        "SELECT * FROM railcarsintrains WHERE train_id = (SELECT * FROM curr_train_id) LIMIT (?); "
+                        "SELECT * FROM railcars_in_trains WHERE train_id = (SELECT * FROM curr_train_id) LIMIT (?); "
         )) {
             statement.setLong(1, Long.parseLong(ticket.race().id()));
             statement.setInt(2, ticket.railcar());
