@@ -37,12 +37,6 @@ public final class RaceServiceImpl implements RaceService {
     }
 
     @Override
-    public Race getRace(String sessionId, RaceId raceId) {
-        return raceRepository.getRace(sessionManager.getUserInfo(sessionId).role(), raceId).orElseThrow(
-                () -> new EntityNotFoundException(String.format("No race with id %s found", raceId.id())));
-    }
-
-    @Override
     public void finishRace(String sessionId, RaceId raceId) {
         raceRepository.updateRace(sessionManager.getUserInfo(sessionId).role(), raceId, true);
     }

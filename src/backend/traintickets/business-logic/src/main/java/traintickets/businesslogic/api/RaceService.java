@@ -8,7 +8,6 @@ import java.util.Map;
 
 public interface RaceService {
     void addRace(String sessionId, Race race);
-    Race getRace(String sessionId, RaceId raceId);
     void finishRace(String sessionId, RaceId raceId);
     Map<String, List<String>> getPassengers(String sessionId, RaceId raceId);
 }

@@ -66,30 +66,6 @@ class RaceServiceImplTest {
     }
 
     @Test
-    void getRace_positive_found() {
-        var start = new Schedule(new ScheduleId("1"), "start", null, Timestamp.valueOf("2001-09-11 08:46:26"), 0);
-        var end = new Schedule(new ScheduleId("2"), "start", null, Timestamp.valueOf("2001-09-11 09:03:02"), 100);
-        var raceId = new RaceId("1");
-        var race = new Race(raceId, new TrainId("1"), List.of(start, end), false);
-        var userInfo = new UserInfo(new UserId("1"), "carrier_role");
-        var sessionId = UUID.randomUUID().toString();
-        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
-        given(raceRepository.getRace(userInfo.role(), raceId)).willReturn(Optional.of(race));
-        var result = raceService.getRace(sessionId, raceId);
-        assertSame(race, result);
-    }
-
-    @Test
-    void getRace_negative_notFound() {
-        var raceId = new RaceId("1");
-        var userInfo = new UserInfo(new UserId("1"), "carrier_role");
-        var sessionId = UUID.randomUUID().toString();
-        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
-        given(raceRepository.getRace(userInfo.role(), raceId)).willReturn(Optional.empty());
-        assertThrows(EntityNotFoundException.class, () -> raceService.getRace(sessionId, raceId));
-    }
-
-    @Test
     void finishRace_positive_finished() {
         var raceId = new RaceId("1");
         var userInfo = new UserInfo(new UserId("1"), "carrier_role");

@@ -2,6 +2,7 @@ package traintickets.ui.controller;
 
 import io.javalin.http.Context;
 import traintickets.businesslogic.api.RaceService;
+import traintickets.businesslogic.api.RouteService;
 import traintickets.businesslogic.logger.UniLogger;
 import traintickets.businesslogic.logger.UniLoggerFactory;
 import traintickets.businesslogic.model.Race;
@@ -11,10 +12,12 @@ import java.util.Objects;
 
 public final class RaceController {
     private final RaceService raceService;
+    private final RouteService routeService;
     private final UniLogger logger;
 
-    public RaceController(RaceService raceService, UniLoggerFactory loggerFactory) {
+    public RaceController(RaceService raceService, RouteService routeService, UniLoggerFactory loggerFactory) {
         this.raceService = Objects.requireNonNull(raceService);
+        this.routeService = Objects.requireNonNull(routeService);
         this.logger = Objects.requireNonNull(loggerFactory).getLogger(RaceController.class);
     }
 
@@ -28,7 +31,7 @@ public final class RaceController {
     public void getRace(Context ctx) {
         var raceId = ctx.pathParam("raceId");
         logger.debug("raceId: %s", raceId);
-        ctx.json(raceService.getRace(ctx.cookie("sessionId"), new RaceId(raceId)));
+        ctx.json(routeService.getRace(new RaceId(raceId)));
         logger.debug("race got");
     }
 

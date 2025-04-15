@@ -83,6 +83,12 @@ public final class RouteServiceImpl implements RouteService {
     }
 
     @Override
+    public Race getRace(RaceId raceId) {
+        return raceRepository.getRace(systemRole, raceId).orElseThrow(
+                () -> new EntityNotFoundException(String.format("No race with id %s found", raceId.id())));
+    }
+
+    @Override
     public List<Route> getRoutes(Filter filter) {
         filter.validate();
         var races = StreamSupport.stream(raceRepository.getRaces(systemRole, filter).spliterator(), false)
