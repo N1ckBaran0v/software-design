@@ -1,6 +1,7 @@
 package traintickets.ui.controller;
 
 import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
 import traintickets.businesslogic.api.FilterService;
 import traintickets.businesslogic.logger.UniLogger;
 import traintickets.businesslogic.logger.UniLoggerFactory;
@@ -18,7 +19,11 @@ public final class FilterController {
     }
 
     public void addFilter(Context ctx) {
-        filterService.addFilter(ctx.cookie("sessionId"), ctx.bodyAsClass(Filter.class));
+        var filter = ctx.bodyAsClass(Filter.class);
+        logger.debug("filter: %s", filter);
+        filterService.addFilter(ctx.cookie("sessionId"), filter);
+        ctx.status(HttpStatus.CREATED);
+        logger.debug("filter added");
     }
 
     public void getFilters(Context ctx) {
@@ -37,6 +42,7 @@ public final class FilterController {
         var filterId = ctx.queryParam("filterId");
         logger.debug("filterId: %s", filterId);
         filterService.deleteFilter(ctx.cookie("sessionId"), filterId);
+        ctx.status(HttpStatus.NO_CONTENT);
         logger.debug("filter deleted");
     }
 }

@@ -22,7 +22,7 @@ public final class FilterServiceImpl implements FilterService {
 
     @Override
     public void addFilter(String sessionId, Filter filter) {
-        filter.validate();
+        filter.saveValidate();
         var userInfo = sessionManager.getUserInfo(sessionId);
         if (!userInfo.userId().equals(filter.user())) {
             throw new InvalidEntityException("Invalid userId");

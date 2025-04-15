@@ -1,6 +1,7 @@
 package traintickets.ui.controller;
 
 import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
 import traintickets.businesslogic.api.CommentService;
 import traintickets.businesslogic.logger.UniLogger;
 import traintickets.businesslogic.logger.UniLoggerFactory;
@@ -24,6 +25,7 @@ public final class CommentController {
         var comment = ctx.bodyAsClass(Comment.class);
         logger.debug("comment: %s", comment);
         commentService.addComment(ctx.cookie("sessionId"), comment);
+        ctx.status(HttpStatus.CREATED);
         logger.debug("comment added");
     }
 
@@ -41,6 +43,7 @@ public final class CommentController {
         var commentId = ctx.pathParam("commentId");
         logger.debug("commentId: %s", commentId);
         commentService.deleteComment(ctx.cookie("sessionId"), new CommentId(ctx.pathParam("commentId")));
+        ctx.status(HttpStatus.NO_CONTENT);
         logger.debug("comment deleted");
     }
 }

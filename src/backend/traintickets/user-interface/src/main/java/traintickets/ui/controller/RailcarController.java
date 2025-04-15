@@ -1,6 +1,7 @@
 package traintickets.ui.controller;
 
 import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
 import traintickets.businesslogic.api.RailcarService;
 import traintickets.businesslogic.logger.UniLogger;
 import traintickets.businesslogic.logger.UniLoggerFactory;
@@ -22,6 +23,7 @@ public final class RailcarController {
         var railcar = ctx.bodyAsClass(Railcar.class);
         logger.debug("railcar: %s", railcar);
         railcarService.addRailcar(ctx.cookie("sessionId"), railcar);
+        ctx.status(HttpStatus.CREATED);
         logger.debug("railcar added");
     }
 

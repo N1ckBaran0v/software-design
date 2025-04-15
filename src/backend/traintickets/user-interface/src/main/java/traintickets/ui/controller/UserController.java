@@ -1,6 +1,7 @@
 package traintickets.ui.controller;
 
 import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
 import traintickets.businesslogic.api.RaceService;
 import traintickets.businesslogic.api.UserService;
 import traintickets.businesslogic.logger.UniLogger;
@@ -36,6 +37,7 @@ public final class UserController {
         var user = ctx.bodyAsClass(User.class);
         logger.debug("user: %s", user);
         userService.createUser(user);
+        ctx.status(HttpStatus.CREATED);
         logger.debug("user created");
     }
 
@@ -43,6 +45,7 @@ public final class UserController {
         var userId = ctx.pathParam("userId");
         logger.debug("user: %s", userId);
         userService.deleteUser(new UserId(userId));
+        ctx.status(HttpStatus.NO_CONTENT);
         logger.debug("user deleted");
     }
 
@@ -51,7 +54,7 @@ public final class UserController {
         if (username == null) {
             var raceId = ctx.queryParam("raceId");
             logger.debug("raceId: %s", raceId);
-            ctx.json(raceService.getRace(ctx.cookie("sessionId"), new RaceId(raceId)));
+            ctx.json(raceService.getPassengers(ctx.cookie("sessionId"), new RaceId(raceId)));
             logger.debug("users got");
         } else {
             logger.debug("username: %s", username);

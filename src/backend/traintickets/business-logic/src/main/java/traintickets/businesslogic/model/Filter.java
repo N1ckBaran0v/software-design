@@ -13,9 +13,25 @@ public record Filter(UserId user,
                      Map<String, Integer> passengers,
                      Date start,
                      Date end) {
-    public void validate() {
-        if (user == null || name == null || departure == null || destination == null ||
-                transfers < 0 || passengers == null || start== null || end == null) {
+    public void saveValidate() {
+        if (user == null || name == null) {
+            throw new InvalidEntityException("User and name are required");
+        }
+        validate();
+    }
+
+    public void searchValidate() {
+        if (start == null || end == null) {
+            throw new InvalidEntityException("Start and end are required");
+        }
+        if (end.before(start)) {
+            throw new InvalidEntityException("Start date cannot be after end date");
+        }
+        validate();
+    }
+
+    private void validate() {
+        if (departure == null || destination == null || transfers < 0 || passengers == null) {
             throw new InvalidEntityException("Invalid parameters");
         }
         if (departure.equals(destination)) {
@@ -28,9 +44,6 @@ public record Filter(UserId user,
             if (entry.getKey() == null || entry.getValue() == null || entry.getValue() < 1) {
                 throw new InvalidEntityException("Invalid passengers data");
             }
-        }
-        if (end.before(start)) {
-            throw new InvalidEntityException("Start date cannot be after end date");
         }
     }
 }

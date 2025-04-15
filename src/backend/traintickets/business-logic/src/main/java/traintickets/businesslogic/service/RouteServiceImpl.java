@@ -90,7 +90,7 @@ public final class RouteServiceImpl implements RouteService {
 
     @Override
     public List<Route> getRoutes(Filter filter) {
-        filter.validate();
+        filter.searchValidate();
         var races = StreamSupport.stream(raceRepository.getRaces(systemRole, filter).spliterator(), false)
                 .map(RaceWrapper::new).toList();
         var transfers = filter.transfers();

@@ -1,6 +1,7 @@
 package traintickets.ui.controller;
 
 import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
 import traintickets.businesslogic.api.TrainService;
 import traintickets.businesslogic.logger.UniLogger;
 import traintickets.businesslogic.logger.UniLoggerFactory;
@@ -24,6 +25,7 @@ public final class TrainController {
         var train = ctx.bodyAsClass(Train.class);
         logger.debug("train: %s", train);
         trainService.addTrain(ctx.cookie("sessionId"), train);
+        ctx.status(HttpStatus.CREATED);
         logger.debug("train added");
     }
 
