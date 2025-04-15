@@ -21,7 +21,7 @@ public final class FilterController {
     public void addFilter(Context ctx) {
         var filter = ctx.bodyAsClass(Filter.class);
         logger.debug("filter: %s", filter);
-        filterService.addFilter(ctx.cookie("sessionId"), filter);
+        filterService.addFilter(ctx.sessionAttributeMap().get("id").toString(), filter);
         ctx.status(HttpStatus.CREATED);
         logger.debug("filter added");
     }
@@ -30,10 +30,10 @@ public final class FilterController {
         var filterName = ctx.queryParam("filterName");
         logger.debug("filterName: %s", filterName);
         if (filterName == null) {
-            ctx.json(filterService.getFilters(ctx.cookie("sessionId")));
+            ctx.json(filterService.getFilters(ctx.sessionAttributeMap().get("id").toString()));
             logger.debug("filters got");
         } else {
-            ctx.json(filterService.getFilter(ctx.cookie("sessionId"), filterName));
+            ctx.json(filterService.getFilter(ctx.sessionAttributeMap().get("id").toString(), filterName));
             logger.debug("filter got");
         }
     }
@@ -41,7 +41,7 @@ public final class FilterController {
     public void deleteFilter(Context ctx) {
         var filterId = ctx.queryParam("filterId");
         logger.debug("filterId: %s", filterId);
-        filterService.deleteFilter(ctx.cookie("sessionId"), filterId);
+        filterService.deleteFilter(ctx.sessionAttributeMap().get("id").toString(), filterId);
         ctx.status(HttpStatus.NO_CONTENT);
         logger.debug("filter deleted");
     }

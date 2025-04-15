@@ -22,7 +22,7 @@ public final class RailcarController {
     public void addRailcar(Context ctx) {
         var railcar = ctx.bodyAsClass(Railcar.class);
         logger.debug("railcar: %s", railcar);
-        railcarService.addRailcar(ctx.cookie("sessionId"), railcar);
+        railcarService.addRailcar(ctx.sessionAttributeMap().get("id").toString(), railcar);
         ctx.status(HttpStatus.CREATED);
         logger.debug("railcar added");
     }
@@ -33,7 +33,7 @@ public final class RailcarController {
         if (type == null) {
             throw new QueryParameterNotFoundException("type");
         }
-        ctx.json(railcarService.getRailcars(ctx.cookie("sessionId"), type));
+        ctx.json(railcarService.getRailcars(ctx.sessionAttributeMap().get("id").toString(), type));
         logger.debug("railcars got");
     }
 }

@@ -24,7 +24,7 @@ public final class TrainController {
     public void addTrain(Context ctx) {
         var train = ctx.bodyAsClass(Train.class);
         logger.debug("train: %s", train);
-        trainService.addTrain(ctx.cookie("sessionId"), train);
+        trainService.addTrain(ctx.sessionAttributeMap().get("id").toString(), train);
         ctx.status(HttpStatus.CREATED);
         logger.debug("train added");
     }
@@ -32,7 +32,7 @@ public final class TrainController {
     public void getTrain(Context ctx) {
         var trainId = ctx.pathParam("trainId");
         logger.debug("trainId: %s", trainId);
-        ctx.json(trainService.getTrain(ctx.cookie("sessionId"), new TrainId(trainId)));
+        ctx.json(trainService.getTrain(ctx.sessionAttributeMap().get("id").toString(), new TrainId(trainId)));
         logger.debug("train got");
     }
 
@@ -47,7 +47,8 @@ public final class TrainController {
         if (end == null) {
             throw new QueryParameterNotFoundException("end");
         }
-        ctx.json(trainService.getTrains(ctx.cookie("sessionId"), Timestamp.valueOf(start), Timestamp.valueOf(end)));
+        ctx.json(trainService.getTrains(ctx.sessionAttributeMap().get("id").toString(),
+                Timestamp.valueOf(start), Timestamp.valueOf(end)));
         logger.debug("trains got");
     }
 }

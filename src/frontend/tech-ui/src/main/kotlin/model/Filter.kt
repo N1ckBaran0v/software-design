@@ -1,5 +1,8 @@
 package traintickets.console.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Filter(
     var name: String = "default",
     var departure: String? = null,

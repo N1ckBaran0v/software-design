@@ -1,5 +1,8 @@
 package traintickets.console.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Comment(
     val id: CommentId?,
     val author: UserId,

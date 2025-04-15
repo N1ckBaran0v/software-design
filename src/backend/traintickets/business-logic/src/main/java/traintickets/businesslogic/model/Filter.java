@@ -2,6 +2,7 @@ package traintickets.businesslogic.model;
 
 import traintickets.businesslogic.exception.InvalidEntityException;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.Map;
 
@@ -12,7 +13,7 @@ public record Filter(UserId user,
                      int transfers,
                      Map<String, Integer> passengers,
                      Date start,
-                     Date end) {
+                     Date end) implements Serializable {
     public void saveValidate() {
         if (user == null || name == null) {
             throw new InvalidEntityException("User and name are required");

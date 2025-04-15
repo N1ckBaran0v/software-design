@@ -27,50 +27,49 @@ public final class SecurityConfiguration {
     }
 
     public void checkSessionId(Context ctx) {
-        if (ctx.cookie("sessionId") == null) {
-            ctx.cookieStore().set("sessionId", sessionManager.generateSessionId());
+        if (!ctx.sessionAttributeMap().containsKey("id")) {
+            ctx.sessionAttribute("id", sessionManager.generateSessionId());
         }
-        logger.debug("%s called %s:%s", ctx.cookie("sessionId"), ctx.method(), ctx.path());
+        logger.debug("%s called %s:%s", ctx.sessionAttributeMap().get("id").toString(), ctx.method(), ctx.path());
     }
 
     public void unauthorizedOnly(Context ctx) {
-        if (sessionManager.getUserInfo(ctx.cookie("sessionId")) != null) {
+        if (sessionManager.getUserInfo(ctx.sessionAttributeMap().get("id").toString()) != null) {
             throw new ForbiddenException();
         }
     }
 
     public void authorizedOnly(Context ctx) {
-        if (sessionManager.getUserInfo(ctx.cookie("sessionId")) == null) {
+        if (sessionManager.getUserInfo(ctx.sessionAttributeMap().get("id").toString()) == null) {
             throw new UnauthorizedException();
         }
     }
 
     public void forUser(Context ctx) {
-        var userInfo = sessionManager.getUserInfo(ctx.cookie("sessionId"));
-        if (userInfo.role() == null) {
-            throw new UnauthorizedException();
-        }
-        if (!(userInfo.role().equals(userRole) || userInfo.role().equals(adminRole))) {
-            throw new ForbiddenException();
-        }
+        forRoles(ctx, userRole, adminRole);
     }
 
     public void forCarrier(Context ctx) {
-        var userInfo = sessionManager.getUserInfo(ctx.cookie("sessionId"));
-        if (userInfo.role() == null) {
-            throw new UnauthorizedException();
-        }
-        if (!(userInfo.role().equals(carrierRole) || userInfo.role().equals(adminRole))) {
-            throw new ForbiddenException();
-        }
+        forRoles(ctx, carrierRole, adminRole);
     }
 
     public void forAdmin(Context ctx) {
-        var userInfo = sessionManager.getUserInfo(ctx.cookie("sessionId"));
+        forRoles(ctx, adminRole);
+    }
+
+    private void forRoles(Context ctx, String... roles) {
+        var userInfo = sessionManager.getUserInfo(ctx.sessionAttributeMap().get("id").toString());
         if (userInfo.role() == null) {
             throw new UnauthorizedException();
         }
-        if (!userInfo.role().equals(adminRole)) {
+        var flag = false;
+        for (var role : roles) {
+            if (userInfo.role().equals(role)) {
+                flag = true;
+                break;
+            }
+        }
+        if (!flag) {
             throw new ForbiddenException();
         }
     }

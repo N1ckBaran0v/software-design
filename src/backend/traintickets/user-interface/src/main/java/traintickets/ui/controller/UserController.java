@@ -54,11 +54,11 @@ public final class UserController {
         if (username == null) {
             var raceId = ctx.queryParam("raceId");
             logger.debug("raceId: %s", raceId);
-            ctx.json(raceService.getPassengers(ctx.cookie("sessionId"), new RaceId(raceId)));
+            ctx.json(raceService.getPassengers(ctx.sessionAttributeMap().get("id").toString(), new RaceId(raceId)));
             logger.debug("users got");
         } else {
             logger.debug("username: %s", username);
-            var role = sessionManager.getUserInfo(ctx.cookie("sessionId")).role();
+            var role = sessionManager.getUserInfo(ctx.sessionAttributeMap().get("id").toString()).role();
             if (role.equals(adminRole)) {
                 ctx.json(userService.getUserByAdmin(username));
             } else {
@@ -69,7 +69,7 @@ public final class UserController {
     }
 
     public void updateUser(Context ctx) {
-        var role = sessionManager.getUserInfo(ctx.cookie("sessionId")).role();
+        var role = sessionManager.getUserInfo(ctx.sessionAttributeMap().get("id").toString()).role();
         if (role.equals(adminRole)) {
             var user = ctx.bodyAsClass(User.class);
             logger.debug("user: %s", user);
@@ -77,7 +77,7 @@ public final class UserController {
         } else {
             var user = ctx.bodyAsClass(TransportUser.class);
             logger.debug("user: %s", user);
-            userService.updateUser(ctx.cookie("sessionId"), user);
+            userService.updateUser(ctx.sessionAttributeMap().get("id").toString(), user);
         }
         logger.debug("user updated");
     }

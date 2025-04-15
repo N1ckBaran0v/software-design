@@ -12,6 +12,7 @@ import traintickets.ui.security.SecurityConfiguration;
 
 import java.util.Objects;
 
+import static io.javalin.apibuilder.ApiBuilder.before;
 import static io.javalin.apibuilder.ApiBuilder.path;
 
 public final class JavalinServerFactory implements ServerFactory {
@@ -33,6 +34,7 @@ public final class JavalinServerFactory implements ServerFactory {
             javalinConfig.jetty.defaultHost = serverParams.host();
             javalinConfig.jetty.defaultPort = serverParams.port();
             javalinConfig.router.apiBuilder(() -> {
+                before(securityConfiguration::checkSessionId);
                 for (var group : endpointGroups) {
                     path(group.getPath(), group);
                 }
@@ -40,7 +42,6 @@ public final class JavalinServerFactory implements ServerFactory {
             javalinConfig.useVirtualThreads = true;
             javalinConfig.jsonMapper(new JavalinGson(new Gson(), true));
         });
-        javalin.before(securityConfiguration::checkSessionId);
         javalin.exception(RuntimeException.class, runtimeExceptionHandler);
         return new JavalinServer(javalin);
     }

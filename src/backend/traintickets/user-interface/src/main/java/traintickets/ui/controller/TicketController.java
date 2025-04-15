@@ -25,7 +25,7 @@ public final class TicketController {
     public void addTickets(Context ctx) {
         var tickets = Arrays.asList(ctx.bodyAsClass(Ticket[].class));
         logger.debug("tickets: %s", tickets);
-        ticketService.buyTickets(ctx.cookie("sessionId"), tickets, new NoOpPaymentData());
+        ticketService.buyTickets(ctx.sessionAttributeMap().get("id").toString(), tickets, new NoOpPaymentData());
         ctx.status(HttpStatus.CREATED);
         logger.debug("tickets added");
     }
@@ -36,7 +36,7 @@ public final class TicketController {
         if (userId == null) {
             throw new QueryParameterNotFoundException("userId");
         }
-        ctx.json(ticketService.getTickets(ctx.cookie("sessionId"), new UserId(userId)));
+        ctx.json(ticketService.getTickets(ctx.sessionAttributeMap().get("id").toString(), new UserId(userId)));
         logger.debug("tickets got");
     }
 }

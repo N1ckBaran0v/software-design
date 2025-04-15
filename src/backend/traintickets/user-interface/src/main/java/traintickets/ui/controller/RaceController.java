@@ -25,7 +25,7 @@ public final class RaceController {
     public void addRace(Context ctx) {
         var race = ctx.bodyAsClass(Race.class);
         logger.debug("race: %s", race);
-        raceService.addRace(ctx.cookie("sessionId"), race);
+        raceService.addRace(ctx.sessionAttributeMap().get("id").toString(), race);
         ctx.status(HttpStatus.CREATED);
         logger.debug("race added");
     }
@@ -40,7 +40,7 @@ public final class RaceController {
     public void finishRace(Context ctx) {
         var raceId = ctx.pathParam("raceId");
         logger.debug("raceId: %s", raceId);
-        raceService.finishRace(ctx.cookie("sessionId"), new RaceId(raceId));
+        raceService.finishRace(ctx.sessionAttributeMap().get("id").toString(), new RaceId(raceId));
         logger.debug("race finished");
     }
 }

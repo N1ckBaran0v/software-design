@@ -21,19 +21,19 @@ public final class AuthController {
     public void register(Context ctx) {
         var form = ctx.bodyAsClass(RegisterForm.class);
         logger.debug("register form: %s", form);
-        authService.register(ctx.cookie("sessionId"), form);
+        authService.register(ctx.sessionAttributeMap().get("id").toString(), form);
         logger.debug("registered");
     }
 
     public void login(Context ctx) {
         var form = ctx.bodyAsClass(LoginForm.class);
         logger.debug("login form: %s", form);
-        authService.login(ctx.cookie("sessionId"), form);
+        authService.login(ctx.sessionAttributeMap().get("id").toString(), form);
         logger.debug("logged in");
     }
 
     public void logout(Context ctx) {
-        authService.logout(ctx.cookie("sessionId"));
+        authService.logout(ctx.sessionAttributeMap().get("id").toString());
         logger.debug("logged out");
     }
 }

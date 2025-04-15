@@ -24,7 +24,7 @@ public final class CommentController {
     public void addComment(Context ctx) {
         var comment = ctx.bodyAsClass(Comment.class);
         logger.debug("comment: %s", comment);
-        commentService.addComment(ctx.cookie("sessionId"), comment);
+        commentService.addComment(ctx.sessionAttributeMap().get("id").toString(), comment);
         ctx.status(HttpStatus.CREATED);
         logger.debug("comment added");
     }
@@ -35,14 +35,15 @@ public final class CommentController {
         if (trainId == null) {
             throw new QueryParameterNotFoundException("trainId");
         }
-        commentService.getComments(ctx.cookie("sessionId"), new TrainId(trainId));
+        commentService.getComments(ctx.sessionAttributeMap().get("id").toString(), new TrainId(trainId));
         logger.debug("comments got");
     }
 
     public void deleteComment(Context ctx) {
         var commentId = ctx.pathParam("commentId");
         logger.debug("commentId: %s", commentId);
-        commentService.deleteComment(ctx.cookie("sessionId"), new CommentId(ctx.pathParam("commentId")));
+        commentService.deleteComment(ctx.sessionAttributeMap().get("id").toString(),
+                new CommentId(ctx.pathParam("commentId")));
         ctx.status(HttpStatus.NO_CONTENT);
         logger.debug("comment deleted");
     }

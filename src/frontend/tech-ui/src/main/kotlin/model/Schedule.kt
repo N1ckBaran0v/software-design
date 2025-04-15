@@ -1,5 +1,8 @@
 package traintickets.console.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 class Schedule(
     val id: ScheduleId? = null,
     val name: String,

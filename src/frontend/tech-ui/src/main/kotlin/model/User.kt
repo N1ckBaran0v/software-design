@@ -1,5 +1,8 @@
 package traintickets.console.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class User(
     val id: UserId? = null,
     val username: String,

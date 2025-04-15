@@ -2,9 +2,10 @@ package traintickets.businesslogic.model;
 
 import traintickets.businesslogic.exception.InvalidEntityException;
 
+import java.io.Serializable;
 import java.util.List;
 
-public record Railcar(RailcarId id, String model, String type, List<Place> places) {
+public record Railcar(RailcarId id, String model, String type, List<Place> places) implements Serializable {
     public void validate() {
         if (model == null || model.isEmpty() || type == null || type.isEmpty() || places == null) {
             throw new InvalidEntityException("Invalid railcar");
