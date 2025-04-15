@@ -12,6 +12,7 @@ class View(val host: String, val port: Int) {
             client.newCall(request).execute().use { response ->
                 println("Server ${response.header("server") ?: "no header"}")
                 println("headers: ${response.headers}")
+                println("sessionAttributes: ${response.header("sessionAttributes")}")
                 println(response.body!!.string())
             }
             readlnOrNull()
