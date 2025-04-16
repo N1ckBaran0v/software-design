@@ -50,14 +50,14 @@ public final class UserController {
     }
 
     public void getUsers(Context ctx) {
-        var username = ctx.queryParam("username");
+        var username = ctx.queryParam("login");
         if (username == null) {
             var raceId = ctx.queryParam("raceId");
             logger.debug("raceId: %s", raceId);
             ctx.json(raceService.getPassengers(ctx.sessionAttributeMap().get("id").toString(), new RaceId(raceId)));
             logger.debug("users got");
         } else {
-            logger.debug("username: %s", username);
+            logger.debug("login: %s", username);
             var role = sessionManager.getUserInfo(ctx.sessionAttributeMap().get("id").toString()).role();
             if (role.equals(adminRole)) {
                 ctx.json(userService.getUserByAdmin(username));

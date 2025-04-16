@@ -23,14 +23,14 @@ public final class UserGroup extends AbstractEndpointGroup {
     public void addEndpoints() {
         before(ctx -> {
             if (ctx.method().equals(HandlerType.GET)) {
-                var username = ctx.queryParam("username");
+                var username = ctx.queryParam("login");
                 var raceId = ctx.queryParam("raceId");
                 if (username == null && raceId != null) {
                     securityConfiguration.forCarrier(ctx);
                 } else if (username != null && raceId == null) {
                     securityConfiguration.authorizedOnly(ctx);
                 } else {
-                    throw new QueryParameterNotFoundException("username && raceId");
+                    throw new QueryParameterNotFoundException("login && raceId");
                 }
             } else {
                 securityConfiguration.authorizedOnly(ctx);
