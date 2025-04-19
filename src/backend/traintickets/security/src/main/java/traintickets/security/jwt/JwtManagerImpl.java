@@ -1,103 +1,75 @@
 package traintickets.security.jwt;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
-import javalinjwt.JWTGenerator;
-import javalinjwt.JWTProvider;
-import redis.clients.jedis.JedisPool;
+import com.auth0.jwt.exceptions.TokenExpiredException;
 import traintickets.businesslogic.model.UserId;
 import traintickets.businesslogic.session.JwtManager;
 import traintickets.businesslogic.transport.UserInfo;
 import traintickets.security.exception.InvalidTokenException;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class JwtManagerImpl implements JwtManager {
-    private final JedisPool jedisPool;
-    private final JWTProvider<UserInfo> jwtProvider;
+    private final JwtProvider jwtProvider;
+    private final Map<String, String> tokens = new ConcurrentHashMap<>();
+    private final Map<String, Set<String>> userTokens = new HashMap<>();
 
-    public JwtManagerImpl(JedisConfig jedisConfig, JwtConfig jwtConfig) {
-        jedisPool = new JedisPool(jedisConfig.host(), jedisConfig.port(), jedisConfig.login(), jedisConfig.password());
-        Runtime.getRuntime().addShutdownHook(new Thread(jedisPool::close));
-        jwtProvider = getJwtProvider(jwtConfig);
-    }
-
-    static JWTProvider<UserInfo> getJwtProvider(JwtConfig jwtConfig) {
-        var algorithm = Algorithm.HMAC256(jwtConfig.secret());
-        var generator = (JWTGenerator<UserInfo>) (userInfo, algoritm) ->
-                JWT.create()
-                        .withClaim("id", userInfo.userId().id())
-                        .withClaim("role", userInfo.role())
-                        .withExpiresAt(getExpirationDate(jwtConfig.expiration()))
-                        .sign(algorithm);
-        var verifier = JWT.require(algorithm).build();
-        return new JWTProvider<>(algorithm, generator, verifier);
-    }
-
-    private static Date getExpirationDate(int expiration) {
-        var calendar = Calendar.getInstance();
-        calendar.setTime(new Date());
-        calendar.add(Calendar.HOUR_OF_DAY, expiration);
-        return calendar.getTime();
+    public JwtManagerImpl(JwtConfig jwtConfig) {
+        jwtProvider = new JwtProvider(jwtConfig);
     }
 
     @Override
     public String generateToken(UserInfo userInfo) {
-        try (var connection = jedisPool.getResource()) {
-            var userId = userInfo.userId().id();
+        synchronized (tokens) {
             var token = jwtProvider.generateToken(userInfo);
-            var tokenKey = String.format("token:%s", token);
-            var userKey = String.format("user:%s", userId);
-            connection.hset(tokenKey, userKey, "");
-            var sessions = new HashMap<>(connection.hgetAll(userKey));
-            sessions.put(tokenKey, "");
-            connection.hset(userKey, sessions);
+            var userId = userInfo.userId().id();
+            tokens.put(token, userId);
+            if (!userTokens.containsKey(userId)) {
+                userTokens.put(userId, new HashSet<>());
+            }
+            userTokens.get(userId).add(token);
             return token;
         }
     }
 
     @Override
     public UserInfo validateToken(String token) {
-        try (var connection = jedisPool.getResource()) {
-            var tokenKey = String.format("token:%s", token);
-            if (!connection.exists(tokenKey)) {
+        try {
+            if (!tokens.containsKey(token)) {
                 throw new InvalidTokenException(token);
             }
-            var decoded = jwtProvider.validateToken(token).orElseThrow(() -> new InvalidTokenException(token));
-            var userId = new UserId(decoded.getClaim("id").asString());
-            var role = decoded.getClaim("role").asString();
-            return new UserInfo(userId, role);
+            return jwtProvider.validateToken(token);
+        } catch (InvalidTokenException e) {
+            if (e.getCause() instanceof TokenExpiredException) {
+                invalidateToken(token);
+            }
+            throw e;
         }
     }
 
     @Override
     public void invalidateToken(String token) {
-        try (var connection = jedisPool.getResource()) {
-            var decoded = jwtProvider.validateToken(token).orElseThrow(() -> new InvalidTokenException(token));
-            var userId = decoded.getClaim("id").asString();
-            var tokenKey = String.format("token:%s", token);
-            connection.del(tokenKey);
-            var userKey = String.format("user:%s", userId);
-            var map = connection.hgetAll(userKey);
-            if (map.size() > 1) {
-                connection.hdel(userKey, tokenKey);
-            } else {
-                connection.del(userKey);
+        synchronized (tokens) {
+            var userId = tokens.get(token);
+            if (userId != null) {
+                tokens.remove(token);
+                var curr = userTokens.get(userId);
+                curr.remove(token);
+                if (curr.isEmpty()) {
+                    userTokens.remove(userId);
+                }
             }
         }
     }
 
     @Override
     public void invalidateTokens(UserId userId) {
-        try (var connection = jedisPool.getResource()) {
-            var userKey = String.format("user:%s", userId.id());
-            var map = connection.hgetAll(userKey);
-            for (var tokenKey : map.keySet()) {
-                connection.del(tokenKey);
+        synchronized (tokens) {
+            var curr = userTokens.get(userId.id());
+            if (curr != null) {
+                curr.forEach(tokens::remove);
+                userTokens.remove(userId.id());
             }
-            connection.del(userKey);
         }
     }
 }

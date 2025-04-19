@@ -4,30 +4,31 @@ import traintickets.businesslogic.api.AuthService;
 import traintickets.businesslogic.exception.*;
 import traintickets.businesslogic.model.User;
 import traintickets.businesslogic.repository.UserRepository;
-import traintickets.businesslogic.session.SessionManager;
+import traintickets.businesslogic.session.JwtManager;
 import traintickets.businesslogic.transport.LoginForm;
 import traintickets.businesslogic.transport.RegisterForm;
+import traintickets.businesslogic.transport.UserInfo;
 
 import java.util.Objects;
 
 public final class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
-    private final SessionManager sessionManager;
+    private final JwtManager jwtManager;
     private final String clientRole;
     private final String systemRole;
 
     public AuthServiceImpl(UserRepository userRepository,
-                           SessionManager sessionManager,
+                           JwtManager jwtManager,
                            String defaultRole,
                            String systemRole) {
         this.userRepository = Objects.requireNonNull(userRepository);
-        this.sessionManager = Objects.requireNonNull(sessionManager);
+        this.jwtManager = Objects.requireNonNull(jwtManager);
         this.clientRole = Objects.requireNonNull(defaultRole);
         this.systemRole = Objects.requireNonNull(systemRole);
     }
 
     @Override
-    public void register(String sessionId, RegisterForm form) {
+    public String register(RegisterForm form) {
         var username = form.username();
         var password = form.password();
         var confirmPassword = form.confirmPassword();
@@ -41,11 +42,11 @@ public final class AuthServiceImpl implements AuthService {
         var user = new User(null, username, password, name, clientRole, true);
         user.validate();
         userRepository.addUser(systemRole, user);
-        sessionManager.startSession(sessionId, user);
+        return jwtManager.generateToken(UserInfo.of(user));
     }
 
     @Override
-    public void login(String sessionId, LoginForm form) {
+    public String login(LoginForm form) {
         var user = userRepository.getUser(systemRole, form.username()).orElseThrow(
                 () -> new EntityNotFoundException(String.format("User %s not found", form.username())));
         if (!user.password().equals(form.password())) {
@@ -54,11 +55,11 @@ public final class AuthServiceImpl implements AuthService {
         if (!user.active()) {
             throw new UserWasBannedException(user.username());
         }
-        sessionManager.startSession(sessionId, user);
+        return jwtManager.generateToken(UserInfo.of(user));
     }
 
     @Override
-    public void logout(String sessionId) {
-        sessionManager.endSession(sessionId);
+    public void logout(String token) {
+        jwtManager.invalidateToken(token);
     }
 }

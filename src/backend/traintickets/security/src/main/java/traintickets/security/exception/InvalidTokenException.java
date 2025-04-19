@@ -4,4 +4,8 @@ public final class InvalidTokenException extends RuntimeException {
     public InvalidTokenException(String token) {
         super(String.format("Invalid token: %s", token));
     }
+
+    public InvalidTokenException(RuntimeException e) {
+        super(e);
+    }
 }

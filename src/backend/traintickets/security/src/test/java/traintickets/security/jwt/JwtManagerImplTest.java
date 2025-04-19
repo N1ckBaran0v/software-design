@@ -1,179 +1,196 @@
 package traintickets.security.jwt;
 
-import com.redis.testcontainers.RedisContainer;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.utility.DockerImageName;
-import redis.clients.jedis.JedisPool;
 import traintickets.businesslogic.model.UserId;
 import traintickets.businesslogic.session.JwtManager;
 import traintickets.businesslogic.transport.UserInfo;
 import traintickets.security.exception.InvalidTokenException;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class JwtManagerImplTest {
     private JwtManager jwtManager;
-    private JedisConfig jedisConfig;
-    private JwtConfig jwtConfig;
-    private RedisContainer redisContainer;
-    private JedisPool jedisPool;
-    private List<String> tokens;
+    private List<String> tokensList;
 
     @BeforeEach
     void setUp() {
-        redisContainer = new RedisContainer(DockerImageName.parse("redis:7.0.15"));
-        redisContainer.start();
-        jedisConfig = new JedisConfig(redisContainer.getRedisHost(), redisContainer.getRedisPort(), null, null);
-        jedisPool = new JedisPool(jedisConfig.host(), jedisConfig.port(), jedisConfig.login(), jedisConfig.password());
-        jwtConfig = new JwtConfig("Tralalelo Tralala", 2);
-        jwtManager = new JwtManagerImpl(jedisConfig, jwtConfig);
+        var jwtConfig = new JwtConfig("Tralalelo Tralala", 2);
+        jwtManager = new JwtManagerImpl(jwtConfig);
         insertData();
     }
 
+    @SuppressWarnings("unchecked")
+    Map<String, String> getTokens() {
+        try {
+            var tokensField = JwtManagerImpl.class.getDeclaredField("tokens");
+            tokensField.setAccessible(true);
+            return (Map<String, String>) tokensField.get(jwtManager);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    Map<String, Set<String>> getUserTokens() {
+        try {
+            var userTokensField = JwtManagerImpl.class.getDeclaredField("userTokens");
+            userTokensField.setAccessible(true);
+            return (Map<String, Set<String>>) userTokensField.get(jwtManager);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     void insertData() {
-        var provider1 = JwtManagerImpl.getJwtProvider(jwtConfig);
-        var provider2 = JwtManagerImpl.getJwtProvider(new JwtConfig("Tralalelo Tralala", 0));
+        var tokens = getTokens();
+        var userTokens = getUserTokens();
+        var provider1 = new JwtProvider(new JwtConfig("Tralalelo Tralala", 2));
+        var provider2 = new JwtProvider(new JwtConfig("Tralalelo Tralala", 0));
         var userInfo1 = new UserInfo(new UserId("1"), "user_role");
         var userInfo2 = new UserInfo(new UserId("2"), "user_role");
+        var userId1 = "1";
+        var userId2 = "2";
         var token1 = provider1.generateToken(userInfo1);
         var token2 = provider2.generateToken(userInfo1);
         var token3 = provider1.generateToken(userInfo2);
-        try (var connection = jedisPool.getResource()) {
-            var user1 = String.format("user:%s", userInfo1.userId().id());
-            var user2 = String.format("user:%s", userInfo2.userId().id());
-            var key1 = String.format("token:%s", token1);
-            var key2 = String.format("token:%s", token2);
-            var key3 = String.format("token:%s", token3);
-            connection.hset(key1, user1, "");
-            connection.hset(key2, user1, "");
-            connection.hset(key3, user2, "");
-            connection.hset(user1, Map.of(key1, "", key2, ""));
-            connection.hset(user2, Map.of(key3, ""));
-        }
-        tokens = List.of(token1, token2, token3);
+        tokens.put(token1, userId1);
+        tokens.put(token2, userId1);
+        tokens.put(token3, userId2);
+        userTokens.put(userId1, new HashSet<>());
+        userTokens.put(userId2, new HashSet<>());
+        userTokens.get(userId1).add(token1);
+        userTokens.get(userId1).add(token2);
+        userTokens.get(userId2).add(token3);
+        tokensList = List.of(token1, token2, token3);
     }
 
     @Test
     void generateToken_positive_oldUser() {
-        var userInfo = new UserInfo(new UserId("1"), "user_role");
+        var id = "1";
+        var userInfo = new UserInfo(new UserId(id), "user_role");
         var token = jwtManager.generateToken(userInfo);
         assertNotNull(token);
-        try (var connection = jedisPool.getResource()) {
-            var tokenKey = String.format("token:%s", token);
-            var userKey = String.format("user:%s", userInfo.userId().id());
-            assertTrue(connection.exists(tokenKey));
-            assertTrue(connection.exists(userKey));
-            assertTrue(connection.hgetAll(userKey).size() > 1);
-        }
+        var tokens = getTokens();
+        var userTokens = getUserTokens();
+        assertTrue(tokens.size() == 3 || tokens.size() == 4);
+        assertEquals(2, userTokens.size());
+        assertTrue(userTokens.containsKey(id));
+        assertTrue(userTokens.get(id).contains(token));
+        assertTrue(userTokens.get(id).size() == 2 || userTokens.get(id).size() == 3);
     }
 
     @Test
     void generateToken_positive_newUser() {
-        var userInfo = new UserInfo(new UserId("3"), "user_role");
+        var id = "3";
+        var userInfo = new UserInfo(new UserId(id), "user_role");
         var token = jwtManager.generateToken(userInfo);
         assertNotNull(token);
-        try (var connection = jedisPool.getResource()) {
-            var tokenKey = String.format("token:%s", token);
-            var userKey = String.format("user:%s", userInfo.userId().id());
-            assertTrue(connection.exists(tokenKey));
-            assertTrue(connection.exists(userKey));
-            assertEquals(1, connection.hgetAll(userKey).size());
-        }
+        var tokens = getTokens();
+        var userTokens = getUserTokens();
+        assertEquals(4, tokens.size());
+        assertEquals(3, userTokens.size());
+        assertTrue(userTokens.containsKey(id));
+        assertTrue(userTokens.get(id).contains(token));
+        assertEquals(1, userTokens.get(id).size());
     }
 
     @Test
     void validateToken_positive_validated() {
         var userInfo = new UserInfo(new UserId("1"), "user_role");
-        var result = jwtManager.validateToken(tokens.getFirst());
+        var result = jwtManager.validateToken(tokensList.getFirst());
         assertNotNull(result);
         assertEquals(userInfo, result);
     }
 
     @Test
     void validateToken_negative_expired() {
-        assertThrows(InvalidTokenException.class, () -> jwtManager.validateToken(tokens.get(1)));
+        var token = tokensList.get(1);
+        assertThrows(InvalidTokenException.class, () -> jwtManager.validateToken(token));
+        var tokens = getTokens();
+        var userTokens = getUserTokens();
+        var id = "1";
+        assertEquals(2, tokens.size());
+        assertEquals(2, userTokens.size());
+        assertTrue(userTokens.containsKey(id));
+        assertFalse(userTokens.get(id).contains(token));
+        assertEquals(1, userTokens.get(id).size());
     }
 
     @Test
     void validateToken_negative_notFound() {
-        var provider = JwtManagerImpl.getJwtProvider(new JwtConfig("Tralalelo Tralala", 4));
+        var provider = new JwtProvider(new JwtConfig("Tralalelo Tralala", 4));
         var token = provider.generateToken(new UserInfo(new UserId("1"), "user_role"));
         System.out.println(token);
-        System.out.println(tokens.getFirst());
+        System.out.println(tokensList.getFirst());
         assertThrows(InvalidTokenException.class, () -> jwtManager.validateToken(token));
+        var tokens = getTokens();
+        var userTokens = getUserTokens();
+        assertEquals(3, tokens.size());
+        assertEquals(2, userTokens.size());
     }
 
     @Test
     void validateToken_negative_invalidToken() {
         assertThrows(InvalidTokenException.class, () -> jwtManager.validateToken("Bombardiro Crocodilo"));
+        var tokens = getTokens();
+        var userTokens = getUserTokens();
+        assertEquals(3, tokens.size());
+        assertEquals(2, userTokens.size());
     }
 
     @Test
     void invalidateToken_positive_last() {
-        var token = tokens.getLast();
+        var token = tokensList.getLast();
         jwtManager.invalidateToken(token);
-        try (var connection = jedisPool.getResource()) {
-            var tokenKey = String.format("token:%s", token);
-            var provider = JwtManagerImpl.getJwtProvider(jwtConfig);
-            var decoded = provider.validateToken(tokens.getLast()).orElseThrow(() -> new InvalidTokenException(token));
-            var userId = decoded.getClaim("id").asString();
-            var userKey = String.format("user:%s", userId);
-            assertFalse(connection.exists(tokenKey));
-            assertFalse(connection.exists(userKey));
-        }
+        var tokens = getTokens();
+        var userTokens = getUserTokens();
+        var id = "2";
+        assertEquals(2, tokens.size());
+        assertEquals(1, userTokens.size());
+        assertFalse(userTokens.containsKey(id));
     }
 
     @Test
     void invalidateToken_positive_notLast() {
-        var token = tokens.getFirst();
+        var token = tokensList.getFirst();
         jwtManager.invalidateToken(token);
-        try (var connection = jedisPool.getResource()) {
-            var tokenKey = String.format("token:%s", token);
-            var provider = JwtManagerImpl.getJwtProvider(jwtConfig);
-            var decoded = provider.validateToken(tokens.getLast()).orElseThrow(() -> new InvalidTokenException(token));
-            var userId = decoded.getClaim("id").asString();
-            var userKey = String.format("user:%s", userId);
-            assertFalse(connection.exists(tokenKey));
-            assertTrue(connection.exists(userKey));
-            assertEquals(1, connection.hgetAll(userKey).size());
-        }
+        var tokens = getTokens();
+        var userTokens = getUserTokens();
+        var id = "1";
+        assertEquals(2, tokens.size());
+        assertEquals(2, userTokens.size());
+        assertTrue(userTokens.containsKey(id));
+        assertFalse(userTokens.get(id).contains(token));
+        assertEquals(1, userTokens.get(id).size());
     }
 
     @Test
     void invalidateTokens_positive_last() {
         var userId = new UserId("2");
         jwtManager.invalidateTokens(userId);
-        try (var connection = jedisPool.getResource()) {
-            var tokenKey = String.format("token:%s", tokens.getLast());
-            var userKey = String.format("user:%s", userId.id());
-            assertFalse(connection.exists(tokenKey));
-            assertFalse(connection.exists(userKey));
-        }
+        var tokens = getTokens();
+        var userTokens = getUserTokens();
+        var id = "2";
+        assertEquals(2, tokens.size());
+        assertEquals(1, userTokens.size());
+        assertFalse(userTokens.containsKey(id));
     }
 
     @Test
     void invalidateTokens_positive_notLast() {
         var userId = new UserId("1");
         jwtManager.invalidateTokens(userId);
-        try (var connection = jedisPool.getResource()) {
-            var tokenKey1 = String.format("token:%s", tokens.get(0));
-            var tokenKey2 = String.format("token:%s", tokens.get(1));
-            var userKey = String.format("user:%s", userId.id());
-            assertFalse(connection.exists(tokenKey1));
-            assertFalse(connection.exists(tokenKey2));
-            assertFalse(connection.exists(userKey));
-        }
-    }
-
-    @AfterEach
-    void tearDown() {
-        redisContainer.stop();
-        redisContainer.close();
-        jedisPool.close();
+        var tokens = getTokens();
+        var userTokens = getUserTokens();
+        var id = "1";
+        assertEquals(1, tokens.size());
+        assertEquals(1, userTokens.size());
+        assertFalse(userTokens.containsKey(id));
     }
 }
