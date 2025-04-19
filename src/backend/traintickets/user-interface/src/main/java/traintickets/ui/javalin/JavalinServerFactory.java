@@ -17,14 +17,11 @@ import static io.javalin.apibuilder.ApiBuilder.path;
 
 public final class JavalinServerFactory implements ServerFactory {
     private final Iterable<AbstractEndpointGroup> endpointGroups;
-    private final SecurityConfiguration securityConfiguration;
     private final RuntimeExceptionHandler runtimeExceptionHandler;
 
     public JavalinServerFactory(Iterable<AbstractEndpointGroup> endpointGroups,
-                                SecurityConfiguration securityConfiguration,
                                 RuntimeExceptionHandler runtimeExceptionHandler) {
         this.endpointGroups = Objects.requireNonNull(endpointGroups);
-        this.securityConfiguration = Objects.requireNonNull(securityConfiguration);
         this.runtimeExceptionHandler = Objects.requireNonNull(runtimeExceptionHandler);
     }
 
@@ -33,12 +30,11 @@ public final class JavalinServerFactory implements ServerFactory {
         var javalin = Javalin.create(javalinConfig -> {
             javalinConfig.jetty.defaultHost = serverParams.host();
             javalinConfig.jetty.defaultPort = serverParams.port();
-            javalinConfig.router.apiBuilder(() -> {
-                before(securityConfiguration::checkSessionId);
+            javalinConfig.router.apiBuilder(() -> path("/api/v1", () -> {
                 for (var group : endpointGroups) {
                     path(group.getPath(), group);
                 }
-            });
+            }));
             javalinConfig.useVirtualThreads = true;
             javalinConfig.jsonMapper(new JavalinGson(new Gson(), true));
         });

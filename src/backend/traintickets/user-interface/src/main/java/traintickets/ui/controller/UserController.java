@@ -11,24 +11,22 @@ import traintickets.businesslogic.model.User;
 import traintickets.businesslogic.model.UserId;
 import traintickets.businesslogic.session.SessionManager;
 import traintickets.businesslogic.transport.TransportUser;
+import traintickets.businesslogic.transport.UserInfo;
 
 import java.util.Objects;
 
 public final class UserController {
     private final UserService userService;
     private final RaceService raceService;
-    private final SessionManager sessionManager;
     private final UniLogger logger;
     private final String adminRole;
 
     public UserController(UserService userService,
                           RaceService raceService,
-                          SessionManager sessionManager,
                           UniLoggerFactory loggerFactory,
                           String adminRole) {
         this.userService = Objects.requireNonNull(userService);
         this.raceService = Objects.requireNonNull(raceService);
-        this.sessionManager = Objects.requireNonNull(sessionManager);
         this.logger = Objects.requireNonNull(loggerFactory).getLogger(UserController.class);
         this.adminRole = Objects.requireNonNull(adminRole);
     }
@@ -49,16 +47,16 @@ public final class UserController {
         logger.debug("user deleted");
     }
 
-    public void getUsers(Context ctx) {
+    public void getUsers(Context ctx, UserInfo userInfo) {
         var username = ctx.queryParam("login");
         if (username == null) {
             var raceId = ctx.queryParam("raceId");
             logger.debug("raceId: %s", raceId);
-            ctx.json(raceService.getPassengers(ctx.sessionAttributeMap().get("id").toString(), new RaceId(raceId)));
+            ctx.json(raceService.getPassengers(userInfo, new RaceId(raceId)));
             logger.debug("users got");
         } else {
             logger.debug("login: %s", username);
-            var role = sessionManager.getUserInfo(ctx.sessionAttributeMap().get("id").toString()).role();
+            var role = userInfo.role();
             if (role.equals(adminRole)) {
                 ctx.json(userService.getUserByAdmin(username));
             } else {
@@ -68,8 +66,8 @@ public final class UserController {
         }
     }
 
-    public void updateUser(Context ctx) {
-        var role = sessionManager.getUserInfo(ctx.sessionAttributeMap().get("id").toString()).role();
+    public void updateUser(Context ctx, UserInfo userInfo) {
+        var role = userInfo.role();
         if (role.equals(adminRole)) {
             var user = ctx.bodyAsClass(User.class);
             logger.debug("user: %s", user);
@@ -77,7 +75,7 @@ public final class UserController {
         } else {
             var user = ctx.bodyAsClass(TransportUser.class);
             logger.debug("user: %s", user);
-            userService.updateUser(ctx.sessionAttributeMap().get("id").toString(), user);
+            userService.updateUser(userInfo, user);
         }
         logger.debug("user updated");
     }

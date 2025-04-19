@@ -12,16 +12,15 @@ public final class TrainGroup extends AbstractEndpointGroup {
     private final SecurityConfiguration securityConfiguration;
 
     public TrainGroup(TrainController trainController, SecurityConfiguration securityConfiguration) {
-        super("/api/trains");
+        super("/trains");
         this.trainController = Objects.requireNonNull(trainController);
         this.securityConfiguration = Objects.requireNonNull(securityConfiguration);
     }
 
     @Override
     public void addEndpoints() {
-        before(securityConfiguration::forCarrier);
-        post(trainController::addTrain);
-        get("/{trainId}", trainController::getTrain);
-        get(trainController::getTrains);
+        post(ctx -> trainController.addTrain(ctx, securityConfiguration.forCarrier(ctx)));
+        get("/{trainId}", ctx -> trainController.getTrain(ctx, securityConfiguration.forCarrier(ctx)));
+        get(ctx -> trainController.getTrains(ctx, securityConfiguration.forCarrier(ctx)));
     }
 }

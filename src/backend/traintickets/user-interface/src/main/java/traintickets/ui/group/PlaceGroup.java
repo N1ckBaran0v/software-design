@@ -10,7 +10,7 @@ public final class PlaceGroup extends AbstractEndpointGroup {
     private final PlaceController placeController;
 
     public PlaceGroup(PlaceController placeController) {
-        super("/api/places");
+        super("/places");
         this.placeController = Objects.requireNonNull(placeController);
     }
 

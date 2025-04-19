@@ -14,7 +14,7 @@ public final class UserGroup extends AbstractEndpointGroup {
     private final SecurityConfiguration securityConfiguration;
 
     public UserGroup(UserController userController, SecurityConfiguration securityConfiguration) {
-        super("/api/users");
+        super("/users");
         this.userController = Objects.requireNonNull(userController);
         this.securityConfiguration = Objects.requireNonNull(securityConfiguration);
     }
@@ -22,23 +22,23 @@ public final class UserGroup extends AbstractEndpointGroup {
     @Override
     public void addEndpoints() {
         before(ctx -> {
-            if (ctx.method().equals(HandlerType.GET)) {
-                var username = ctx.queryParam("login");
-                var raceId = ctx.queryParam("raceId");
-                if (username == null && raceId != null) {
-                    securityConfiguration.forCarrier(ctx);
-                } else if (username != null && raceId == null) {
-                    securityConfiguration.authorizedOnly(ctx);
-                } else {
-                    throw new QueryParameterNotFoundException("login && raceId");
-                }
-            } else {
-                securityConfiguration.authorizedOnly(ctx);
+            if (ctx.method().equals(HandlerType.POST) || ctx.method().equals(HandlerType.DELETE)) {
+                securityConfiguration.forAdmin(ctx);
             }
         });
         post(userController::createUser);
         delete("/{userId}", userController::deleteUser);
-        get(userController::getUsers);
-        put("/{userId}", userController::updateUser);
+        get(ctx -> {
+            var username = ctx.queryParam("login");
+            var raceId = ctx.queryParam("raceId");
+            if (username == null && raceId != null) {
+                userController.getUsers(ctx, securityConfiguration.forCarrier(ctx));
+            } else if (username != null && raceId == null) {
+                userController.getUsers(ctx, securityConfiguration.authorizedOnly(ctx));
+            } else {
+                throw new QueryParameterNotFoundException("login && raceId");
+            }
+        });
+        put("/{userId}", ctx -> userController.updateUser(ctx, securityConfiguration.authorizedOnly(ctx)));
     }
 }

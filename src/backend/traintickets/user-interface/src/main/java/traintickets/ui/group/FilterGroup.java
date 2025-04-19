@@ -12,7 +12,7 @@ public final class FilterGroup extends AbstractEndpointGroup {
     private final SecurityConfiguration securityConfiguration;
 
     public FilterGroup(FilterController filterController, SecurityConfiguration securityConfiguration) {
-        super("/api/filters");
+        super("/filters");
         this.filterController = Objects.requireNonNull(filterController);
         this.securityConfiguration = Objects.requireNonNull(securityConfiguration);
     }
@@ -20,8 +20,8 @@ public final class FilterGroup extends AbstractEndpointGroup {
     @Override
     public void addEndpoints() {
         before(securityConfiguration::forUser);
-        post(filterController::addFilter);
-        get(filterController::getFilters);
-        delete(filterController::deleteFilter);
+        post(ctx -> filterController.addFilter(ctx, securityConfiguration.forUser(ctx)));
+        get(ctx -> filterController.getFilters(ctx, securityConfiguration.forUser(ctx)));
+        delete(ctx -> filterController.deleteFilter(ctx, securityConfiguration.forUser(ctx)));
     }
 }

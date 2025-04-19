@@ -10,7 +10,7 @@ public final class RouteGroup extends AbstractEndpointGroup {
     private final RouteController routeController;
 
     public RouteGroup(RouteController routeController) {
-        super("/api/routes");
+        super("/routes");
         this.routeController = Objects.requireNonNull(routeController);
     }
 

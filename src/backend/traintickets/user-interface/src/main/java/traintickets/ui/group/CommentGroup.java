@@ -1,6 +1,5 @@
 package traintickets.ui.group;
 
-import io.javalin.http.HandlerType;
 import traintickets.ui.controller.CommentController;
 import traintickets.ui.security.SecurityConfiguration;
 
@@ -13,22 +12,15 @@ public final class CommentGroup extends AbstractEndpointGroup {
     private final SecurityConfiguration securityConfiguration;
 
     public CommentGroup(CommentController commentController, SecurityConfiguration securityConfiguration) {
-        super("/api/comments");
+        super("/comments");
         this.commentController = Objects.requireNonNull(commentController);
         this.securityConfiguration = Objects.requireNonNull(securityConfiguration);
     }
 
     @Override
     public void addEndpoints() {
-        before(ctx -> {
-            if (ctx.method().equals(HandlerType.POST)) {
-                securityConfiguration.forUser(ctx);
-            } else if (ctx.method().equals(HandlerType.DELETE)) {
-                securityConfiguration.forAdmin(ctx);
-            }
-        });
-        post(commentController::addComment);
-        get(commentController::getComments);
-        delete("/{commentId}", commentController::deleteComment);
+        post(ctx -> commentController.addComment(ctx, securityConfiguration.forUser(ctx)));
+        get(ctx -> commentController.getComments(ctx, securityConfiguration.authorizedOnly(ctx)));
+        delete("/{commentId}", ctx -> commentController.deleteComment(ctx, securityConfiguration.forAdmin(ctx)));
     }
 }

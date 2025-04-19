@@ -12,15 +12,14 @@ public final class TicketGroup extends AbstractEndpointGroup {
     private final SecurityConfiguration securityConfiguration;
 
     public TicketGroup(TicketController ticketController, SecurityConfiguration securityConfiguration) {
-        super("/api/tickets");
+        super("/tickets");
         this.ticketController = Objects.requireNonNull(ticketController);
         this.securityConfiguration = Objects.requireNonNull(securityConfiguration);
     }
 
     @Override
     public void addEndpoints() {
-        before(securityConfiguration::forUser);
-        post(ticketController::addTickets);
-        get(ticketController::getTickets);
+        post(ctx -> ticketController.addTickets(ctx, securityConfiguration.forUser(ctx)));
+        get(ctx -> ticketController.getTickets(ctx, securityConfiguration.forUser(ctx)));
     }
 }

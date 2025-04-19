@@ -8,6 +8,7 @@ import traintickets.businesslogic.logger.UniLoggerFactory;
 import traintickets.businesslogic.model.Comment;
 import traintickets.businesslogic.model.CommentId;
 import traintickets.businesslogic.model.TrainId;
+import traintickets.businesslogic.transport.UserInfo;
 import traintickets.ui.exception.QueryParameterNotFoundException;
 
 import java.util.Objects;
@@ -21,29 +22,28 @@ public final class CommentController {
         this.logger = Objects.requireNonNull(loggerFactory).getLogger(CommentController.class);
     }
 
-    public void addComment(Context ctx) {
+    public void addComment(Context ctx, UserInfo userInfo) {
         var comment = ctx.bodyAsClass(Comment.class);
         logger.debug("comment: %s", comment);
-        commentService.addComment(ctx.sessionAttributeMap().get("id").toString(), comment);
+        commentService.addComment(userInfo, comment);
         ctx.status(HttpStatus.CREATED);
         logger.debug("comment added");
     }
 
-    public void getComments(Context ctx) {
+    public void getComments(Context ctx, UserInfo userInfo) {
         var trainId = ctx.queryParam("trainId");
         logger.debug("trainId: %s", trainId);
         if (trainId == null) {
             throw new QueryParameterNotFoundException("trainId");
         }
-        commentService.getComments(ctx.sessionAttributeMap().get("id").toString(), new TrainId(trainId));
+        commentService.getComments(userInfo, new TrainId(trainId));
         logger.debug("comments got");
     }
 
-    public void deleteComment(Context ctx) {
+    public void deleteComment(Context ctx, UserInfo userInfo) {
         var commentId = ctx.pathParam("commentId");
         logger.debug("commentId: %s", commentId);
-        commentService.deleteComment(ctx.sessionAttributeMap().get("id").toString(),
-                new CommentId(ctx.pathParam("commentId")));
+        commentService.deleteComment(userInfo, new CommentId(ctx.pathParam("commentId")));
         ctx.status(HttpStatus.NO_CONTENT);
         logger.debug("comment deleted");
     }

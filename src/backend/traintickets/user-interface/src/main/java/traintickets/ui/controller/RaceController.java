@@ -8,6 +8,7 @@ import traintickets.businesslogic.logger.UniLogger;
 import traintickets.businesslogic.logger.UniLoggerFactory;
 import traintickets.businesslogic.model.Race;
 import traintickets.businesslogic.model.RaceId;
+import traintickets.businesslogic.transport.UserInfo;
 
 import java.util.Objects;
 
@@ -22,10 +23,10 @@ public final class RaceController {
         this.logger = Objects.requireNonNull(loggerFactory).getLogger(RaceController.class);
     }
 
-    public void addRace(Context ctx) {
+    public void addRace(Context ctx, UserInfo userInfo) {
         var race = ctx.bodyAsClass(Race.class);
         logger.debug("race: %s", race);
-        raceService.addRace(ctx.sessionAttributeMap().get("id").toString(), race);
+        raceService.addRace(userInfo, race);
         ctx.status(HttpStatus.CREATED);
         logger.debug("race added");
     }
@@ -37,10 +38,10 @@ public final class RaceController {
         logger.debug("race got");
     }
 
-    public void finishRace(Context ctx) {
+    public void finishRace(Context ctx, UserInfo userInfo) {
         var raceId = ctx.pathParam("raceId");
         logger.debug("raceId: %s", raceId);
-        raceService.finishRace(ctx.sessionAttributeMap().get("id").toString(), new RaceId(raceId));
+        raceService.finishRace(userInfo, new RaceId(raceId));
         logger.debug("race finished");
     }
 }

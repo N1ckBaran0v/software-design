@@ -12,15 +12,14 @@ public final class RailcarGroup extends AbstractEndpointGroup {
     private final SecurityConfiguration securityConfiguration;
 
     public RailcarGroup(RailcarController railcarController, SecurityConfiguration securityConfiguration) {
-        super("/api/railcars");
+        super("/railcars");
         this.railcarController = Objects.requireNonNull(railcarController);
         this.securityConfiguration = Objects.requireNonNull(securityConfiguration);
     }
 
     @Override
     public void addEndpoints() {
-        before(securityConfiguration::forCarrier);
-        post(railcarController::addRailcar);
-        get(railcarController::getRailcars);
+        post(ctx -> railcarController.addRailcar(ctx, securityConfiguration.forCarrier(ctx)));
+        get(ctx -> railcarController.getRailcars(ctx, securityConfiguration.forCarrier(ctx)));
     }
 }

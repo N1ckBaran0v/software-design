@@ -6,6 +6,7 @@ import traintickets.businesslogic.api.FilterService;
 import traintickets.businesslogic.logger.UniLogger;
 import traintickets.businesslogic.logger.UniLoggerFactory;
 import traintickets.businesslogic.model.Filter;
+import traintickets.businesslogic.transport.UserInfo;
 
 import java.util.Objects;
 
@@ -18,30 +19,30 @@ public final class FilterController {
         this.logger = Objects.requireNonNull(loggerFactory).getLogger(FilterController.class);
     }
 
-    public void addFilter(Context ctx) {
+    public void addFilter(Context ctx, UserInfo userInfo) {
         var filter = ctx.bodyAsClass(Filter.class);
         logger.debug("filter: %s", filter);
-        filterService.addFilter(ctx.sessionAttributeMap().get("id").toString(), filter);
+        filterService.addFilter(userInfo, filter);
         ctx.status(HttpStatus.CREATED);
         logger.debug("filter added");
     }
 
-    public void getFilters(Context ctx) {
+    public void getFilters(Context ctx, UserInfo userInfo) {
         var filterName = ctx.queryParam("filterName");
         logger.debug("filterName: %s", filterName);
         if (filterName == null) {
-            ctx.json(filterService.getFilters(ctx.sessionAttributeMap().get("id").toString()));
+            ctx.json(filterService.getFilters(userInfo));
             logger.debug("filters got");
         } else {
-            ctx.json(filterService.getFilter(ctx.sessionAttributeMap().get("id").toString(), filterName));
+            ctx.json(filterService.getFilter(userInfo, filterName));
             logger.debug("filter got");
         }
     }
 
-    public void deleteFilter(Context ctx) {
+    public void deleteFilter(Context ctx, UserInfo userInfo) {
         var filterId = ctx.queryParam("filterId");
         logger.debug("filterId: %s", filterId);
-        filterService.deleteFilter(ctx.sessionAttributeMap().get("id").toString(), filterId);
+        filterService.deleteFilter(userInfo, filterId);
         ctx.status(HttpStatus.NO_CONTENT);
         logger.debug("filter deleted");
     }

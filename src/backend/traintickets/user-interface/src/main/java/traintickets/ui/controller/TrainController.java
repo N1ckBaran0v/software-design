@@ -7,6 +7,7 @@ import traintickets.businesslogic.logger.UniLogger;
 import traintickets.businesslogic.logger.UniLoggerFactory;
 import traintickets.businesslogic.model.Train;
 import traintickets.businesslogic.model.TrainId;
+import traintickets.businesslogic.transport.UserInfo;
 import traintickets.ui.exception.QueryParameterNotFoundException;
 
 import java.sql.Timestamp;
@@ -21,22 +22,22 @@ public final class TrainController {
         this.logger = Objects.requireNonNull(loggerFactory).getLogger(TrainController.class);
     }
 
-    public void addTrain(Context ctx) {
+    public void addTrain(Context ctx, UserInfo userInfo) {
         var train = ctx.bodyAsClass(Train.class);
         logger.debug("train: %s", train);
-        trainService.addTrain(ctx.sessionAttributeMap().get("id").toString(), train);
+        trainService.addTrain(userInfo, train);
         ctx.status(HttpStatus.CREATED);
         logger.debug("train added");
     }
 
-    public void getTrain(Context ctx) {
+    public void getTrain(Context ctx, UserInfo userInfo) {
         var trainId = ctx.pathParam("trainId");
         logger.debug("trainId: %s", trainId);
-        ctx.json(trainService.getTrain(ctx.sessionAttributeMap().get("id").toString(), new TrainId(trainId)));
+        ctx.json(trainService.getTrain(userInfo, new TrainId(trainId)));
         logger.debug("train got");
     }
 
-    public void getTrains(Context ctx) {
+    public void getTrains(Context ctx, UserInfo userInfo) {
         var start = ctx.queryParam("start");
         logger.debug("start: %s", start);
         if (start == null) {
@@ -47,8 +48,7 @@ public final class TrainController {
         if (end == null) {
             throw new QueryParameterNotFoundException("end");
         }
-        ctx.json(trainService.getTrains(ctx.sessionAttributeMap().get("id").toString(),
-                Timestamp.valueOf(start), Timestamp.valueOf(end)));
+        ctx.json(trainService.getTrains(userInfo, Timestamp.valueOf(start), Timestamp.valueOf(end)));
         logger.debug("trains got");
     }
 }
