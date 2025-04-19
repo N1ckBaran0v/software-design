@@ -4,7 +4,7 @@ import traintickets.businesslogic.api.AuthService;
 import traintickets.businesslogic.exception.*;
 import traintickets.businesslogic.model.User;
 import traintickets.businesslogic.repository.UserRepository;
-import traintickets.businesslogic.session.JwtManager;
+import traintickets.businesslogic.jwt.JwtManager;
 import traintickets.businesslogic.transport.LoginForm;
 import traintickets.businesslogic.transport.RegisterForm;
 import traintickets.businesslogic.transport.UserInfo;

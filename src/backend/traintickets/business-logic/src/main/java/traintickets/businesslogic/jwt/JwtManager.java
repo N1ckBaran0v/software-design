@@ -1,4 +1,4 @@
-package traintickets.businesslogic.session;
+package traintickets.businesslogic.jwt;
 
 import traintickets.businesslogic.model.UserId;
 import traintickets.businesslogic.transport.UserInfo;

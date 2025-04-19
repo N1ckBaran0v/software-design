@@ -9,7 +9,6 @@ import traintickets.businesslogic.logger.UniLoggerFactory;
 import traintickets.businesslogic.model.RaceId;
 import traintickets.businesslogic.model.User;
 import traintickets.businesslogic.model.UserId;
-import traintickets.businesslogic.session.SessionManager;
 import traintickets.businesslogic.transport.TransportUser;
 import traintickets.businesslogic.transport.UserInfo;
 

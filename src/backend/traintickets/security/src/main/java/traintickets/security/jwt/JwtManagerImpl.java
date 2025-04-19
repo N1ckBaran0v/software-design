@@ -2,7 +2,7 @@ package traintickets.security.jwt;
 
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import traintickets.businesslogic.model.UserId;
-import traintickets.businesslogic.session.JwtManager;
+import traintickets.businesslogic.jwt.JwtManager;
 import traintickets.businesslogic.transport.UserInfo;
 import traintickets.security.exception.InvalidTokenException;
 

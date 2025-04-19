@@ -15,7 +15,7 @@ public final class ApplicationContextCreator {
                 .addModule(new JdbcTemplateModule(appParams.getDatabase()))
                 .addModule(new LoggerModule())
                 .addModule(new PaymentModule())
-                .addModule(new SecurityModule(appParams.getRedis()))
+                .addModule(new SecurityModule(appParams.getSecurity()))
                 .addModule(new UserInterfaceModule(appParams.getServer(), appParams.getSecurity()))
                 .build();
     }

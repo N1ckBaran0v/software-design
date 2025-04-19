@@ -3,7 +3,7 @@ package traintickets.ui.security;
 import io.javalin.http.Context;
 import traintickets.businesslogic.logger.UniLogger;
 import traintickets.businesslogic.logger.UniLoggerFactory;
-import traintickets.businesslogic.session.JwtManager;
+import traintickets.businesslogic.jwt.JwtManager;
 import traintickets.businesslogic.transport.UserInfo;
 import traintickets.security.exception.ForbiddenException;
 import traintickets.security.exception.InvalidTokenException;

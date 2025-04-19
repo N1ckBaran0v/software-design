@@ -3,7 +3,7 @@ package traintickets.control.modules;
 import traintickets.businesslogic.api.RaceService;
 import traintickets.businesslogic.api.UserService;
 import traintickets.businesslogic.logger.UniLoggerFactory;
-import traintickets.businesslogic.session.SessionManager;
+import traintickets.businesslogic.jwt.JwtManager;
 import traintickets.control.configuration.SecurityConfig;
 import traintickets.control.configuration.ServerConfig;
 import traintickets.di.ApplicationContextBuilder;
@@ -36,9 +36,9 @@ public final class UserInterfaceModule implements ContextModule {
                 })
                 .addSingleton(ServerFactory.class, beanProvider -> {
                     var endpointGroups = beanProvider.getInstances(AbstractEndpointGroup.class);
-                    var securityConfiguration = beanProvider.getInstance(SecurityConfiguration.class);
                     var runtimeExceptionHandler = beanProvider.getInstance(RuntimeExceptionHandler.class);
-                    return new JavalinServerFactory(endpointGroups, securityConfiguration, runtimeExceptionHandler);
+                    var loggerFactory = beanProvider.getInstance(UniLoggerFactory.class);
+                    return new JavalinServerFactory(endpointGroups, runtimeExceptionHandler, loggerFactory);
                 })
                 .addSingleton(AuthController.class, AuthController.class)
                 .addSingleton(CommentController.class, CommentController.class)
@@ -52,10 +52,9 @@ public final class UserInterfaceModule implements ContextModule {
                 .addSingleton(UserController.class, beanProvider -> {
                     var userService = beanProvider.getInstance(UserService.class);
                     var raceService = beanProvider.getInstance(RaceService.class);
-                    var sessionManager = beanProvider.getInstance(SessionManager.class);
                     var loggerFactory = beanProvider.getInstance(UniLoggerFactory.class);
                     var adminRole = securityConfig.getRoles().get("adminRole");
-                    return new UserController(userService, raceService, sessionManager, loggerFactory, adminRole);
+                    return new UserController(userService, raceService, loggerFactory, adminRole);
                 })
                 .addSingleton(AbstractEndpointGroup.class, AuthGroup.class)
                 .addSingleton(AbstractEndpointGroup.class, CommentGroup.class)
@@ -69,12 +68,12 @@ public final class UserInterfaceModule implements ContextModule {
                 .addSingleton(AbstractEndpointGroup.class, UserGroup.class)
                 .addSingleton(RuntimeExceptionHandler.class, RuntimeExceptionHandler.class)
                 .addSingleton(SecurityConfiguration.class, beanProvider -> {
+                    var jwtManager = beanProvider.getInstance(JwtManager.class);
+                    var loggerFactory = beanProvider.getInstance(UniLoggerFactory.class);
                     var userRole = securityConfig.getRoles().get("userRole");
                     var carrierRole = securityConfig.getRoles().get("carrierRole");
                     var adminRole = securityConfig.getRoles().get("adminRole");
-                    var loggerFactory = beanProvider.getInstance(UniLoggerFactory.class);
-                    var sessionManager = beanProvider.getInstance(SessionManager.class);
-                    return new SecurityConfiguration(sessionManager, loggerFactory, userRole, carrierRole, adminRole);
+                    return new SecurityConfiguration(jwtManager, loggerFactory, userRole, carrierRole, adminRole);
                 });
     }
 }

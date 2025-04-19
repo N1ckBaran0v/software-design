@@ -3,7 +3,7 @@ package traintickets.security.jwt;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import traintickets.businesslogic.model.UserId;
-import traintickets.businesslogic.session.JwtManager;
+import traintickets.businesslogic.jwt.JwtManager;
 import traintickets.businesslogic.transport.UserInfo;
 import traintickets.security.exception.InvalidTokenException;
 

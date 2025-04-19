@@ -1,21 +1,22 @@
 package traintickets.control.modules;
 
-import traintickets.businesslogic.session.SessionManager;
-import traintickets.control.configuration.RedisConfig;
+import traintickets.businesslogic.jwt.JwtManager;
+import traintickets.control.configuration.SecurityConfig;
 import traintickets.di.ApplicationContextBuilder;
 import traintickets.di.ContextModule;
-import traintickets.security.session.SessionManagerImpl;
+import traintickets.security.jwt.JwtConfig;
+import traintickets.security.jwt.JwtManagerImpl;
 
 public final class SecurityModule implements ContextModule {
-    private final RedisConfig redisConfig;
+    private final SecurityConfig securityConfig;
 
-    public SecurityModule(RedisConfig redisConfig) {
-        this.redisConfig = redisConfig;
+    public SecurityModule(SecurityConfig securityConfig) {
+        this.securityConfig = securityConfig;
     }
 
     @Override
     public void accept(ApplicationContextBuilder builder) {
-        builder.addSingleton(SessionManager.class, beanProvider -> new SessionManagerImpl(redisConfig.getHost(),
-                redisConfig.getPort(), redisConfig.getUsername(), redisConfig.getPassword()));
+        builder.addSingleton(JwtManager.class, beanProvider ->
+                new JwtManagerImpl(new JwtConfig(securityConfig.getSecret(), securityConfig.getExpiration())));
     }
 }

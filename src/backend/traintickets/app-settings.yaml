@@ -12,8 +12,5 @@ security:
         carrierRole: test
         adminRole: test
         systemRole: test
-redis:
-    host: hz:)
-    port: 228
-    username: tozhe
-    password: qwerty123
+    secret: BobritoBandito
+    expiration: 1

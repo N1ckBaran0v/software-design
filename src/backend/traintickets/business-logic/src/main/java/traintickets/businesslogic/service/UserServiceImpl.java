@@ -7,7 +7,7 @@ import traintickets.businesslogic.exception.UserWasBannedException;
 import traintickets.businesslogic.model.User;
 import traintickets.businesslogic.model.UserId;
 import traintickets.businesslogic.repository.UserRepository;
-import traintickets.businesslogic.session.JwtManager;
+import traintickets.businesslogic.jwt.JwtManager;
 import traintickets.businesslogic.transport.TransportUser;
 import traintickets.businesslogic.transport.UserInfo;
 

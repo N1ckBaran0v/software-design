@@ -3,12 +3,13 @@ package traintickets.ui.javalin;
 import com.google.gson.Gson;
 import io.javalin.Javalin;
 import io.javalin.json.JavalinGson;
+import traintickets.businesslogic.logger.UniLogger;
+import traintickets.businesslogic.logger.UniLoggerFactory;
 import traintickets.ui.api.Server;
 import traintickets.ui.api.ServerFactory;
 import traintickets.ui.api.ServerParams;
 import traintickets.ui.group.AbstractEndpointGroup;
 import traintickets.ui.security.RuntimeExceptionHandler;
-import traintickets.ui.security.SecurityConfiguration;
 
 import java.util.Objects;
 
@@ -18,11 +19,14 @@ import static io.javalin.apibuilder.ApiBuilder.path;
 public final class JavalinServerFactory implements ServerFactory {
     private final Iterable<AbstractEndpointGroup> endpointGroups;
     private final RuntimeExceptionHandler runtimeExceptionHandler;
+    private final UniLogger logger;
 
     public JavalinServerFactory(Iterable<AbstractEndpointGroup> endpointGroups,
-                                RuntimeExceptionHandler runtimeExceptionHandler) {
+                                RuntimeExceptionHandler runtimeExceptionHandler,
+                                UniLoggerFactory loggerFactory) {
         this.endpointGroups = Objects.requireNonNull(endpointGroups);
         this.runtimeExceptionHandler = Objects.requireNonNull(runtimeExceptionHandler);
+        this.logger = Objects.requireNonNull(loggerFactory).getLogger(Server.class);
     }
 
     @Override
@@ -30,11 +34,14 @@ public final class JavalinServerFactory implements ServerFactory {
         var javalin = Javalin.create(javalinConfig -> {
             javalinConfig.jetty.defaultHost = serverParams.host();
             javalinConfig.jetty.defaultPort = serverParams.port();
-            javalinConfig.router.apiBuilder(() -> path("/api/v1", () -> {
-                for (var group : endpointGroups) {
-                    path(group.getPath(), group);
-                }
-            }));
+            javalinConfig.router.apiBuilder(() -> {
+                before(ctx -> logger.debug("method: %s, path: %s", ctx.method(), ctx.path()));
+                path("/api/v1", () -> {
+                    for (var group : endpointGroups) {
+                        path(group.getPath(), group);
+                    }
+                });
+            });
             javalinConfig.useVirtualThreads = true;
             javalinConfig.jsonMapper(new JavalinGson(new Gson(), true));
         });

@@ -5,7 +5,6 @@ import traintickets.businesslogic.exception.EntityNotFoundException;
 import traintickets.businesslogic.exception.InvalidEntityException;
 import traintickets.businesslogic.model.Filter;
 import traintickets.businesslogic.repository.FilterRepository;
-import traintickets.businesslogic.session.SessionManager;
 import traintickets.businesslogic.transport.UserInfo;
 
 import java.util.List;
