@@ -11,12 +11,11 @@ import traintickets.businesslogic.exception.UserWasBannedException;
 import traintickets.businesslogic.model.User;
 import traintickets.businesslogic.model.UserId;
 import traintickets.businesslogic.repository.UserRepository;
-import traintickets.businesslogic.session.SessionManager;
+import traintickets.businesslogic.session.JwtManager;
 import traintickets.businesslogic.transport.TransportUser;
 import traintickets.businesslogic.transport.UserInfo;
 
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -30,14 +29,14 @@ class UserServiceImplTest {
     private UserRepository userRepository;
 
     @Mock
-    private SessionManager sessionManager;
+    private JwtManager jwtManager;
 
     private final String systemRole = "system_role";
     private UserServiceImpl userService;
 
     @BeforeEach
     void setUp() {
-        userService = new UserServiceImpl(userRepository, sessionManager, systemRole);
+        userService = new UserServiceImpl(userRepository, jwtManager, systemRole);
     }
 
     @Test
@@ -59,7 +58,7 @@ class UserServiceImplTest {
         var userId = new UserId("1");
         userService.deleteUser(userId);
         verify(userRepository).deleteUser(systemRole, userId);
-        verify(sessionManager).endSessions(userId);
+        verify(jwtManager).invalidateTokens(userId);
     }
 
     @Test
@@ -116,9 +115,7 @@ class UserServiceImplTest {
         var userId = new UserId("1");
         var user = new TransportUser(userId, "random_username", "qwerty123", "Zubenko Mikhail");
         var userInfo = new UserInfo(new UserId("1"), "user_role");
-        var sessionId = UUID.randomUUID().toString();
-        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
-        userService.updateUser(sessionId, user);
+        userService.updateUser(userInfo, user);
         verify(userRepository).updateUserPartially(systemRole, user);
     }
 
@@ -126,9 +123,7 @@ class UserServiceImplTest {
     void updateUser_negative_invalid() {
         var user = new TransportUser(new UserId("1"), "random_username", "qwerty123", "Zubenko Mikhail");
         var userInfo = new UserInfo(new UserId("2"), "user_role");
-        var sessionId = UUID.randomUUID().toString();
-        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
-        assertThrows(InvalidEntityException.class, () -> userService.updateUser(sessionId ,user));
+        assertThrows(InvalidEntityException.class, () -> userService.updateUser(userInfo ,user));
         verify(userRepository, never()).updateUserPartially(any(), any());
     }
 
@@ -137,7 +132,7 @@ class UserServiceImplTest {
         var user = new User(new UserId("1"), "random_username", "qwerty123", "Zubenko Mikhail", "admin", true);
         userService.updateUserByAdmin(user);
         verify(userRepository).updateUserCompletely(systemRole, user);
-        verify(sessionManager).updateUserInfo(any());
+        verify(jwtManager).invalidateTokens(any());
     }
 
     @Test
@@ -145,7 +140,7 @@ class UserServiceImplTest {
         var user = new User(new UserId("1"), "random_username_long", "qwerty123", "Zubenko Mikhail", "client", true);
         assertThrows(InvalidEntityException.class, () -> userService.updateUserByAdmin(user));
         verify(userRepository, never()).updateUserCompletely(any(), any());
-        verify(sessionManager, never()).updateUserInfo(any());
+        verify(jwtManager, never()).invalidateTokens(any());
     }
 
     @Test
@@ -153,6 +148,6 @@ class UserServiceImplTest {
         var user = new User(new UserId("1"), "random_username", "qwerty123", "Zubenko Mikhail", "client", false);
         userService.updateUserByAdmin(user);
         verify(userRepository).updateUserCompletely(systemRole, user);
-        verify(sessionManager).updateUserInfo(any());
+        verify(jwtManager).invalidateTokens(any());
     }
 }

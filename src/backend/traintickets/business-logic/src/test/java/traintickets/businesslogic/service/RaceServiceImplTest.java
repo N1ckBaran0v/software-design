@@ -5,21 +5,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import traintickets.businesslogic.exception.EntityNotFoundException;
 import traintickets.businesslogic.exception.InvalidEntityException;
 import traintickets.businesslogic.exception.TrainAlreadyReservedException;
 import traintickets.businesslogic.model.*;
 import traintickets.businesslogic.repository.RaceRepository;
 import traintickets.businesslogic.repository.TicketRepository;
 import traintickets.businesslogic.repository.UserRepository;
-import traintickets.businesslogic.session.SessionManager;
 import traintickets.businesslogic.transport.UserInfo;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -38,9 +34,6 @@ class RaceServiceImplTest {
     @Mock
     private TicketRepository ticketRepository;
 
-    @Mock
-    private SessionManager sessionManager;
-
     @InjectMocks
     private RaceServiceImpl raceService;
 
@@ -50,9 +43,7 @@ class RaceServiceImplTest {
         var end = new Schedule(null, "end", Timestamp.valueOf("2001-09-11 09:03:02"), null, 100);
         var race = new Race(null, new TrainId("1"), List.of(start, end), false);
         var userInfo = new UserInfo(new UserId("1"), "carrier_role");
-        var sessionId = UUID.randomUUID().toString();
-        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
-        raceService.addRace(sessionId, race);
+        raceService.addRace(userInfo, race);
         verify(raceRepository).addRace(userInfo.role(), race);
     }
 
@@ -61,7 +52,8 @@ class RaceServiceImplTest {
         var start = new Schedule(null, "start", null, Timestamp.valueOf("2001-09-11 09:03:02"), 0);
         var end = new Schedule(null, "end", Timestamp.valueOf("2001-09-11 08:46:26"), null, 100);
         var race = new Race(null, new TrainId("1"), List.of(start, end), false);
-        assertThrows(InvalidEntityException.class, () -> raceService.addRace(UUID.randomUUID().toString(), race));
+        var userInfo = new UserInfo(new UserId("1"), "carrier_role");
+        assertThrows(InvalidEntityException.class, () -> raceService.addRace(userInfo, race));
         verify(raceRepository, never()).addRace(any(), any());
     }
 
@@ -69,9 +61,7 @@ class RaceServiceImplTest {
     void finishRace_positive_finished() {
         var raceId = new RaceId("1");
         var userInfo = new UserInfo(new UserId("1"), "carrier_role");
-        var sessionId = UUID.randomUUID().toString();
-        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
-        raceService.finishRace(sessionId, raceId);
+        raceService.finishRace(userInfo, raceId);
         verify(raceRepository).updateRace(userInfo.role(), raceId, true);
     }
 
@@ -91,11 +81,9 @@ class RaceServiceImplTest {
         var user1 = new User(userId1, username1, "qwerty123", "Zubenko Mikhail", "clientRole", true);
         var user2 = new User(userId2, username2, "qwerty123", "Zubenko Mikhail", "clientRole", true);
         var userInfo = new UserInfo(new UserId("1"), "carrier_role");
-        var sessionId = UUID.randomUUID().toString();
-        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
         given(ticketRepository.getTicketsByRace(userInfo.role(), raceId)).willReturn(List.of(ticket1, ticket2));
         given(userRepository.getUsers(any(), any())).willReturn(List.of(user1, user2));
-        var result = raceService.getPassengers(sessionId, raceId);
+        var result = raceService.getPassengers(userInfo, raceId);
         assertNotNull(result);
         assertEquals(2, result.size());
         var first = result.get(username1);
@@ -112,11 +100,9 @@ class RaceServiceImplTest {
     void getPassengersList_positive_empty() {
         var raceId = new RaceId("1");
         var userInfo = new UserInfo(new UserId("1"), "carrier_role");
-        var sessionId = UUID.randomUUID().toString();
-        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
         given(ticketRepository.getTicketsByRace(userInfo.role(), raceId)).willReturn(List.of());
         given(userRepository.getUsers(any(), any())).willReturn(List.of());
-        var result = raceService.getPassengers(sessionId, raceId);
+        var result = raceService.getPassengers(userInfo, raceId);
         assertNotNull(result);
         assertTrue(result.isEmpty());
     }

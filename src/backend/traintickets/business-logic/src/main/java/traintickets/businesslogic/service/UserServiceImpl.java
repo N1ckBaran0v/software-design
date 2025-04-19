@@ -7,7 +7,7 @@ import traintickets.businesslogic.exception.UserWasBannedException;
 import traintickets.businesslogic.model.User;
 import traintickets.businesslogic.model.UserId;
 import traintickets.businesslogic.repository.UserRepository;
-import traintickets.businesslogic.session.SessionManager;
+import traintickets.businesslogic.session.JwtManager;
 import traintickets.businesslogic.transport.TransportUser;
 import traintickets.businesslogic.transport.UserInfo;
 
@@ -15,12 +15,12 @@ import java.util.Objects;
 
 public final class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
-    private final SessionManager sessionManager;
+    private final JwtManager jwtManager;
     private final String systemRole;
 
-    public UserServiceImpl(UserRepository userRepository, SessionManager sessionManager, String systemRole) {
+    public UserServiceImpl(UserRepository userRepository, JwtManager jwtManager, String systemRole) {
         this.userRepository = Objects.requireNonNull(userRepository);
-        this.sessionManager = Objects.requireNonNull(sessionManager);
+        this.jwtManager = Objects.requireNonNull(jwtManager);
         this.systemRole = Objects.requireNonNull(systemRole);
     }
 
@@ -33,7 +33,7 @@ public final class UserServiceImpl implements UserService {
     @Override
     public void deleteUser(UserId userId) {
         userRepository.deleteUser(systemRole, userId);
-        sessionManager.endSessions(userId);
+        jwtManager.invalidateTokens(userId);
     }
 
     @Override
@@ -53,12 +53,12 @@ public final class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updateUser(String sessionId, TransportUser user) {
+    public void updateUser(UserInfo userInfo, TransportUser user) {
         user.toUser("someRole", true).validate();
         if (user.id() == null) {
             throw new InvalidEntityException("All data required");
         }
-        var userId = sessionManager.getUserInfo(sessionId).userId();
+        var userId = userInfo.userId();
         if (!userId.equals(user.id())) {
             throw new InvalidEntityException(
                     String.format("Invalid userId: expected '%s', but got '%s'", userId.id(), user.id().id()));
@@ -72,7 +72,7 @@ public final class UserServiceImpl implements UserService {
         if (user.id() == null) {
             throw new InvalidEntityException("All data required");
         }
-        sessionManager.updateUserInfo(new UserInfo(user.id(), user.role()));
+        jwtManager.invalidateTokens(user.id());
         userRepository.updateUserCompletely(systemRole, user);
     }
 }

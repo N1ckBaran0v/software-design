@@ -10,12 +10,10 @@ import traintickets.businesslogic.model.Railcar;
 import traintickets.businesslogic.model.RailcarId;
 import traintickets.businesslogic.model.UserId;
 import traintickets.businesslogic.repository.RailcarRepository;
-import traintickets.businesslogic.session.SessionManager;
 import traintickets.businesslogic.transport.UserInfo;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
@@ -26,9 +24,6 @@ class RailcarServiceImplTest {
     @Mock
     private RailcarRepository railcarRepository;
 
-    @Mock
-    private SessionManager sessionManager;
-
     @InjectMocks
     private RailcarServiceImpl railcarService;
 
@@ -36,9 +31,7 @@ class RailcarServiceImplTest {
     void addRailcar_positive_saved() {
         var railcar = new Railcar(null, "1", "cars", List.of(new Place(null, 1, "", "cars", BigDecimal.valueOf(1000))));
         var userInfo = new UserInfo(new UserId("1"), "carrier_role");
-        var sessionId = UUID.randomUUID().toString();
-        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
-        railcarService.addRailcar(sessionId, railcar);
+        railcarService.addRailcar(userInfo, railcar);
         verify(railcarRepository).addRailcar(userInfo.role(), railcar);
     }
 
@@ -50,10 +43,8 @@ class RailcarServiceImplTest {
         var railcarId2 = new RailcarId("2");
         var railcar2 = new Railcar(railcarId2, "2", type, List.of());
         var userInfo = new UserInfo(new UserId("1"), "carrier_role");
-        var sessionId = UUID.randomUUID().toString();
-        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
         given(railcarRepository.getRailcarsByType(userInfo.role(), type)).willReturn(List.of(railcar1, railcar2));
-        var result = railcarService.getRailcars(sessionId, type);
+        var result = railcarService.getRailcars(userInfo, type);
         assertNotNull(result);
         assertEquals(2, result.size());
         assertEquals(railcar1, result.get(0));
@@ -64,10 +55,8 @@ class RailcarServiceImplTest {
     void getRailcars_positive_empty() {
         var type = "cars";
         var userInfo = new UserInfo(new UserId("1"), "carrier_role");
-        var sessionId = UUID.randomUUID().toString();
-        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
         given(railcarRepository.getRailcarsByType(userInfo.role(), type)).willReturn(List.of());
-        var result = railcarService.getRailcars(sessionId, type);
+        var result = railcarService.getRailcars(userInfo, type);
         assertNotNull(result);
         assertTrue(result.isEmpty());
     }

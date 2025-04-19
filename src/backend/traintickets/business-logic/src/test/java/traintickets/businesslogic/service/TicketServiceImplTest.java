@@ -9,13 +9,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import traintickets.businesslogic.model.*;
 import traintickets.businesslogic.payment.PaymentData;
 import traintickets.businesslogic.repository.TicketRepository;
-import traintickets.businesslogic.session.SessionManager;
 import traintickets.businesslogic.transport.UserInfo;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.List;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
@@ -25,9 +23,6 @@ import static org.mockito.Mockito.verify;
 class TicketServiceImplTest {
     @Mock
     private TicketRepository ticketRepository;
-
-    @Mock
-    private SessionManager sessionManager;
 
     @InjectMocks
     private TicketServiceImpl ticketService;
@@ -54,9 +49,7 @@ class TicketServiceImplTest {
     @Test
     void buyTickets_positive_saved() {
         var userInfo = new UserInfo(new UserId("1"), "carrier_role");
-        var sessionId = UUID.randomUUID().toString();
-        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
-        ticketService.buyTickets(sessionId, tickets, paymentData);
+        ticketService.buyTickets(userInfo, tickets, paymentData);
         verify(ticketRepository).addTickets(userInfo.role(), tickets, paymentData);
     }
 
@@ -64,10 +57,8 @@ class TicketServiceImplTest {
     void getTickets_positive_got() {
         var user = new UserId("1");
         var userInfo = new UserInfo(new UserId("1"), "carrier_role");
-        var sessionId = UUID.randomUUID().toString();
-        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
         given(ticketRepository.getTicketsByUser(userInfo.role(), user)).willReturn(tickets);
-        var result = ticketService.getTickets(sessionId, user);
+        var result = ticketService.getTickets(userInfo, user);
         assertNotNull(result);
         assertEquals(tickets.size(), result.size());
         for (var i = 0; i < result.size(); ++i) {
@@ -79,10 +70,8 @@ class TicketServiceImplTest {
     void getTickets_positive_empty() {
         var user = new UserId("1");
         var userInfo = new UserInfo(new UserId("1"), "carrier_role");
-        var sessionId = UUID.randomUUID().toString();
-        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
         given(ticketRepository.getTicketsByUser(userInfo.role(), user)).willReturn(List.of());
-        var result = ticketService.getTickets(sessionId, user);
+        var result = ticketService.getTickets(userInfo, user);
         assertNotNull(result);
         assertTrue(result.isEmpty());
     }

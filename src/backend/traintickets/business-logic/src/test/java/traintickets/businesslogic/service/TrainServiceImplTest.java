@@ -8,16 +8,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import traintickets.businesslogic.exception.EntityNotFoundException;
 import traintickets.businesslogic.exception.InvalidEntityException;
 import traintickets.businesslogic.model.*;
-import traintickets.businesslogic.repository.RailcarRepository;
 import traintickets.businesslogic.repository.TrainRepository;
-import traintickets.businesslogic.session.SessionManager;
 import traintickets.businesslogic.transport.UserInfo;
 
-import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -30,9 +26,6 @@ class TrainServiceImplTest {
     @Mock
     private TrainRepository trainRepository;
 
-    @Mock
-    private SessionManager sessionManager;
-
     @InjectMocks
     private TrainServiceImpl trainService;
 
@@ -40,18 +33,16 @@ class TrainServiceImplTest {
     void addTrain_positive_saved() {
         var train = new Train(null, "express", List.of(new RailcarId("1"), new RailcarId("2")));
         var userInfo = new UserInfo(new UserId("1"), "carrier_role");
-        var sessionId = UUID.randomUUID().toString();
-        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
-        trainService.addTrain(sessionId, train);
+        trainService.addTrain(userInfo, train);
         verify(trainRepository).addTrain(userInfo.role(), train);
     }
 
     @Test
     void addTrain_negative_invalid() {
+        var userInfo = new UserInfo(new UserId("1"), "carrier_role");
         var train = new Train(null, "express", List.of());
-        assertThrows(InvalidEntityException.class, () -> trainService.addTrain(UUID.randomUUID().toString(), train));
+        assertThrows(InvalidEntityException.class, () -> trainService.addTrain(userInfo, train));
         verify(trainRepository, never()).addTrain(any(), any());
-        verify(sessionManager, never()).getUserInfo(any());
     }
 
     @Test
@@ -59,10 +50,8 @@ class TrainServiceImplTest {
         var trainId = new TrainId("1");
         var train = new Train(trainId, "express", List.of(new RailcarId("1"), new RailcarId("2")));
         var userInfo = new UserInfo(new UserId("1"), "carrier_role");
-        var sessionId = UUID.randomUUID().toString();
-        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
         given(trainRepository.getTrain(userInfo.role(), trainId)).willReturn(Optional.of(train));
-        var result = trainService.getTrain(sessionId, trainId);
+        var result = trainService.getTrain(userInfo, trainId);
         assertSame(train, result);
     }
 
@@ -70,10 +59,8 @@ class TrainServiceImplTest {
     void getTrain_negative_notFound() {
         var trainId = new TrainId("1");
         var userInfo = new UserInfo(new UserId("1"), "carrier_role");
-        var sessionId = UUID.randomUUID().toString();
-        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
         given(trainRepository.getTrain(userInfo.role(), trainId)).willReturn(Optional.empty());
-        assertThrows(EntityNotFoundException.class, () -> trainService.getTrain(sessionId, trainId));
+        assertThrows(EntityNotFoundException.class, () -> trainService.getTrain(userInfo, trainId));
     }
 
     @Test
@@ -83,10 +70,8 @@ class TrainServiceImplTest {
         var start = Timestamp.valueOf("2025-03-19 10:10:00");
         var end = Timestamp.valueOf("2025-03-19 11:40:00");
         var userInfo = new UserInfo(new UserId("1"), "carrier_role");
-        var sessionId = UUID.randomUUID().toString();
-        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
         given(trainRepository.getTrains(userInfo.role(), start, end)).willReturn(List.of(train1, train2));
-        var result = trainService.getTrains(sessionId, start, end);
+        var result = trainService.getTrains(userInfo, start, end);
         assertNotNull(result);
         assertEquals(2, result.size());
         assertEquals(train1, result.get(0));
@@ -98,10 +83,8 @@ class TrainServiceImplTest {
         var start = Timestamp.valueOf("2025-03-19 10:10:00");
         var end = Timestamp.valueOf("2025-03-19 11:40:00");
         var userInfo = new UserInfo(new UserId("1"), "carrier_role");
-        var sessionId = UUID.randomUUID().toString();
-        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
         given(trainRepository.getTrains(userInfo.role(), start, end)).willReturn(List.of());
-        var result = trainService.getTrains(sessionId, start, end);
+        var result = trainService.getTrains(userInfo, start, end);
         assertNotNull(result);
         assertTrue(result.isEmpty());
     }
