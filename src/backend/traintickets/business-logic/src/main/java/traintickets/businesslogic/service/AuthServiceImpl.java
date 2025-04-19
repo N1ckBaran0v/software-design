@@ -41,8 +41,7 @@ public final class AuthServiceImpl implements AuthService {
         var name = form.name();
         var user = new User(null, username, password, name, clientRole, true);
         user.validate();
-        userRepository.addUser(systemRole, user);
-        return jwtManager.generateToken(UserInfo.of(user));
+        return jwtManager.generateToken(UserInfo.of(userRepository.addUser(systemRole, user)));
     }
 
     @Override

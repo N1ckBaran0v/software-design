@@ -6,7 +6,7 @@ import traintickets.businesslogic.model.CommentId;
 import traintickets.businesslogic.model.Comment;
 import traintickets.businesslogic.model.TrainId;
 import traintickets.businesslogic.repository.CommentRepository;
-import traintickets.businesslogic.session.SessionManager;
+import traintickets.businesslogic.transport.UserInfo;
 
 import java.util.List;
 import java.util.Objects;
@@ -14,17 +14,14 @@ import java.util.stream.StreamSupport;
 
 public final class CommentServiceImpl implements CommentService {
     private final CommentRepository commentRepository;
-    private final SessionManager sessionManager;
 
-    public CommentServiceImpl(CommentRepository commentRepository, SessionManager sessionManager) {
+    public CommentServiceImpl(CommentRepository commentRepository) {
         this.commentRepository = Objects.requireNonNull(commentRepository);
-        this.sessionManager = Objects.requireNonNull(sessionManager);
     }
 
     @Override
-    public void addComment(String sessionId, Comment comment) {
+    public void addComment(UserInfo userInfo, Comment comment) {
         comment.validate();
-        var userInfo = sessionManager.getUserInfo(sessionId);
         if (!userInfo.userId().equals(comment.author())) {
             throw new InvalidEntityException("Invalid userId");
         }
@@ -32,14 +29,13 @@ public final class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public List<Comment> getComments(String sessionId, TrainId trainId) {
-        var role = sessionManager.getUserInfo(sessionId).role();
+    public List<Comment> getComments(UserInfo userInfo, TrainId trainId) {
+        var role = userInfo.role();
         return StreamSupport.stream(commentRepository.getComments(role, trainId).spliterator(), false).toList();
     }
 
     @Override
-    public void deleteComment(String sessionId, CommentId commentId) {
-        var role = sessionManager.getUserInfo(sessionId).role();
-        commentRepository.deleteComment(role, commentId);
+    public void deleteComment(UserInfo userInfo, CommentId commentId) {
+        commentRepository.deleteComment(userInfo.role(), commentId);
     }
 }

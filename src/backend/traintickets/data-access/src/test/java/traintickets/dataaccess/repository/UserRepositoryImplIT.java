@@ -39,7 +39,14 @@ class UserRepositoryImplIT extends PostgresIT {
     @Test
     void addUser_positive_added() {
         var user = new User(null, "random_username", "qwerty123", "Зубенко Михаил Петрович", "userRole", true);
-        userRepository.addUser(roleName, user);
+        var result = userRepository.addUser(roleName, user);
+        assertNotNull(result);
+        assertNotNull(result.id());
+        assertEquals(user.username(), result.username());
+        assertEquals(user.password(), result.password());
+        assertEquals(user.name(), result.name());
+        assertEquals(user.role(), result.role());
+        assertEquals(user.active(), result.active());
         jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "select * from users_view where user_name = 'random_username';"

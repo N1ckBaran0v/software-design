@@ -4,8 +4,6 @@ import traintickets.businesslogic.model.User;
 import traintickets.businesslogic.model.UserId;
 import traintickets.businesslogic.transport.TransportUser;
 
-import java.util.UUID;
-
 public interface UserService {
     void createUser(User user);
     void deleteUser(UserId userId);

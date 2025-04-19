@@ -10,6 +10,7 @@ import traintickets.jdbc.api.JdbcTemplate;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Optional;
@@ -23,19 +24,24 @@ public final class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public void addUser(String role, User user) {
-        jdbcTemplate.executeCons(role, Connection.TRANSACTION_SERIALIZABLE, connection -> {
+    public User addUser(String role, User user) {
+        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_SERIALIZABLE, connection -> {
             checkIfExists(user.id(), user.username(), connection);
             try (var statement = connection.prepareStatement(
                     "INSERT INTO users_view (user_name, pass_word, real_name, user_role, is_active)\n" +
-                            "VALUES (?, ?, ?, ?, ?);"
+                            "VALUES (?, ?, ?, ?, ?);",
+                    Statement.RETURN_GENERATED_KEYS
             )) {
                 statement.setString(1, user.username());
                 statement.setString(2, user.password());
                 statement.setString(3, user.name());
                 statement.setString(4, user.role());
                 statement.setBoolean(5, user.active());
-                statement.execute();
+                statement.executeUpdate();
+                var rs = statement.getGeneratedKeys();
+                rs.next();
+                var userId = new UserId(String.valueOf(rs.getLong(1)));
+                return new User(userId, user.username(), user.password(), user.name(), user.role(), user.active());
             }
         });
     }

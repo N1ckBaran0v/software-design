@@ -11,11 +11,9 @@ import traintickets.businesslogic.model.Comment;
 import traintickets.businesslogic.model.TrainId;
 import traintickets.businesslogic.model.UserId;
 import traintickets.businesslogic.repository.CommentRepository;
-import traintickets.businesslogic.session.SessionManager;
 import traintickets.businesslogic.transport.UserInfo;
 
 import java.util.List;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -28,9 +26,6 @@ class CommentServiceImplTest {
     @Mock
     private CommentRepository commentRepository;
 
-    @Mock
-    private SessionManager sessionManager;
-
     @InjectMocks
     private CommentServiceImpl commentService;
 
@@ -39,17 +34,15 @@ class CommentServiceImplTest {
         var comment = new Comment(null, new UserId("1"), new TrainId("737"), 5, "good");
         var role = "user_role";
         var userInfo = new UserInfo(new UserId("1"), role);
-        var sessionId = UUID.randomUUID().toString();
-        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
-        commentService.addComment(sessionId, comment);
+        commentService.addComment(userInfo, comment);
         verify(commentRepository).addComment(role, comment);
     }
 
     @Test
     void addComment_negative_invalid() {
+        var userInfo = new UserInfo(new UserId("1"), "user_role");
         var comment = new Comment(null, new UserId("1"), new TrainId("737"), 6, "good");
-        assertThrows(InvalidEntityException.class, () -> commentService.addComment(UUID.randomUUID().toString(), comment));
-        verify(sessionManager, never()).getUserInfo(any());
+        assertThrows(InvalidEntityException.class, () -> commentService.addComment(userInfo, comment));
         verify(commentRepository, never()).addComment(any(), any());
     }
 
@@ -58,9 +51,7 @@ class CommentServiceImplTest {
         var comment = new Comment(null, new UserId("1"), new TrainId("737"), 5, "good");
         var role = "user_role";
         var userInfo = new UserInfo(new UserId("2"), role);
-        var sessionId = UUID.randomUUID().toString();
-        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
-        assertThrows(InvalidEntityException.class, () -> commentService.addComment(sessionId, comment));
+        assertThrows(InvalidEntityException.class, () -> commentService.addComment(userInfo, comment));
         verify(commentRepository, never()).addComment(any(), any());
     }
 
@@ -71,10 +62,8 @@ class CommentServiceImplTest {
         var comm2 = new Comment(new CommentId("2"), new UserId("2"), trainId, 1, "bad");
         var role = "user_role";
         var userInfo = new UserInfo(null, role);
-        var sessionId = UUID.randomUUID().toString();
-        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
         given(commentRepository.getComments(role, trainId)).willReturn(List.of(comm1, comm2));
-        var comments = commentService.getComments(sessionId, trainId);
+        var comments = commentService.getComments(userInfo, trainId);
         assertNotNull(comments);
         assertEquals(2, comments.size());
         assertEquals(comm1, comments.get(0));
@@ -86,10 +75,8 @@ class CommentServiceImplTest {
         var trainId = new TrainId("228");
         var role = "user_role";
         var userInfo = new UserInfo(null, role);
-        var sessionId = UUID.randomUUID().toString();
-        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
         given(commentRepository.getComments(role, trainId)).willReturn(List.of());
-        var result = commentService.getComments(sessionId, trainId);
+        var result = commentService.getComments(userInfo, trainId);
         assertNotNull(result);
         assertTrue(result.isEmpty());
     }
@@ -99,9 +86,7 @@ class CommentServiceImplTest {
         var commId = new CommentId("1");
         var role = "user_role";
         var userInfo = new UserInfo(null, role);
-        var sessionId = UUID.randomUUID().toString();
-        given(sessionManager.getUserInfo(sessionId)).willReturn(userInfo);
-        commentService.deleteComment(sessionId, commId);
+        commentService.deleteComment(userInfo, commId);
         verify(commentRepository).deleteComment(role, commId);
     }
 }

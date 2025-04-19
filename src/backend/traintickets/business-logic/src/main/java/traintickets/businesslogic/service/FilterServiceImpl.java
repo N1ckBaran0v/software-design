@@ -6,6 +6,7 @@ import traintickets.businesslogic.exception.InvalidEntityException;
 import traintickets.businesslogic.model.Filter;
 import traintickets.businesslogic.repository.FilterRepository;
 import traintickets.businesslogic.session.SessionManager;
+import traintickets.businesslogic.transport.UserInfo;
 
 import java.util.List;
 import java.util.Objects;
@@ -13,17 +14,14 @@ import java.util.stream.StreamSupport;
 
 public final class FilterServiceImpl implements FilterService {
     private final FilterRepository filterRepository;
-    private final SessionManager sessionManager;
 
-    public FilterServiceImpl(FilterRepository filterRepository, SessionManager sessionManager) {
+    public FilterServiceImpl(FilterRepository filterRepository) {
         this.filterRepository = Objects.requireNonNull(filterRepository);
-        this.sessionManager = Objects.requireNonNull(sessionManager);
     }
 
     @Override
-    public void addFilter(String sessionId, Filter filter) {
+    public void addFilter(UserInfo userInfo, Filter filter) {
         filter.saveValidate();
-        var userInfo = sessionManager.getUserInfo(sessionId);
         if (!userInfo.userId().equals(filter.user())) {
             throw new InvalidEntityException("Invalid userId");
         }
@@ -31,21 +29,18 @@ public final class FilterServiceImpl implements FilterService {
     }
 
     @Override
-    public Filter getFilter(String sessionId, String filterName) {
-        var userInfo = sessionManager.getUserInfo(sessionId);
+    public Filter getFilter(UserInfo userInfo, String filterName) {
         return filterRepository.getFilter(userInfo.role(), userInfo.userId(), filterName).orElseThrow(
                 () -> new EntityNotFoundException(String.format("Filter %s not found", filterName)));
     }
 
     @Override
-    public List<Filter> getFilters(String sessionId) {
-        var userInfo = sessionManager.getUserInfo(sessionId);
+    public List<Filter> getFilters(UserInfo userInfo) {
         return StreamSupport.stream(filterRepository.getFilters(userInfo.role(), userInfo.userId()).spliterator(), false).toList();
     }
 
     @Override
-    public void deleteFilter(String sessionId, String filterName) {
-        var userInfo = sessionManager.getUserInfo(sessionId);
+    public void deleteFilter(UserInfo userInfo, String filterName) {
         filterRepository.deleteFilter(userInfo.role(), userInfo.userId(), filterName);
     }
 }

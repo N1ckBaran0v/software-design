@@ -7,7 +7,7 @@ import traintickets.businesslogic.transport.TransportUser;
 import java.util.Optional;
 
 public interface UserRepository {
-    void addUser(String role, User user);
+    User addUser(String role, User user);
     Optional<User> getUser(String role, String username);
     Iterable<User> getUsers(String role, Iterable<UserId> userIds);
     void updateUserCompletely(String role, User user);
