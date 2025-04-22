@@ -2,15 +2,22 @@ server:
     host: localhost
     port: 8080
 database:
-    url: jdbc:postgresql://localhost:5432/testtrain1
-    users:
-        test: test
+    url: jdbc:postgresql://localhost:5555/train_tickets_postgres
+    username: train_database_admin
+    password: s3cr3tpassw0rd
     poolSize: 20
 security:
-    roles:
-        userRole: test
-        carrierRole: test
-        adminRole: test
-        systemRole: test
     secret: BobritoBandito
     expiration: 1
+    userRole:
+        appName: user_role
+        dbName: _user_role
+    carrierRole:
+        appName: carrier_role
+        dbName: _carrier_role
+    adminRole:
+        appName: admin_role
+        dbName: _admin_role
+    systemRole:
+        appName: system_role
+        dbName: _system_role

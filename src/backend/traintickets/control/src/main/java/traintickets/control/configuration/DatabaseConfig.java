@@ -1,10 +1,9 @@
 package traintickets.control.configuration;
 
-import java.util.Map;
-
 public final class DatabaseConfig {
     private String url;
-    private Map<String, String> users;
+    private String username;
+    private String password;
     private int poolSize;
 
     public String getUrl() {
@@ -15,12 +14,20 @@ public final class DatabaseConfig {
         this.url = url;
     }
 
-    public Map<String, String> getUsers() {
-        return users;
+    public String getUsername() {
+        return username;
     }
 
-    public void setUsers(Map<String, String> users) {
-        this.users = users;
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public int getPoolSize() {

@@ -43,7 +43,7 @@ class TicketRepositoryImplIT extends PostgresIT {
 
     @Override
     protected void insertData() {
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+        jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "insert into trains (train_class) values ('фирменный'); " +
                             "insert into races (train_id, finished) values " +
@@ -75,8 +75,8 @@ class TicketRepositoryImplIT extends PostgresIT {
                 new Schedule(new ScheduleId("3"), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0),
                 new Schedule(new ScheduleId("4"), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5),
                 BigDecimal.valueOf(500));
-        ticketRepository.addTickets(roleName, List.of(ticket), paymentData);
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+        ticketRepository.addTickets(userRole, List.of(ticket), paymentData);
+        jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM tickets WHERE id = 4;"
             )) {
@@ -105,9 +105,9 @@ class TicketRepositoryImplIT extends PostgresIT {
                 new Schedule(new ScheduleId("4"), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5),
                 BigDecimal.valueOf(500));
         assertThrows(InvalidEntityException.class,
-                () -> ticketRepository.addTickets(roleName, List.of(ticket), paymentData));
+                () -> ticketRepository.addTickets(adminRole, List.of(ticket), paymentData));
         verify(paymentManager, never()).pay(any());
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+        jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM tickets WHERE id = 4;"
             )) {
@@ -126,9 +126,9 @@ class TicketRepositoryImplIT extends PostgresIT {
                 new Schedule(new ScheduleId("4"), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5),
                 BigDecimal.valueOf(500));
         assertThrows(PlaceAlreadyReservedException.class,
-                () -> ticketRepository.addTickets(roleName, List.of(ticket), paymentData));
+                () -> ticketRepository.addTickets(userRole, List.of(ticket), paymentData));
         verify(paymentManager, never()).pay(any());
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+        jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM tickets WHERE id = 4;"
             )) {
@@ -148,8 +148,8 @@ class TicketRepositoryImplIT extends PostgresIT {
                 BigDecimal.valueOf(500));
         willThrow(PaymentException.class).given(paymentManager).pay(paymentData);
         assertThrows(PaymentException.class,
-                () -> ticketRepository.addTickets(roleName, List.of(ticket), paymentData));
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+                () -> ticketRepository.addTickets(adminRole, List.of(ticket), paymentData));
+        jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM tickets WHERE id = 4;"
             )) {
@@ -172,7 +172,7 @@ class TicketRepositoryImplIT extends PostgresIT {
                 new Schedule(new ScheduleId("3"), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0),
                 new Schedule(new ScheduleId("4"), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5),
                 BigDecimal.valueOf(500));
-        var result = ticketRepository.getTicketsByUser(roleName, userId);
+        var result = ticketRepository.getTicketsByUser(userRole, userId);
         assertNotNull(result);
         var iterator = result.iterator();
         assertTrue(iterator.hasNext());
@@ -184,7 +184,7 @@ class TicketRepositoryImplIT extends PostgresIT {
 
     @Test
     void getTicketsByUser_positive_empty() {
-        var result = ticketRepository.getTicketsByUser(roleName, new UserId("3"));
+        var result = ticketRepository.getTicketsByUser(adminRole, new UserId("3"));
         assertNotNull(result);
         assertFalse(result.iterator().hasNext());
     }
@@ -202,7 +202,7 @@ class TicketRepositoryImplIT extends PostgresIT {
                 new Schedule(new ScheduleId("1"), "first", null, Timestamp.valueOf("2025-04-01 10:10:00"), 0),
                 new Schedule(new ScheduleId("2"), "second", Timestamp.valueOf("2025-04-01 11:40:00"), null, 5),
                 BigDecimal.valueOf(500));
-        var result = ticketRepository.getTicketsByRace(roleName, raceId);
+        var result = ticketRepository.getTicketsByRace(userRole, raceId);
         assertNotNull(result);
         var iterator = result.iterator();
         assertTrue(iterator.hasNext());
@@ -214,7 +214,7 @@ class TicketRepositoryImplIT extends PostgresIT {
 
     @Test
     void getTicketsByRace_positive_empty() {
-        var result = ticketRepository.getTicketsByRace(roleName, new RaceId("3"));
+        var result = ticketRepository.getTicketsByRace(adminRole, new RaceId("3"));
         assertNotNull(result);
         assertFalse(result.iterator().hasNext());
     }

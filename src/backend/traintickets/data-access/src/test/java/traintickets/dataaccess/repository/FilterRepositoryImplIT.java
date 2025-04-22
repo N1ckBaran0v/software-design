@@ -25,7 +25,7 @@ class FilterRepositoryImplIT extends PostgresIT {
 
     @Override
     protected void insertData() {
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+        jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "insert into users_view (user_name, pass_word, real_name, user_role, is_active) values " +
                             "('first', 'qwerty123', 'Иванов Иван Иванович', 'userRole', TRUE), " +
@@ -44,8 +44,8 @@ class FilterRepositoryImplIT extends PostgresIT {
     @Test
     void addFilter_positive_added() {
         var filter = new Filter(new UserId("2"), "first", "first", "second", 0, Map.of("adult", 1), null, null);
-        filterRepository.addFilter(roleName, filter);
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+        filterRepository.addFilter(userRole, filter);
+        jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM filters WHERE id = 3;"
             )) {
@@ -75,8 +75,8 @@ class FilterRepositoryImplIT extends PostgresIT {
     @Test
     void addFilter_negative_exists() {
         var filter = new Filter(new UserId("1"), "first", "first", "second", 0, Map.of("adult", 1), null, null);
-        assertThrows(EntityAlreadyExistsException.class, () -> filterRepository.addFilter(roleName, filter));
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+        assertThrows(EntityAlreadyExistsException.class, () -> filterRepository.addFilter(adminRole, filter));
+        jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM filters WHERE id = 3;"
             )) {
@@ -97,20 +97,20 @@ class FilterRepositoryImplIT extends PostgresIT {
     @Test
     void getFilter_positive_found() {
         var filter = new Filter(new UserId("1"), "first", "first", "second", 0, Map.of("adult", 2, "child", 1), null, null);
-        var result = filterRepository.getFilter(roleName, new UserId("1"), "first");
+        var result = filterRepository.getFilter(userRole, new UserId("1"), "first");
         assertEquals(filter, result.orElse(null));
     }
 
     @Test
     void getFilter_positive_notFound() {
-        assertNull(filterRepository.getFilter(roleName, new UserId("1"), "third").orElse(null));
+        assertNull(filterRepository.getFilter(adminRole, new UserId("1"), "third").orElse(null));
     }
 
     @Test
     void getFilters_positive_got() {
         var filter1 = new Filter(new UserId("1"), "first", "first", "second", 0, Map.of("adult", 2, "child", 1), null, null);
         var filter2 = new Filter(new UserId("1"), "second", "first", "second", 1, Map.of("adult", 1), null, null);
-        var result = filterRepository.getFilters(roleName, new UserId("1"));
+        var result = filterRepository.getFilters(userRole, new UserId("1"));
         assertNotNull(result);
         var iterator = result.iterator();
         assertTrue(iterator.hasNext());
@@ -122,15 +122,15 @@ class FilterRepositoryImplIT extends PostgresIT {
 
     @Test
     void getFilters_positive_empty() {
-        var result = filterRepository.getFilters(roleName, new UserId("2"));
+        var result = filterRepository.getFilters(adminRole, new UserId("2"));
         assertNotNull(result);
         assertFalse(result.iterator().hasNext());
     }
 
     @Test
     void deleteFilter_positive_deleted() {
-        filterRepository.deleteFilter(roleName, new UserId("1"), "first");
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+        filterRepository.deleteFilter(userRole, new UserId("1"), "first");
+        jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM filters WHERE id = 1;"
             )) {

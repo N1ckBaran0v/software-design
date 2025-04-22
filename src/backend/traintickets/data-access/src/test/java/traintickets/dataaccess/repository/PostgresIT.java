@@ -15,7 +15,11 @@ abstract class PostgresIT {
 
     protected PostgreSQLContainer<?> container;
     protected JdbcTemplate jdbcTemplate;
-    protected static final String roleName = "test";
+    protected static final String superuser = "superuser";
+    protected static final String userRole = "user_role";
+    protected static final String carrierRole = "carrier_role";
+    protected static final String adminRole = "admin_role";
+    protected static final String systemRole = "system_role";
 
     @BeforeEach
     @SuppressWarnings("all")
@@ -23,10 +27,22 @@ abstract class PostgresIT {
         container = new PostgreSQLContainer<>("postgres:16.8")
                 .withUsername("test")
                 .withPassword("test")
-                .withInitScripts("schema.sql", "restrictions.sql", "trigger.sql")
+                .withInitScripts("schema.sql", "restrictions.sql", "trigger.sql", "roles.sql")
                 .withDatabaseName("test");
         container.start();
-        var params = new DatabaseParams(container.getJdbcUrl(), Map.of("test", "test"), 1);
+        var rolesMap = Map.of(
+                superuser, container.getUsername(),
+                userRole, "_user_role",
+                carrierRole, "_carrier_role",
+                adminRole, "_admin_role",
+                systemRole, "_system_role"
+        );
+        var params = new DatabaseParams(
+                container.getJdbcUrl(),
+                container.getUsername(),
+                container.getPassword(),
+                rolesMap, 1
+        );
         jdbcTemplate = jdbcTemplateFactory.create(params);
         insertData();
     }

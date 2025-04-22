@@ -1,19 +1,12 @@
 package traintickets.control.configuration;
 
-import java.util.Map;
-
 public final class SecurityConfig {
-    private Map<String, String> roles;
     private String secret;
     private int expiration;
-
-    public Map<String, String> getRoles() {
-        return roles;
-    }
-
-    public void setRoles(Map<String, String> roles) {
-        this.roles = roles;
-    }
+    private RoleConfig userRole;
+    private RoleConfig carrierRole;
+    private RoleConfig adminRole;
+    private RoleConfig systemRole;
 
     public int getExpiration() {
         return expiration;
@@ -29,5 +22,37 @@ public final class SecurityConfig {
 
     public void setSecret(String secret) {
         this.secret = secret;
+    }
+
+    public RoleConfig getUserRole() {
+        return userRole;
+    }
+
+    public void setUserRole(RoleConfig userRole) {
+        this.userRole = userRole;
+    }
+
+    public RoleConfig getCarrierRole() {
+        return carrierRole;
+    }
+
+    public void setCarrierRole(RoleConfig carrierRole) {
+        this.carrierRole = carrierRole;
+    }
+
+    public RoleConfig getAdminRole() {
+        return adminRole;
+    }
+
+    public void setAdminRole(RoleConfig adminRole) {
+        this.adminRole = adminRole;
+    }
+
+    public RoleConfig getSystemRole() {
+        return systemRole;
+    }
+
+    public void setSystemRole(RoleConfig systemRole) {
+        this.systemRole = systemRole;
     }
 }

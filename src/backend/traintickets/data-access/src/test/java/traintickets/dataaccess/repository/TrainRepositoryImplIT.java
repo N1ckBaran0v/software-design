@@ -25,7 +25,7 @@ class TrainRepositoryImplIT extends PostgresIT {
 
     @Override
     protected void insertData() {
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+        jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "insert into trains (train_class) values ('фирменный'), ('Скорый'); " +
                             "insert into races (train_id, finished) values " +
@@ -46,8 +46,8 @@ class TrainRepositoryImplIT extends PostgresIT {
     @Test
     void addTrain_positive_added() {
         var train = new Train(null, "Скорый", List.of(new RailcarId("1")));
-        trainRepository.addTrain(roleName, train);
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+        trainRepository.addTrain(carrierRole, train);
+        jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM trains WHERE id = 3;"
             )) {
@@ -73,21 +73,21 @@ class TrainRepositoryImplIT extends PostgresIT {
     void getTrain_positive_found() {
         var id = new TrainId("1");
         var train = new Train(id, "фирменный", List.of(new RailcarId("1")));
-        var result = trainRepository.getTrain(roleName, id).orElse(null);
+        var result = trainRepository.getTrain(adminRole, id).orElse(null);
         assertNotNull(result);
         assertEquals(train, result);
     }
 
     @Test
     void getTrain_positive_notFound() {
-        var result = trainRepository.getTrain(roleName, new TrainId("3")).orElse(null);
+        var result = trainRepository.getTrain(carrierRole, new TrainId("3")).orElse(null);
         assertNull(result);
     }
 
     @Test
     void getTrains_positive_got() {
         var train = new Train(new TrainId("1"), "фирменный", List.of());
-        var result = trainRepository.getTrains(roleName, Timestamp.valueOf("2025-04-01 11:50:00"),
+        var result = trainRepository.getTrains(systemRole, Timestamp.valueOf("2025-04-01 11:50:00"),
                 Timestamp.valueOf("2025-04-01 13:20:00"));
         assertNotNull(result);
         var iterator = result.iterator();
@@ -98,7 +98,7 @@ class TrainRepositoryImplIT extends PostgresIT {
 
     @Test
     void getTrains_positive_empty() {
-        var result = trainRepository.getTrains(roleName, Timestamp.valueOf("2025-04-01 11:30:00"),
+        var result = trainRepository.getTrains(adminRole, Timestamp.valueOf("2025-04-01 11:30:00"),
                 Timestamp.valueOf("2025-04-01 12:30:00"));
         assertNotNull(result);
         assertFalse(result.iterator().hasNext());

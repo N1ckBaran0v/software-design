@@ -21,8 +21,8 @@ public final class BusinessLogicModule implements ContextModule {
                 .addSingleton(AuthService.class, beanProvider -> {
                     var userRepository = beanProvider.getInstance(UserRepository.class);
                     var jwtManager = beanProvider.getInstance(JwtManager.class);
-                    var defaultRole = securityConfig.getRoles().get("userRole");
-                    var systemRole = securityConfig.getRoles().get("systemRole");
+                    var defaultRole = securityConfig.getUserRole().getAppName();
+                    var systemRole = securityConfig.getSystemRole().getAppName();
                     return new AuthServiceImpl(userRepository, jwtManager, defaultRole, systemRole);
                 })
                 .addSingleton(CommentService.class, CommentServiceImpl.class)
@@ -34,7 +34,7 @@ public final class BusinessLogicModule implements ContextModule {
                     var trainRepository = beanProvider.getInstance(TrainRepository.class);
                     var raceRepository = beanProvider.getInstance(RaceRepository.class);
                     var ticketRepository = beanProvider.getInstance(TicketRepository.class);
-                    var systemRole = securityConfig.getRoles().get("systemRole");
+                    var systemRole = securityConfig.getSystemRole().getAppName();
                     return new RouteServiceImpl(railcarRepository, trainRepository,
                             raceRepository, ticketRepository, systemRole);
                 })
@@ -43,7 +43,7 @@ public final class BusinessLogicModule implements ContextModule {
                 .addSingleton(UserService.class, beanProvider -> {
                     var userRepository = beanProvider.getInstance(UserRepository.class);
                     var jwtManager = beanProvider.getInstance(JwtManager.class);
-                    var systemRole = securityConfig.getRoles().get("systemRole");
+                    var systemRole = securityConfig.getSystemRole().getAppName();
                     return new UserServiceImpl(userRepository, jwtManager, systemRole);
                 });
     }
