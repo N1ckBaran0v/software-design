@@ -20,10 +20,10 @@ abstract class PostgresIT {
     @BeforeEach
     @SuppressWarnings("all")
     void setUp() {
-        container = new PostgreSQLContainer<>("postgres:16")
+        container = new PostgreSQLContainer<>("postgres:16.8")
                 .withUsername("test")
                 .withPassword("test")
-                .withInitScript("schema.sql")
+                .withInitScripts("schema.sql", "restrictions.sql", "trigger.sql")
                 .withDatabaseName("test");
         container.start();
         var params = new DatabaseParams(container.getJdbcUrl(), Map.of("test", "test"), 1);

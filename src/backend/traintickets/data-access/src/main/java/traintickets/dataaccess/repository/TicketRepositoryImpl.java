@@ -8,6 +8,7 @@ import traintickets.businesslogic.payment.PaymentManager;
 import traintickets.businesslogic.repository.TicketRepository;
 import traintickets.jdbc.api.JdbcTemplate;
 
+import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,13 +51,15 @@ public final class TicketRepositoryImpl implements TicketRepository {
 
     private void checkIfCorrect(Connection connection, Ticket ticket) throws SQLException {
         var railcarId = 0L;
+        var placeCost = BigDecimal.ZERO;
         try (var statement = connection.prepareStatement(
-                "SELECT railcar_id FROM places WHERE id = (?);"
+                "SELECT railcar_id, place_cost FROM places WHERE id = (?);"
         )) {
             statement.setLong(1, Long.parseLong(ticket.place().id().id()));
             try (var resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
                     railcarId = resultSet.getLong("railcar_id");
+                    placeCost = resultSet.getBigDecimal("place_cost");
                 } else {
                     throw new InvalidEntityException("Place not found");
                 }
@@ -86,8 +89,17 @@ public final class TicketRepositoryImpl implements TicketRepository {
             statement.setLong(2, Long.parseLong(ticket.start().id().id()));
             statement.setLong(3, Long.parseLong(ticket.end().id().id()));
             try (var resultSet = statement.executeQuery()) {
-                if (!(resultSet.next() && resultSet.next())) {
-                    throw new InvalidEntityException("Invalid schedule in ticket");
+                if (!resultSet.next()) {
+                    throw new InvalidEntityException("Departure not found");
+                }
+                var multiplier = BigDecimal.valueOf(resultSet.getDouble("multiplier"));
+                if (!resultSet.next()) {
+                    throw new InvalidEntityException("Destination not found");
+                }
+                multiplier = BigDecimal.valueOf(resultSet.getDouble("multiplier")).subtract(multiplier);
+                placeCost = placeCost.multiply(multiplier);
+                if (placeCost.compareTo(ticket.cost()) != 0) {
+                    throw new InvalidEntityException("Invalid cost");
                 }
             }
         }
