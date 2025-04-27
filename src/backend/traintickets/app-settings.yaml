@@ -7,7 +7,7 @@ database:
     password: s3cr3tpassw0rd
     poolSize: 20
 security:
-    secret: BobritoBandito
+    secret: s3cr3tc0d3
     expiration: 1
     userRole:
         appName: user_role

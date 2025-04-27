@@ -249,4 +249,21 @@ class UserRepositoryImplIT extends PostgresIT {
             }
         });
     }
+
+    @Test
+    void deleteUser_negative_denied() {
+        var id = new UserId("1");
+        assertThrows(RuntimeException.class, () -> userRepository.deleteUser(adminRole, id));
+        jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+            try (var statement = connection.prepareStatement(
+                    "select * from users_view where user_name = 'first';"
+            )) {
+                try (var resultSet = statement.executeQuery()) {
+                    assertTrue(resultSet.next());
+                    assertTrue(resultSet.getBoolean("is_active"));
+                    assertFalse(resultSet.next());
+                }
+            }
+        });
+    }
 }

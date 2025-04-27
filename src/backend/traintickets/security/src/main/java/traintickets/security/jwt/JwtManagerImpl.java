@@ -14,8 +14,35 @@ public final class JwtManagerImpl implements JwtManager {
     private final Map<String, String> tokens = new ConcurrentHashMap<>();
     private final Map<String, Set<String>> userTokens = new HashMap<>();
 
+    @SuppressWarnings("all")
     public JwtManagerImpl(JwtConfig jwtConfig) {
         jwtProvider = new JwtProvider(jwtConfig);
+        Thread.ofVirtual().start(() -> {
+            var time = 1000L * 60 * 60 * jwtConfig.expiration();
+            while (true) {
+                try {
+                    Thread.sleep(time);
+                    synchronized (tokens) {
+                        var users = new ArrayList<>(userTokens.keySet());
+                        for (var user : users) {
+                            var tokenSet = userTokens.get(user);
+                            var tokenList = new ArrayList<>(tokenSet);
+                            for (var token : tokenList) {
+                                try {
+                                    jwtProvider.validateToken(token);
+                                } catch (InvalidTokenException e) {
+                                    tokenSet.remove(token);
+                                }
+                            }
+                            if (tokenSet.isEmpty()) {
+                                userTokens.remove(user);
+                            }
+                        }
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+        });
     }
 
     @Override

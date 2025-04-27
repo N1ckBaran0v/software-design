@@ -91,4 +91,17 @@ class CommentRepositoryImplIT extends PostgresIT {
             }
         });
     }
+
+    @Test
+    void deleteComment_negative_denied() {
+        var commentId = new CommentId("1");
+        assertThrows(RuntimeException.class, () -> commentRepository.deleteComment(carrierRole, commentId));
+        jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+            try (var statement = connection.prepareStatement("select * from train_comments where id = 1;")) {
+                try (var resultSet = statement.executeQuery()) {
+                    assertTrue(resultSet.next());
+                }
+            }
+        });
+    }
 }

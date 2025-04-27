@@ -4,7 +4,7 @@ import org.slf4j.Logger;
 import traintickets.businesslogic.logger.UniLogger;
 
 public final class UniLoggerImpl implements UniLogger {
-    private Logger logger;
+    private final Logger logger;
 
     UniLoggerImpl(Logger logger) {
         this.logger = logger;
