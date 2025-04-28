@@ -14,6 +14,9 @@ repositories {
 dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
+    implementation("org.springframework:spring-core:6.2.6")
+    implementation("org.springframework:spring-beans:6.2.6")
+    implementation("org.springframework:spring-context:6.2.6")
     testImplementation(kotlin("test"))
 }
 
