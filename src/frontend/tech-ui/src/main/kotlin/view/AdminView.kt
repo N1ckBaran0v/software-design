@@ -4,4 +4,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class AdminView {
+    fun indexHtml(token: String) {
+        // TODO: implement
+    }
 }

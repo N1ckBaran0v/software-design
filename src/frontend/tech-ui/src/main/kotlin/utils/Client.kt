@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component
 class Client() {
     private val host = "http://localhost"
     private val port = 8080
-    private val client = OkHttpClient()
+    val client = OkHttpClient()
 
     fun url(path: String): String {
         return "$host:$port/api/v1/$path"

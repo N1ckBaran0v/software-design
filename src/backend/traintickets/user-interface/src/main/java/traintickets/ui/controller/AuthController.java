@@ -7,6 +7,7 @@ import traintickets.businesslogic.logger.UniLoggerFactory;
 import traintickets.businesslogic.transport.LoginForm;
 import traintickets.businesslogic.transport.RegisterForm;
 
+import java.util.Map;
 import java.util.Objects;
 
 public final class AuthController {
@@ -21,14 +22,14 @@ public final class AuthController {
     public void register(Context ctx) {
         var form = ctx.bodyAsClass(RegisterForm.class);
         logger.debug("register form: %s", form);
-        ctx.json(authService.register(form));
+        ctx.json(Map.of("token", authService.register(form)));
         logger.debug("registered");
     }
 
     public void login(Context ctx) {
         var form = ctx.bodyAsClass(LoginForm.class);
         logger.debug("login form: %s", form);
-        ctx.json(authService.login(form));
+        ctx.json(Map.of("token", authService.login(form)));
         logger.debug("logged in");
     }
 

@@ -5,7 +5,7 @@ import traintickets.console.utils.IOUtil
 import kotlin.system.exitProcess
 
 @Component
-class MainView(val io: IOUtil, val authView: AuthView, val filterView: FilterView) {
+class MainView(private val io: IOUtil, private val authView: AuthView, private val filterView: FilterView) {
     fun indexHtml() {
         val list = listOf(
             "1. Войти в аккаунт.",
