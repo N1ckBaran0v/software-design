@@ -68,6 +68,26 @@ class UserView(override val client: Client, val io: IOUtil): ExecutableView(clie
         }
     }
 
+    fun readUsers(userData: UserData) {
+        try {
+            val raceId = io.readNotEmpty("Введите id рейса: ")
+            val request = Request.Builder()
+                .url(client.url("users?raceId=${raceId}"))
+                .get()
+                .addHeader("Authorization", "Bearer ${userData.token}")
+                .build()
+            client.client.newCall(request).execute().use { response ->
+                if (response.code >= 400) {
+                    println("Ошибка. Код возврата ${response.code}. Сообщение: ${response.body?.string()}")
+                } else {
+                    println(Json.decodeFromString<Map<String, List<String>>>(response.body!!.string()))
+                }
+            }
+        } catch (_: Exception) {
+            println("Возникла непредвиденная ошибка. Возможно, вырубился сервер.")
+        }
+    }
+
     private fun updateUser(userData: UserData) {
         try {
             var loop = true

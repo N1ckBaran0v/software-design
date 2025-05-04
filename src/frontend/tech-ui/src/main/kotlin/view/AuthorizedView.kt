@@ -43,7 +43,7 @@ class AuthorizedView(
         raceView::finishRace,
         trainView::createTrain,
         railcarView::createRailcar,
-        mockView::doNothing,
+        userView::readUsers,
         userView::createUser,
         userView::deleteUser,
         userView::readUser,
