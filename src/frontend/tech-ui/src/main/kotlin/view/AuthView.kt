@@ -4,14 +4,15 @@ import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
 import org.springframework.stereotype.Component
 import traintickets.console.model.LoginForm
 import traintickets.console.model.RegisterForm
 import traintickets.console.model.TokenForm
 import traintickets.console.model.TokenInfo
+import traintickets.console.model.UserData
 import traintickets.console.utils.Client
-import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
+import java.util.Base64
 
 @Component
 class AuthView(
@@ -20,7 +21,6 @@ class AuthView(
     private val carrierView: CarrierView,
     private val adminView: AdminView,
 ) {
-    @OptIn(ExperimentalEncodingApi::class)
     fun login() {
         try {
             val actions = mapOf(
@@ -39,11 +39,8 @@ class AuthView(
                 if (response.code != 200) {
                     println("Ошибка. Код возврата ${response.code}. Сообщение: \"${response.body?.string() ?: ""}\"")
                 } else {
-                    val tokenForm = Json.decodeFromString<TokenForm>(response.body!!.string())
-                    val role = Json.decodeFromString<TokenInfo>(
-                        Base64.decode(tokenForm.token.split(".")[1]).decodeToString()
-                    ).role
-                    actions[role]?.let { it(tokenForm.token) }
+                    val userData = getUserData(response)
+                    actions[userData.role]?.let { it(userData) }
                 }
             }
         } catch (_: Exception) {
@@ -68,12 +65,18 @@ class AuthView(
                 if (response.code != 200) {
                     println("Ошибка. Код возврата ${response.code}. Сообщение: \"${response.body?.string() ?: ""}\"")
                 } else {
-                    val tokenForm = Json.decodeFromString<TokenForm>(response.body!!.string())
-                    userView.indexHtml(tokenForm.token)
+                    userView.indexHtml(getUserData(response))
                 }
             }
         } catch (_: Exception) {
             println("Возникла непредвиденная ошибка. Возврат на стартовую страницу.")
         }
+    }
+
+    private fun getUserData(response: Response): UserData {
+        val tokenForm = Json.decodeFromString<TokenForm>(response.body!!.string())
+        val decoded = String(Base64.getDecoder().decode(tokenForm.token.split(".")[1]))
+        val info = Json.decodeFromString<TokenInfo>(decoded)
+        return UserData(tokenForm.token, info.id, info.role)
     }
 }

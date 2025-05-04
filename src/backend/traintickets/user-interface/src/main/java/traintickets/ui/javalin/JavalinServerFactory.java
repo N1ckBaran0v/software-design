@@ -1,8 +1,6 @@
 package traintickets.ui.javalin;
 
-import com.google.gson.Gson;
 import io.javalin.Javalin;
-import io.javalin.json.JavalinGson;
 import traintickets.businesslogic.logger.UniLogger;
 import traintickets.businesslogic.logger.UniLoggerFactory;
 import traintickets.ui.api.Server;
@@ -43,7 +41,7 @@ public final class JavalinServerFactory implements ServerFactory {
                 });
             });
             javalinConfig.useVirtualThreads = true;
-            javalinConfig.jsonMapper(new JavalinGson(new Gson(), true));
+            javalinConfig.jsonMapper(new GsonMapper());
         });
         javalin.exception(RuntimeException.class, runtimeExceptionHandler);
         return new JavalinServer(javalin);
