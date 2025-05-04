@@ -79,7 +79,7 @@ class AuthServiceImplTest {
         var password = "qwerty123";
         var form = new LoginForm(username, password);
         var user = new User(new UserId("1"), username, password, "Zubenko Mikhail", clientRole, true);
-        given(userRepository.getUser(systemRole, username)).willReturn(Optional.of(user));
+        given(userRepository.getUserByUsername(systemRole, username)).willReturn(Optional.of(user));
         var token = "random_maybe_invalid_jwt_token";
         given(jwtManager.generateToken(any())).willReturn(token);
         var result = authService.login(form);
@@ -92,7 +92,7 @@ class AuthServiceImplTest {
         var username = "random_username";
         var password = "qwerty123";
         var form = new LoginForm(username, password);
-        given(userRepository.getUser(systemRole, username)).willReturn(Optional.empty());
+        given(userRepository.getUserByUsername(systemRole, username)).willReturn(Optional.empty());
         assertThrows(EntityNotFoundException.class, () -> authService.login(form));
         verify(jwtManager, never()).generateToken(any());
     }
@@ -102,7 +102,7 @@ class AuthServiceImplTest {
         var username = "random_username";
         var form = new LoginForm(username, "qwerty1234");
         var user = new User(null, username, "qwerty123", "Zubenko Mikhail", clientRole, true);
-        given(userRepository.getUser(systemRole, username)).willReturn(Optional.of(user));
+        given(userRepository.getUserByUsername(systemRole, username)).willReturn(Optional.of(user));
         assertThrows(InvalidPasswordException.class, () -> authService.login(form));
         verify(jwtManager, never()).generateToken(any());
     }
@@ -113,7 +113,7 @@ class AuthServiceImplTest {
         var password = "qwerty123";
         var form = new LoginForm(username, password);
         var user = new User(null, username, password, "Zubenko Mikhail", clientRole, false);
-        given(userRepository.getUser(systemRole, username)).willReturn(Optional.of(user));
+        given(userRepository.getUserByUsername(systemRole, username)).willReturn(Optional.of(user));
         assertThrows(UserWasBannedException.class, () -> authService.login(form));
         verify(jwtManager, never()).generateToken(any());
     }

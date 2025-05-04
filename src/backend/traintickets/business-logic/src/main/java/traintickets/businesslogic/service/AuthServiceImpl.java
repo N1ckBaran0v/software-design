@@ -46,7 +46,7 @@ public final class AuthServiceImpl implements AuthService {
 
     @Override
     public String login(LoginForm form) {
-        var user = userRepository.getUser(systemRole, form.username()).orElseThrow(
+        var user = userRepository.getUserByUsername(systemRole, form.username()).orElseThrow(
                 () -> new EntityNotFoundException(String.format("User %s not found", form.username())));
         if (!user.password().equals(form.password())) {
             throw new InvalidPasswordException();

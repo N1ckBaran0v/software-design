@@ -80,18 +80,29 @@ class UserRepositoryImplIT extends PostgresIT {
     }
 
     @Test
-    void getUser_positive_found() {
+    void getUserById_positive_found() {
         var user = new User(new UserId("1"), "first", "qwerty123", "Иванов Иван Иванович", "userRole", true);
-        assertEquals(user, userRepository.getUser(systemRole, user.username()).orElse(null));
+        assertEquals(user, userRepository.getUserById(systemRole, user.id()).orElse(null));
     }
 
     @Test
-    void getUser_positive_notFound() {
-        assertTrue(userRepository.getUser(systemRole, "third").isEmpty());
+    void getUserById_positive_notFound() {
+        assertTrue(userRepository.getUserById(systemRole, new UserId("3")).isEmpty());
     }
 
     @Test
-    void getUsers_positive_allFound() {
+    void getUserByUsername_positive_found() {
+        var user = new User(new UserId("1"), "first", "qwerty123", "Иванов Иван Иванович", "userRole", true);
+        assertEquals(user, userRepository.getUserByUsername(systemRole, user.username()).orElse(null));
+    }
+
+    @Test
+    void getUserByUsername_positive_notFound() {
+        assertTrue(userRepository.getUserByUsername(systemRole, "third").isEmpty());
+    }
+
+    @Test
+    void getUsers_positive_allFoundByUsername() {
         var userId1 = new UserId("1");
         var user1 = new User(userId1, "first", "qwerty123", "Иванов Иван Иванович", "userRole", true);
         var userId2 = new UserId("2");
@@ -107,7 +118,7 @@ class UserRepositoryImplIT extends PostgresIT {
     }
 
     @Test
-    void getUsers_positive_someFound() {
+    void getUsers_positive_someFoundByUsername() {
         var userId1 = new UserId("1");
         var user1 = new User(userId1, "first", "qwerty123", "Иванов Иван Иванович", "userRole", true);
         var result = userRepository.getUsers(systemRole, List.of(userId1, new UserId("3")));
@@ -119,7 +130,7 @@ class UserRepositoryImplIT extends PostgresIT {
     }
 
     @Test
-    void getUsers_positive_noFound() {
+    void getUsers_positive_noFoundByUsername() {
         var result = userRepository.getUsers(systemRole, List.of(new UserId("3"), new UserId("3")));
         assertNotNull(result);
         var iterator = result.iterator();

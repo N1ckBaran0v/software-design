@@ -8,7 +8,8 @@ import java.util.Optional;
 
 public interface UserRepository {
     User addUser(String role, User user);
-    Optional<User> getUser(String role, String username);
+    Optional<User> getUserById(String role, UserId userId);
+    Optional<User> getUserByUsername(String role, String username);
     Iterable<User> getUsers(String role, Iterable<UserId> userIds);
     void updateUserCompletely(String role, User user);
     void updateUserPartially(String role, TransportUser user);

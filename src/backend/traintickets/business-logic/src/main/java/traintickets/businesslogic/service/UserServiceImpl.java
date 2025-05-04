@@ -37,18 +37,18 @@ public final class UserServiceImpl implements UserService {
     }
 
     @Override
-    public TransportUser getUser(String username) {
-        var user = userRepository.getUser(systemRole, username).orElseThrow(
-                () -> new EntityNotFoundException(String.format("User with username '%s' not found", username)));
+    public TransportUser getUser(UserId userId) {
+        var user = userRepository.getUserById(systemRole, userId).orElseThrow(
+                () -> new EntityNotFoundException(String.format("User with id '%s' not found", userId.id())));
         if (!user.active()) {
-            throw new UserWasBannedException(username);
+            throw new UserWasBannedException(userId);
         }
         return TransportUser.from(user);
     }
 
     @Override
     public User getUserByAdmin(String username) {
-        return userRepository.getUser(systemRole, username).orElseThrow(
+        return userRepository.getUserByUsername(systemRole, username).orElseThrow(
                 () -> new EntityNotFoundException(String.format("User with username '%s' not found", username)));
     }
 

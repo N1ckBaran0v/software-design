@@ -47,6 +47,17 @@ public final class UserController {
         logger.debug("user deleted");
     }
 
+    public void getUser(Context ctx, UserInfo userInfo) {
+        var id = ctx.pathParam("userId");
+        logger.debug("user: %s", id);
+        var userId = new UserId(id);
+        if (!userId.equals(userInfo.userId())) {
+            throw new ForbiddenException();
+        }
+        ctx.json(userService.getUser(userId));
+        logger.debug("user got");
+    }
+
     public void getUsers(Context ctx, UserInfo userInfo) {
         var username = ctx.queryParam("username");
         if (username == null) {
@@ -56,20 +67,7 @@ public final class UserController {
             logger.debug("users got");
         } else {
             logger.debug("username: %s", username);
-            var role = userInfo.role();
-            if (role.equals(adminRole)) {
-                ctx.json(userService.getUserByAdmin(username));
-            } else {
-                try {
-                    var user = userService.getUser(username);
-                    if (!user.id().equals(userInfo.userId())) {
-                        throw new RuntimeException();
-                    }
-                    ctx.json(user);
-                } catch (RuntimeException e) {
-                    throw new ForbiddenException();
-                }
-            }
+            ctx.json(userService.getUserByAdmin(username));
             logger.debug("user got");
         }
     }
@@ -81,8 +79,17 @@ public final class UserController {
             logger.debug("user: %s", user);
             userService.updateUserByAdmin(user);
         } else {
+            var id = ctx.pathParam("userId");
+            logger.debug("id: %s", id);
+            var userId = new UserId(id);
+            if (!userId.equals(userInfo.userId())) {
+                throw new ForbiddenException();
+            }
             var user = ctx.bodyAsClass(TransportUser.class);
             logger.debug("user: %s", user);
+            if (!userId.equals(user.id())) {
+                throw new ForbiddenException();
+            }
             userService.updateUser(userInfo, user);
         }
         logger.debug("user updated");

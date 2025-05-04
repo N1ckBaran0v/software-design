@@ -63,33 +63,33 @@ class UserServiceImplTest {
 
     @Test
     void getUser_positive_found() {
-        var username = "random_username";
-        var user = new User(new UserId("1"), username, "qwerty123", "Zubenko Mikhail", "client", true);
-        given(userRepository.getUser(systemRole, username)).willReturn(Optional.of(user));
-        var result = userService.getUser(username);
+        var userId = new UserId("1");
+        var user = new User(userId, "random_username", "qwerty123", "Zubenko Mikhail", "client", true);
+        given(userRepository.getUserById(systemRole, userId)).willReturn(Optional.of(user));
+        var result = userService.getUser(userId);
         assertEquals(TransportUser.from(user), result);
     }
 
     @Test
     void getUser_negative_notFound() {
-        var username = "random_username";
-        given(userRepository.getUser(systemRole, username)).willReturn(Optional.empty());
-        assertThrows(EntityNotFoundException.class, () -> userService.getUser(username));
+        var userId = new UserId("1");
+        given(userRepository.getUserById(systemRole, userId)).willReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class, () -> userService.getUser(userId));
     }
 
     @Test
     void getUser_negative_banned() {
-        var username = "random_username";
-        var user = new User(new UserId("1"), username, "qwerty123", "Zubenko Mikhail", "client", false);
-        given(userRepository.getUser(systemRole, username)).willReturn(Optional.of(user));
-        assertThrows(UserWasBannedException.class, () -> userService.getUser(username));
+        var userId = new UserId("1");
+        var user = new User(userId, "random_username", "qwerty123", "Zubenko Mikhail", "client", false);
+        given(userRepository.getUserById(systemRole, userId)).willReturn(Optional.of(user));
+        assertThrows(UserWasBannedException.class, () -> userService.getUser(userId));
     }
 
     @Test
     void getUserByAdmin_positive_found() {
         var username = "random_username";
         var user = new User(new UserId("1"), username, "qwerty123", "Zubenko Mikhail", "client", true);
-        given(userRepository.getUser(systemRole, username)).willReturn(Optional.of(user));
+        given(userRepository.getUserByUsername(systemRole, username)).willReturn(Optional.of(user));
         var result = userService.getUserByAdmin(username);
         assertSame(user, result);
     }
@@ -97,7 +97,7 @@ class UserServiceImplTest {
     @Test
     void getUserByAdmin_negative_notFound() {
         var username = "random_username";
-        given(userRepository.getUser(systemRole, username)).willReturn(Optional.empty());
+        given(userRepository.getUserByUsername(systemRole, username)).willReturn(Optional.empty());
         assertThrows(EntityNotFoundException.class, () -> userService.getUserByAdmin(username));
     }
 
@@ -105,7 +105,7 @@ class UserServiceImplTest {
     void getUserByAdmin_positive_banned() {
         var username = "random_username";
         var user = new User(new UserId("1"), username, "qwerty123", "Zubenko Mikhail", "client", false);
-        given(userRepository.getUser(systemRole, username)).willReturn(Optional.of(user));
+        given(userRepository.getUserByUsername(systemRole, username)).willReturn(Optional.of(user));
         var result = userService.getUserByAdmin(username);
         assertSame(result, user);
     }

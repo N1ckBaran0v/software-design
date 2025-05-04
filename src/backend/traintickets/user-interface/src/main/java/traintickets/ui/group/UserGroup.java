@@ -34,11 +34,12 @@ public final class UserGroup extends AbstractEndpointGroup {
             if (username == null && raceId != null) {
                 userController.getUsers(ctx, securityConfiguration.forCarrier(ctx));
             } else if (username != null && raceId == null) {
-                userController.getUsers(ctx, securityConfiguration.authorizedOnly(ctx));
+                userController.getUsers(ctx, securityConfiguration.forAdmin(ctx));
             } else {
                 throw new QueryParameterNotFoundException("login && raceId");
             }
         });
+        get("/{userId}", ctx -> userController.getUser(ctx, securityConfiguration.authorizedOnly(ctx)));
         put("/{userId}", ctx -> userController.updateUser(ctx, securityConfiguration.authorizedOnly(ctx)));
     }
 }

@@ -47,7 +47,21 @@ public final class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public Optional<User> getUser(String role, String username) {
+    public Optional<User> getUserById(String role, UserId userId) {
+        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_READ_COMMITTED, connection -> {
+            try (var statement = connection.prepareStatement(
+                    "SELECT * FROM users_view WHERE id = (?);"
+            )) {
+                statement.setLong(1, Long.parseLong(userId.id()));
+                try (var resultSet = statement.executeQuery()) {
+                    return Optional.ofNullable(getUser(resultSet));
+                }
+            }
+        });
+    }
+
+    @Override
+    public Optional<User> getUserByUsername(String role, String username) {
         return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_READ_COMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM users_view WHERE user_name = (?);"
