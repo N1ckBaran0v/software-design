@@ -29,7 +29,7 @@ public final class UserGroup extends AbstractEndpointGroup {
         post(userController::createUser);
         delete("/{userId}", userController::deleteUser);
         get(ctx -> {
-            var username = ctx.queryParam("login");
+            var username = ctx.queryParam("username");
             var raceId = ctx.queryParam("raceId");
             if (username == null && raceId != null) {
                 userController.getUsers(ctx, securityConfiguration.forCarrier(ctx));

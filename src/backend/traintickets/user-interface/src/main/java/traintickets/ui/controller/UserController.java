@@ -11,6 +11,7 @@ import traintickets.businesslogic.model.User;
 import traintickets.businesslogic.model.UserId;
 import traintickets.businesslogic.transport.TransportUser;
 import traintickets.businesslogic.transport.UserInfo;
+import traintickets.security.exception.ForbiddenException;
 
 import java.util.Objects;
 
@@ -47,19 +48,27 @@ public final class UserController {
     }
 
     public void getUsers(Context ctx, UserInfo userInfo) {
-        var username = ctx.queryParam("login");
+        var username = ctx.queryParam("username");
         if (username == null) {
             var raceId = ctx.queryParam("raceId");
             logger.debug("raceId: %s", raceId);
             ctx.json(raceService.getPassengers(userInfo, new RaceId(raceId)));
             logger.debug("users got");
         } else {
-            logger.debug("login: %s", username);
+            logger.debug("username: %s", username);
             var role = userInfo.role();
             if (role.equals(adminRole)) {
                 ctx.json(userService.getUserByAdmin(username));
             } else {
-                ctx.json(userService.getUser(username));
+                try {
+                    var user = userService.getUser(username);
+                    if (!user.id().equals(userInfo.userId())) {
+                        throw new RuntimeException();
+                    }
+                    ctx.json(user);
+                } catch (RuntimeException e) {
+                    throw new ForbiddenException();
+                }
             }
             logger.debug("user got");
         }

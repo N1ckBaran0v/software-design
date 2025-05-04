@@ -19,11 +19,31 @@ class IOUtil {
                 } catch (_: NumberFormatException) {
                     println("Ошибка. Введено не целое число.")
                 }
+            } else {
+                println("Ошибка. Строка пустая.")
+            }
+        }
+    }
+
+    fun readNotEmpty(message: String = "Введите непустую строку: "): String {
+        while (true) {
+            print(message)
+            val input = readLine()
+            if (input == null || input.isBlank()) {
+                println("Ошибка. Строка пустая.")
+            } else {
+                return input
             }
         }
     }
 
     fun printList(actions: List<String>) {
-        println(actions.joinToString("\n"))
+        val sb = StringBuilder()
+        var num = 0
+        for (action in actions) {
+            num++
+            sb.append("$num) $action.\n")
+        }
+        print(sb)
     }
 }

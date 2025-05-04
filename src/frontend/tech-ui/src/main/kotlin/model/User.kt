@@ -5,9 +5,9 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class User(
     val id: UserId? = null,
-    val username: String,
-    val password: String,
-    val name: String,
-    val role: String,
-    val active: Boolean = true,
+    var username: String,
+    var password: String,
+    var name: String,
+    var role: String,
+    var active: Boolean = true,
 )

@@ -8,10 +8,10 @@ import kotlin.system.exitProcess
 class MainView(private val io: IOUtil, private val authView: AuthView, private val filterView: FilterView) {
     fun indexHtml() {
         val list = listOf(
-            "1. Войти в аккаунт.",
-            "2. Зарегистрироваться.",
-            "3. Посмотреть билеты.",
-            "4. Выход.",
+            "Войти в аккаунт",
+            "Зарегистрироваться",
+            "Посмотреть билеты",
+            "Выход",
         )
         val actions = listOf(
             authView::login,
