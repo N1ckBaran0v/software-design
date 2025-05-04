@@ -13,6 +13,7 @@ class AuthorizedView(
     val client: Client,
     val io: IOUtil,
     val userView: UserView,
+    val railcarView: RailcarView,
     val mockView: MockView,
 ) {
     private var loop = true
@@ -37,10 +38,11 @@ class AuthorizedView(
         mockView::doNothing,
         mockView::doNothing,
         mockView::doNothing,
+        railcarView::createRailcar,
         mockView::doNothing,
-        userView::create,
-        userView::delete,
-        userView::read,
+        userView::createUser,
+        userView::deleteUser,
+        userView::readUser,
         this::exit,
     )
 
@@ -48,7 +50,7 @@ class AuthorizedView(
         while (loop) {
             io.printList(list)
             val num = io.readNum(list.size)
-            actions[num - 1](userData)
+            actions[num](userData)
         }
         loop = true
     }

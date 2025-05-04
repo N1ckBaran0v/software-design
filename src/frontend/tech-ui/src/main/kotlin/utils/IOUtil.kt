@@ -25,6 +25,22 @@ class IOUtil {
         }
     }
 
+    fun readNum(message: String = "Введите целое число: "): Int {
+        while (true) {
+            print(message)
+            val input = readLine()
+            if (input != null) {
+                try {
+                    return input.toInt()
+                } catch (_: NumberFormatException) {
+                    println("Ошибка. Введено не целое число.")
+                }
+            } else {
+                println("Ошибка. Строка пустая.")
+            }
+        }
+    }
+
     fun readNotEmpty(message: String = "Введите непустую строку: "): String {
         while (true) {
             print(message)

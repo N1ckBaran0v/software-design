@@ -11,10 +11,10 @@ import traintickets.console.utils.Client
 import traintickets.console.utils.IOUtil
 
 @Component
-class UserView(override val client: Client, val io: IOUtil): CrudView(client) {
+class UserView(override val client: Client, val io: IOUtil): ExecutableView(client) {
     private var user = User(null, "", "", "", "")
 
-    override fun create(userData: UserData) {
+    fun createUser(userData: UserData) {
         try {
             print("Введите логин пользователя: ")
             val username = readLine() ?: ""
@@ -42,7 +42,7 @@ class UserView(override val client: Client, val io: IOUtil): CrudView(client) {
         }
     }
 
-    override fun read(userData: UserData) {
+    fun readUser(userData: UserData) {
         try {
             val username = io.readNotEmpty("Введите логин пользователя: ")
             val request = Request.Builder()
@@ -59,7 +59,7 @@ class UserView(override val client: Client, val io: IOUtil): CrudView(client) {
                     val list = listOf("Изменить данные", "Выход")
                     io.printList(list)
                     if (io.readNum(2) == 0) {
-                        update(userData)
+                        updateUser(userData)
                     }
                 }
             }
@@ -68,7 +68,7 @@ class UserView(override val client: Client, val io: IOUtil): CrudView(client) {
         }
     }
 
-    override fun update(userData: UserData) {
+    private fun updateUser(userData: UserData) {
         try {
             var loop = true
             val list = listOf(
@@ -119,7 +119,7 @@ class UserView(override val client: Client, val io: IOUtil): CrudView(client) {
         }
     }
 
-    override fun delete(userData: UserData) {
+    fun deleteUser(userData: UserData) {
         try {
             val id = io.readNotEmpty("Введите id пользователя: ")
             val request = Request.Builder()
