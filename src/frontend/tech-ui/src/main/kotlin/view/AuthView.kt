@@ -51,7 +51,6 @@ class AuthView(
         }
     }
 
-    @OptIn(ExperimentalEncodingApi::class)
     fun register() {
         try {
             print("Введите логин: ")
