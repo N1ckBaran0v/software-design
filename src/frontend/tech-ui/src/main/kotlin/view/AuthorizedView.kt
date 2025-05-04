@@ -16,6 +16,7 @@ class AuthorizedView(
     val selfView: SelfView,
     val railcarView: RailcarView,
     val trainView: TrainView,
+    val raceView: RaceView,
     val ticketView: TicketView,
     val mockView: MockView,
 ) {
@@ -38,8 +39,8 @@ class AuthorizedView(
         mockView::doNothing,
         selfView::readSelf,
         ticketView::readTickets,
-        mockView::doNothing,
-        mockView::doNothing,
+        raceView::createRace,
+        raceView::finishRace,
         trainView::createTrain,
         railcarView::createRailcar,
         mockView::doNothing,

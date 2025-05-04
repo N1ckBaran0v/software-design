@@ -43,6 +43,28 @@ class TrainView(override val client: Client, val io: IOUtil, val railcarView: Ra
         }
     }
 
+    fun readTrains(userData: UserData): List<Train> {
+        try {
+            val start = io.readNotEmpty("Введите время начала забронированного участка: ")
+            val end = io.readNotEmpty("Введите время конца забронированного участка: ")
+            val request = Request.Builder()
+                .url(client.url("trains?start=$start&end=$end"))
+                .get()
+                .addHeader("Authorization", "Bearer ${userData.token}")
+                .build()
+            client.client.newCall(request).execute().use { response ->
+                if (response.code < 300) {
+                    return Json.decodeFromString<List<Train>>(response.body!!.string())
+                } else {
+                    println("Код возврата ${response.code}. Тело ответа: ${response.body?.string()}")
+                }
+            }
+        } catch (_: Exception) {
+            println("Возникла непредвиденная ошибка. Возможно, вырубился сервер.")
+        }
+        return emptyList()
+    }
+
     private fun printRailcars(railcars: List<Railcar>) {
         if (!railcars.isEmpty()) {
             println("Вагоны:")

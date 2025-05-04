@@ -6,6 +6,6 @@ import kotlinx.serialization.Serializable
 data class Race(
     val id: RaceId? = null,
     val trainId: TrainId,
-    val schedule: List<Schedule>,
+    val schedule: MutableList<Schedule> = mutableListOf(),
     val finished: Boolean = false,
 )

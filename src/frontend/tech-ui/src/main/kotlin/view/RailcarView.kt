@@ -7,8 +7,6 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.springframework.stereotype.Component
 import traintickets.console.model.Place
 import traintickets.console.model.Railcar
-import traintickets.console.model.RailcarId
-import traintickets.console.model.Ticket
 import traintickets.console.model.UserData
 import traintickets.console.utils.Client
 import traintickets.console.utils.IOUtil
