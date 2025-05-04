@@ -7,6 +7,8 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.springframework.stereotype.Component
 import traintickets.console.model.Place
 import traintickets.console.model.Railcar
+import traintickets.console.model.RailcarId
+import traintickets.console.model.Ticket
 import traintickets.console.model.UserData
 import traintickets.console.utils.Client
 import traintickets.console.utils.IOUtil
@@ -45,6 +47,27 @@ class RailcarView(override val client: Client, val io: IOUtil): ExecutableView(c
         } catch (_: Exception) {
             println("Возникла непредвиденная ошибка. Возможно, вырубился сервер.")
         }
+    }
+
+    fun readRailcars(userData: UserData): List<Railcar> {
+        try {
+            val type = io.readNotEmpty("Введите тип вагона: ")
+            val request = Request.Builder()
+                .url(client.url("railcars?type=$type"))
+                .get()
+                .addHeader("Authorization", "Bearer ${userData.token}")
+                .build()
+            client.client.newCall(request).execute().use { response ->
+                if (response.code < 300) {
+                    return Json.decodeFromString<List<Railcar>>(response.body!!.string())
+                } else {
+                    println("Код возврата ${response.code}. Тело ответа: ${response.body?.string()}")
+                }
+            }
+        } catch (_: Exception) {
+            println("Возникла непредвиденная ошибка. Возможно, вырубился сервер.")
+        }
+        return emptyList()
     }
 
     private fun createPlace(): Place {

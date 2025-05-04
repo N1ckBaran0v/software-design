@@ -6,5 +6,5 @@ import kotlinx.serialization.Serializable
 data class Train(
     val id: TrainId? = null,
     val trainClass: String,
-    val railcars: List<RailcarId>,
+    val railcars: MutableList<RailcarId> = mutableListOf(),
 )
