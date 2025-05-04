@@ -12,5 +12,5 @@ data class Ticket(
     val place: Place,
     val start: Schedule,
     val end: Schedule,
-    val cost: String,
+    val cost: Double,
 )

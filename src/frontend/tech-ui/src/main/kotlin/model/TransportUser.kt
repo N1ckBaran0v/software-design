@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class TransportUser(
     val id: UserId,
-    val username: String,
-    val password: String,
-    val name: String,
+    var username: String,
+    var password: String,
+    var name: String,
 )

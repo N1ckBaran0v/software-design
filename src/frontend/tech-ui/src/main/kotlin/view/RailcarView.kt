@@ -53,8 +53,7 @@ class RailcarView(override val client: Client, val io: IOUtil): ExecutableView(c
         val description = readLine() ?: ""
         print("Введите назначение места: ")
         val purpose = readLine() ?: ""
-        print("Введите цену на место: ")
-        val price = readLine() ?: ""
+        val price = io.readDouble("Введите цену на место: ")
         return Place(null, number, description, purpose, price)
     }
 }

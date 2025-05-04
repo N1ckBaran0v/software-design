@@ -8,5 +8,5 @@ data class Place(
     val number: Int,
     val description: String,
     val purpose: String,
-    val cost: String,
+    val cost: Double,
 )

@@ -41,6 +41,22 @@ class IOUtil {
         }
     }
 
+    fun readDouble(message: String = "Введите вещественное число: "): Double {
+        while (true) {
+            print(message)
+            val input = readLine()
+            if (input != null) {
+                try {
+                    return input.toDouble()
+                } catch (_: NumberFormatException) {
+                    println("Ошибка. Введено не целое число.")
+                }
+            } else {
+                println("Ошибка. Строка пустая.")
+            }
+        }
+    }
+
     fun readNotEmpty(message: String = "Введите непустую строку: "): String {
         while (true) {
             print(message)

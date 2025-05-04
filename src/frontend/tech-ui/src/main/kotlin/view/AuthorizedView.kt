@@ -14,6 +14,8 @@ class AuthorizedView(
     val io: IOUtil,
     val userView: UserView,
     val railcarView: RailcarView,
+    val selfView: SelfView,
+    val ticketView: TicketView,
     val mockView: MockView,
 ) {
     private var loop = true
@@ -33,8 +35,8 @@ class AuthorizedView(
     )
     private val actions = mutableListOf(
         mockView::doNothing,
-        mockView::doNothing,
-        mockView::doNothing,
+        selfView::readSelf,
+        ticketView::readTickets,
         mockView::doNothing,
         mockView::doNothing,
         mockView::doNothing,

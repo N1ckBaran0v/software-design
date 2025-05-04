@@ -73,18 +73,18 @@ public final class UserController {
     }
 
     public void updateUser(Context ctx, UserInfo userInfo) {
-        var role = userInfo.role();
-        if (role.equals(adminRole)) {
+        var id = ctx.pathParam("userId");
+        logger.debug("id: %s", id);
+        var userId = new UserId(id);
+        if (!userId.equals(userInfo.userId())) {
+            var role = userInfo.role();
+            if (!role.equals(adminRole)) {
+                throw new ForbiddenException();
+            }
             var user = ctx.bodyAsClass(User.class);
             logger.debug("user: %s", user);
             userService.updateUserByAdmin(user);
         } else {
-            var id = ctx.pathParam("userId");
-            logger.debug("id: %s", id);
-            var userId = new UserId(id);
-            if (!userId.equals(userInfo.userId())) {
-                throw new ForbiddenException();
-            }
             var user = ctx.bodyAsClass(TransportUser.class);
             logger.debug("user: %s", user);
             if (!userId.equals(user.id())) {
