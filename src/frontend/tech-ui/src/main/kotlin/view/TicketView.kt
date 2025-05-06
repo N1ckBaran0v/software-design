@@ -12,11 +12,7 @@ import traintickets.console.utils.IOUtil
 class TicketView(override val client: Client, val io: IOUtil): ExecutableView(client) {
     fun readTickets(userData: UserData) {
         try {
-            val request = Request.Builder()
-                .url(client.url("tickets?userId=${userData.id}"))
-                .get()
-                .addHeader("Authorization", "Bearer ${userData.token}")
-                .build()
+            val request = build(Request.Builder().url(client.url("tickets?userId=${userData.id}")).get(), userData)
             client.client.newCall(request).execute().use { response ->
                 if (response.code >= 400) {
                     println("Ошибка. Код возврата ${response.code}. Сообщение: ${response.body?.string()}")

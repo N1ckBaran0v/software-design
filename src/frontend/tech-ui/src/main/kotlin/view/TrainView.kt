@@ -32,11 +32,7 @@ class TrainView(override val client: Client, val io: IOUtil, val railcarView: Ra
                 }
             }
             val body = Json.encodeToString(train).toRequestBody("application/json".toMediaType())
-            val request = Request.Builder()
-                .url(client.url("trains"))
-                .post(body)
-                .addHeader("Authorization", "Bearer ${userData.token}")
-                .build()
+            val request = build(Request.Builder().url(client.url("trains")).post(body), userData)
             execute(request)
         } catch (_: Exception) {
             println("Возникла непредвиденная ошибка. Возможно, вырубился сервер.")
@@ -47,11 +43,7 @@ class TrainView(override val client: Client, val io: IOUtil, val railcarView: Ra
         try {
             val start = io.readNotEmpty("Введите время начала забронированного участка: ")
             val end = io.readNotEmpty("Введите время конца забронированного участка: ")
-            val request = Request.Builder()
-                .url(client.url("trains?start=$start&end=$end"))
-                .get()
-                .addHeader("Authorization", "Bearer ${userData.token}")
-                .build()
+            val request = build(Request.Builder().url(client.url("trains?start=$start&end=$end")).get(), userData)
             client.client.newCall(request).execute().use { response ->
                 if (response.code < 300) {
                     return Json.decodeFromString<List<Train>>(response.body!!.string())

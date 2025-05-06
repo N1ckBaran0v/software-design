@@ -17,11 +17,7 @@ class SelfView(override val client: Client, val io: IOUtil): ExecutableView(clie
 
     fun readSelf(userData: UserData) {
         try {
-            val request = Request.Builder()
-                .url(client.url("users/${userData.id}"))
-                .get()
-                .addHeader("Authorization", "Bearer ${userData.token}")
-                .build()
+            val request = build(Request.Builder().url(client.url("users/${userData.id}")).get(), userData)
             client.client.newCall(request).execute().use { response ->
                 if (response.code >= 400) {
                     println("Ошибка. Код возврата ${response.code}. Сообщение: ${response.body?.string()}")
@@ -71,11 +67,7 @@ class SelfView(override val client: Client, val io: IOUtil): ExecutableView(clie
                 }
             }
             val body = Json.encodeToString(self).toRequestBody("application/json".toMediaType())
-            val request = Request.Builder()
-                .url(client.url("users/${self.id.id}"))
-                .put(body)
-                .addHeader("Authorization", "Bearer ${userData.token}")
-                .build()
+            val request = build(Request.Builder().url(client.url("users/${self.id.id}")).put(body), userData)
             execute(request)
         } catch (_: Exception) {
             println("Возникла непредвиденная ошибка. Возможно, вырубился сервер.")

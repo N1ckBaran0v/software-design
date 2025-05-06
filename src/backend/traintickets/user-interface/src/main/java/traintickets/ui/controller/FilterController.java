@@ -8,6 +8,7 @@ import traintickets.businesslogic.logger.UniLoggerFactory;
 import traintickets.businesslogic.model.Filter;
 import traintickets.businesslogic.transport.UserInfo;
 
+import java.util.List;
 import java.util.Objects;
 
 public final class FilterController {
@@ -34,7 +35,7 @@ public final class FilterController {
             ctx.json(filterService.getFilters(userInfo));
             logger.debug("filters got");
         } else {
-            ctx.json(filterService.getFilter(userInfo, filterName));
+            ctx.json(List.of(filterService.getFilter(userInfo, filterName)));
             logger.debug("filter got");
         }
     }

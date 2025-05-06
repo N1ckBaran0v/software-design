@@ -36,11 +36,7 @@ class RaceView(override val client: Client, val io: IOUtil, val trainView: Train
                 }
             }
             val body = Json.encodeToString(race).toRequestBody("application/json".toMediaType())
-            val request = Request.Builder()
-                .url(client.url("races"))
-                .post(body)
-                .addHeader("Authorization", "Bearer ${userData.token}")
-                .build()
+            val request = build(Request.Builder().url(client.url("races")).post(body), userData)
             execute(request)
         } catch (_: Exception) {
             println("Возникла непредвиденная ошибка. Возможно, вырубился сервер.")
@@ -51,11 +47,7 @@ class RaceView(override val client: Client, val io: IOUtil, val trainView: Train
         try {
             val raceId = io.readNotEmpty("Введите id рейса: ")
             val body = Json.encodeToString("").toRequestBody("application/json".toMediaType())
-            val request = Request.Builder()
-                .url(client.url("races/$raceId"))
-                .patch(body)
-                .addHeader("Authorization", "Bearer ${userData.token}")
-                .build()
+            val request = build(Request.Builder().url(client.url("races/$raceId")).patch(body), userData)
             execute(request)
         } catch (_: Exception) {
             println("Возникла непредвиденная ошибка. Возможно, вырубился сервер.")

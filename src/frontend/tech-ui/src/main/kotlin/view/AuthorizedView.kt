@@ -18,7 +18,7 @@ class AuthorizedView(
     val trainView: TrainView,
     val raceView: RaceView,
     val ticketView: TicketView,
-    val mockView: MockView,
+    val filterView: FilterView,
 ) {
     private var loop = true
     private val list = mutableListOf(
@@ -36,7 +36,7 @@ class AuthorizedView(
         "Выход",
     )
     private val actions = mutableListOf(
-        mockView::doNothing,
+        filterView::filter,
         selfView::readSelf,
         ticketView::readTickets,
         raceView::createRace,

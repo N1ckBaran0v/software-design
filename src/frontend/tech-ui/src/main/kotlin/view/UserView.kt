@@ -31,11 +31,7 @@ class UserView(override val client: Client, val io: IOUtil): ExecutableView(clie
                 role = role
             )
             val body = Json.encodeToString(user).toRequestBody("application/json".toMediaType())
-            val request = Request.Builder()
-                .url(client.url("users"))
-                .post(body)
-                .addHeader("Authorization", "Bearer ${userData.token}")
-                .build()
+            val request = build(Request.Builder().url(client.url("users")).post(body), userData)
             execute(request)
         } catch (_: Exception) {
             println("Возникла непредвиденная ошибка. Возможно, вырубился сервер.")
@@ -45,11 +41,7 @@ class UserView(override val client: Client, val io: IOUtil): ExecutableView(clie
     fun readUser(userData: UserData) {
         try {
             val username = io.readNotEmpty("Введите логин пользователя: ")
-            val request = Request.Builder()
-                .url(client.url("users?username=${username}"))
-                .get()
-                .addHeader("Authorization", "Bearer ${userData.token}")
-                .build()
+            val request = build(Request.Builder().url(client.url("users?username=${username}")).get(), userData)
             client.client.newCall(request).execute().use { response ->
                 if (response.code >= 400) {
                     println("Ошибка. Код возврата ${response.code}. Сообщение: ${response.body?.string()}")
@@ -71,11 +63,7 @@ class UserView(override val client: Client, val io: IOUtil): ExecutableView(clie
     fun readUsers(userData: UserData) {
         try {
             val raceId = io.readNotEmpty("Введите id рейса: ")
-            val request = Request.Builder()
-                .url(client.url("users?raceId=${raceId}"))
-                .get()
-                .addHeader("Authorization", "Bearer ${userData.token}")
-                .build()
+            val request = build(Request.Builder().url(client.url("users?raceId=${raceId}")).get(), userData)
             client.client.newCall(request).execute().use { response ->
                 if (response.code >= 400) {
                     println("Ошибка. Код возврата ${response.code}. Сообщение: ${response.body?.string()}")
@@ -128,11 +116,7 @@ class UserView(override val client: Client, val io: IOUtil): ExecutableView(clie
                 }
             }
             val body = Json.encodeToString(user).toRequestBody("application/json".toMediaType())
-            val request = Request.Builder()
-                .url(client.url("users/${user.id!!.id}"))
-                .put(body)
-                .addHeader("Authorization", "Bearer ${userData.token}")
-                .build()
+            val request = build(Request.Builder().url(client.url("users/${user.id!!.id}")).put(body), userData)
             execute(request)
         } catch (_: Exception) {
             println("Возникла непредвиденная ошибка. Возможно, вырубился сервер.")
@@ -142,11 +126,7 @@ class UserView(override val client: Client, val io: IOUtil): ExecutableView(clie
     fun deleteUser(userData: UserData) {
         try {
             val id = io.readNotEmpty("Введите id пользователя: ")
-            val request = Request.Builder()
-                .url(client.url("users/$id"))
-                .delete()
-                .addHeader("Authorization", "Bearer ${userData.token}")
-                .build()
+            val request = build(Request.Builder().url(client.url("users/$id")).delete(), userData)
             execute(request)
         } catch (_: Exception) {
             println("Возникла непредвиденная ошибка. Возможно, вырубился сервер.")

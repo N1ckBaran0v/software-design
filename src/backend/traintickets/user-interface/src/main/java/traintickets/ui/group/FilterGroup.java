@@ -19,7 +19,6 @@ public final class FilterGroup extends AbstractEndpointGroup {
 
     @Override
     public void addEndpoints() {
-        before(securityConfiguration::forUser);
         post(ctx -> filterController.addFilter(ctx, securityConfiguration.forUser(ctx)));
         get(ctx -> filterController.getFilters(ctx, securityConfiguration.forUser(ctx)));
         delete(ctx -> filterController.deleteFilter(ctx, securityConfiguration.forUser(ctx)));
