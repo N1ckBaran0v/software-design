@@ -6,7 +6,6 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.springframework.stereotype.Component
 import traintickets.console.model.Filter
-import traintickets.console.model.Ticket
 import traintickets.console.model.UserData
 import traintickets.console.utils.Client
 import traintickets.console.utils.IOUtil

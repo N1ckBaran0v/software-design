@@ -43,7 +43,7 @@ class RaceView(override val client: Client, val io: IOUtil, val trainView: Train
         }
     }
 
-    fun readRace(userData: UserData?, raceId: String, departure: String, destination: String) {
+    fun readRace(userData: UserData?, raceId: String, departure: Schedule, destination: Schedule) {
         try {
             val request = build(Request.Builder().url(client.url("races/$raceId")).get(), userData)
             client.client.newCall(request).execute().use { response ->
@@ -81,7 +81,7 @@ class RaceView(override val client: Client, val io: IOUtil, val trainView: Train
         return Schedule(null, name, arrival, departure, price)
     }
 
-    private fun executeRace(userData: UserData?, departure: String, destination: String) {
+    private fun executeRace(userData: UserData?, departure: Schedule, destination: Schedule) {
         val list = listOf("Посмотреть билеты", "Посмотреть отзывы о поезде", "Выход")
         var flag = true
         while (flag) {
@@ -95,21 +95,10 @@ class RaceView(override val client: Client, val io: IOUtil, val trainView: Train
         }
     }
 
-    private fun printRace(departureName: String, destinationName: String) {
-        val departure = findStation(departureName)
-        val destination = findStation(destinationName)
+    private fun printRace(departure: Schedule, destination: Schedule) {
         println("Рейс ${race.id}")
         println("Отправление с ${departure.name}: ${departure.departure}")
         println("Прибытие на ${destination.name}: ${destination.arrival}")
         println("Рейс выполняет поезд ${race.trainId.id}")
-    }
-
-    private fun findStation(stationName: String): Schedule {
-        for (station in race.schedule) {
-            if (station.name == stationName) {
-                return station
-            }
-        }
-        throw IllegalArgumentException("Not found (near impossible).")
     }
 }
