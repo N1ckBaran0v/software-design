@@ -13,7 +13,12 @@ import traintickets.console.utils.Client
 import traintickets.console.utils.IOUtil
 
 @Component
-class RaceView(override val client: Client, val io: IOUtil, val trainView: TrainView): ExecutableView(client) {
+class RaceView(
+    override val client: Client,
+    val io: IOUtil,
+    val trainView: TrainView,
+    val commentView: CommentView,
+): ExecutableView(client) {
     private var race = Race(trainId = TrainId(""))
 
     fun createRace(userData: UserData) {
@@ -89,7 +94,7 @@ class RaceView(override val client: Client, val io: IOUtil, val trainView: Train
             io.printList(list)
             when (io.readNum(list.size)) {
                 0 -> TODO("implement")
-                1 -> TODO("implement")
+                1 -> commentView.readComments(userData, race.trainId)
                 else -> flag = false
             }
         }
