@@ -17,6 +17,7 @@ class RaceView(
     override val client: Client,
     val io: IOUtil,
     val trainView: TrainView,
+    val ticketView: TicketView,
     val commentView: CommentView,
 ): ExecutableView(client) {
     private var race = Race(trainId = TrainId(""))
@@ -93,7 +94,7 @@ class RaceView(
             printRace(departure, destination)
             io.printList(list)
             when (io.readNum(list.size)) {
-                0 -> TODO("implement")
+                0 -> ticketView.getAvailableTickets(userData, race, departure, destination)
                 1 -> commentView.readComments(userData, race.trainId)
                 else -> flag = false
             }

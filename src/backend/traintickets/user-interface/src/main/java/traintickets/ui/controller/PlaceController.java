@@ -33,7 +33,7 @@ public final class PlaceController {
         var destinationId = ctx.queryParam("destinationId");
         logger.debug("destinationId: %s", destinationId);
         if (destinationId == null) {
-            throw new QueryParameterNotFoundException("arrivalId");
+            throw new QueryParameterNotFoundException("destinationId");
         }
         ctx.json(routeService.getFreePlaces(new RaceId(raceId),
                 new ScheduleId(departureId), new ScheduleId(destinationId)));
