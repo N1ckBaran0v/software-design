@@ -10,7 +10,7 @@ import traintickets.console.utils.Client
 import traintickets.console.utils.IOUtil
 
 @Component
-class RouteView(override val client: Client, val io: IOUtil): ExecutableView(client) {
+class RouteView(override val client: Client, val io: IOUtil, val raceView: RaceView): ExecutableView(client) {
     fun readRoutes(userData: UserData?, filter: Filter) {
         try {
             val sb = StringBuilder()
@@ -50,20 +50,34 @@ class RouteView(override val client: Client, val io: IOUtil): ExecutableView(cli
     }
 
     fun executeRoute(userData: UserData?, route: Route) {
-        TODO("implement")
+        val list = listOf("Посмотреть рейс", "Выход")
+        var flag = true
+        while (flag) {
+            printRoute(route)
+            io.printList(list)
+            if (io.readNum(2) == 0) {
+                val number = io.readNum(route.races.size)
+                raceView.readRace(userData, route.races[number].id, route.starts[number], route.ends[number])
+            } else {
+                flag = false
+            }
+        }
     }
 
     fun printRoutes(routes: List<Route>) {
         println("Возможные маршруты:")
         for (i in routes.indices) {
             println("Маршрут ${i + 1}:")
-            val route = routes[i]
-            for (j in route.races.indices) {
-                val start = route.starts[j]
-                val end = route.ends[j]
-                val race = route.races[j]
-                println("Рейс ${race.id}: ${start.name}-${end.name} (${start.departure}-${end.arrival})")
-            }
+            printRoute(routes[i])
+        }
+    }
+
+    fun printRoute(route: Route) {
+        for (j in route.races.indices) {
+            val start = route.starts[j]
+            val end = route.ends[j]
+            val race = route.races[j]
+            println("Рейс ${race.id}: ${start.name}-${end.name} (${start.departure}-${end.arrival})")
         }
     }
 }
