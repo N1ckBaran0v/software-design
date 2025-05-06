@@ -21,7 +21,7 @@ class TicketView(override val client: Client, val io: IOUtil): ExecutableView(cl
                     printTickets(tickets)
                 }
             }
-        } catch (ex: Exception) {
+        } catch (_: Exception) {
             println("Возникла непредвиденная ошибка. Возможно, вырубился сервер.")
         }
     }

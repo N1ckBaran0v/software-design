@@ -6,6 +6,7 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.springframework.stereotype.Component
 import traintickets.console.model.Filter
+import traintickets.console.model.Ticket
 import traintickets.console.model.UserData
 import traintickets.console.utils.Client
 import traintickets.console.utils.IOUtil
@@ -56,7 +57,7 @@ class FilterView(override val client: Client, val io: IOUtil, val routeView: Rou
                 7 -> filter.end = io.readNotEmpty("Введите максимально время прибытия: ")
                 8 -> getFilters(userData, false)
                 9 -> saveFilter(userData)
-                10 -> routeView.readRoutes(userData)
+                10 -> routeView.readRoutes(userData, filter)
                 else -> flag = false
             }
         }
@@ -69,47 +70,55 @@ class FilterView(override val client: Client, val io: IOUtil, val routeView: Rou
     }
 
     private fun getFilters(userData: UserData?, init: Boolean = true) {
-        val request = build(Request.Builder().url(client.url("filters")).get(), userData)
-        client.client.newCall(request).execute().use { response ->
-            if (response.code >= 400) {
-                println("Ошибка. Код возврата ${response.code}. Сообщение: ${response.body?.string()}")
-                if (init) {
-                    println("Переход к ручному вводу параметров")
-                    defaultFilter()
+        try {
+            val request = build(Request.Builder().url(client.url("filters")).get(), userData)
+            client.client.newCall(request).execute().use { response ->
+                if (response.code >= 400) {
+                    println("Ошибка. Код возврата ${response.code}. Сообщение: ${response.body?.string()}")
+                    if (init) {
+                        println("Переход к ручному вводу параметров")
+                        defaultFilter()
+                    }
+                } else {
+                    val filters = Json.decodeFromString<List<Filter>>(response.body!!.string())
+                    for (i in filters.indices) {
+                        println("Фильтр ${i + 1}:")
+                        printFilter(filters[i])
+                    }
+                    getFilter(userData, init)
                 }
-            } else {
-                val filters = Json.decodeFromString<List<Filter>>(response.body!!.string())
-                for (i in filters.indices) {
-                    println("Фильтр ${i + 1}:")
-                    printFilter(filters[i])
-                }
-                getFilter(userData, init)
             }
+        } catch (_: Exception) {
+            println("Возникла непредвиденная ошибка. Возможно, вырубился сервер.")
         }
     }
 
     private fun getFilter(userData: UserData?, init: Boolean) {
-        val list = listOf("Выбрать фильтр", "Ввести параметры вручную")
-        var flag = true
-        while (flag) {
-            io.printList(list)
-            if (io.readNum(2) == 0) {
-                val filterName = io.readNotEmpty("Введите имя фильтра: ")
-                val request = build(Request.Builder().url(client.url("filters?filterName=$filterName")).get(), userData)
-                client.client.newCall(request).execute().use { response ->
-                    if (response.code >= 400) {
-                        println("Ошибка. Код возврата ${response.code}. Сообщение: ${response.body?.string()}")
-                    } else {
-                        filter = Json.decodeFromString<List<Filter>>(response.body!!.string())[0]
-                        flag = false
+        try {
+            val list = listOf("Выбрать фильтр", "Ввести параметры вручную")
+            var flag = true
+            while (flag) {
+                io.printList(list)
+                if (io.readNum(2) == 0) {
+                    val filterName = io.readNotEmpty("Введите имя фильтра: ")
+                    val request = build(Request.Builder().url(client.url("filters?filterName=$filterName")).get(), userData)
+                    client.client.newCall(request).execute().use { response ->
+                        if (response.code >= 400) {
+                            println("Ошибка. Код возврата ${response.code}. Сообщение: ${response.body?.string()}")
+                        } else {
+                            filter = Json.decodeFromString<List<Filter>>(response.body!!.string())[0]
+                            flag = false
+                        }
                     }
+                } else {
+                    if (init) {
+                        defaultFilter()
+                    }
+                    flag = false
                 }
-            } else {
-                if (init) {
-                    defaultFilter()
-                }
-                flag = false
             }
+        } catch (_: Exception) {
+            println("Возникла непредвиденная ошибка. Возможно, вырубился сервер.")
         }
     }
 
@@ -131,9 +140,13 @@ class FilterView(override val client: Client, val io: IOUtil, val routeView: Rou
     }
 
     private fun saveFilter(userData: UserData?) {
-        val body = Json.encodeToString(filter).toRequestBody("application/json".toMediaType())
-        val request = build(Request.Builder().url(client.url("filters")).post(body), userData)
-        execute(request)
+        try {
+            val body = Json.encodeToString(filter).toRequestBody("application/json".toMediaType())
+            val request = build(Request.Builder().url(client.url("filters")).post(body), userData)
+            execute(request)
+        } catch (_: Exception) {
+            println("Возникла непредвиденная ошибка. Возможно, вырубился сервер.")
+        }
     }
 
     private fun printFilter(filter: Filter) {
