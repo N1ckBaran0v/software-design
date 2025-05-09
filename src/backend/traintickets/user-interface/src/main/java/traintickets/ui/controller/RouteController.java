@@ -8,8 +8,7 @@ import traintickets.businesslogic.model.Filter;
 import traintickets.ui.exception.InvalidQueryParameterException;
 import traintickets.ui.exception.QueryParameterNotFoundException;
 
-import java.text.DateFormat;
-import java.text.ParseException;
+import java.sql.Timestamp;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Objects;
@@ -45,15 +44,15 @@ public final class RouteController {
         var startTime = getParamValue(ctx, "start");
         var start = new Date();
         try {
-            start = DateFormat.getDateInstance().parse(startTime);
-        } catch (ParseException e) {
+            start = Timestamp.valueOf(startTime);
+        } catch (IllegalArgumentException e) {
             throw new InvalidQueryParameterException("start");
         }
         var endTime = getParamValue(ctx, "end");
         var end = new Date();
         try {
-            end = DateFormat.getDateInstance().parse(endTime);
-        } catch (ParseException e) {
+            end = Timestamp.valueOf(endTime);
+        } catch (IllegalArgumentException e) {
             throw new InvalidQueryParameterException("end");
         }
         for (var param : ctx.queryParamMap().entrySet()) {

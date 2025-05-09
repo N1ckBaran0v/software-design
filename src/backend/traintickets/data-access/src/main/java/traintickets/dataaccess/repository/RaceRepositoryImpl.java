@@ -104,7 +104,7 @@ public final class RaceRepositoryImpl implements RaceRepository {
                     "WITH races_time AS (SELECT race_id, MIN(departure) as start_time, MAX(arrival) as end_time " +
                             "FROM schedule GROUP BY race_id), " +
                             "good_races AS (SELECT race_id FROM races_time WHERE " +
-                            "start_time >= (?) AND end_time <= (?)) " +
+                            "end_time >= (?) AND start_time <= (?)) " +
                             "SELECT * FROM races WHERE id IN (SELECT * FROM good_races);"
             )) {
                 statement.setTimestamp(1, new Timestamp(filter.start().getTime()));

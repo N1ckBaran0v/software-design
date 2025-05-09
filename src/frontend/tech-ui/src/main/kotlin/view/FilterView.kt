@@ -53,10 +53,10 @@ class FilterView(override val client: Client, val io: IOUtil, val routeView: Rou
                 3 -> filter.transfers = io.readNum("Введите количество пересадок: ")
                 4 -> filter.passengers = getPassengers()
                 5 -> filter.start = io.readNotEmpty("Введите минимальное время отправления: ")
-                7 -> filter.end = io.readNotEmpty("Введите максимально время прибытия: ")
-                8 -> getFilters(userData, false)
-                9 -> saveFilter(userData)
-                10 -> routeView.readRoutes(userData, filter)
+                6 -> filter.end = io.readNotEmpty("Введите максимально время прибытия: ")
+                7 -> getFilters(userData, false)
+                8 -> saveFilter(userData)
+                9 -> routeView.readRoutes(userData, filter)
                 else -> flag = false
             }
         }
@@ -66,6 +66,7 @@ class FilterView(override val client: Client, val io: IOUtil, val routeView: Rou
         filter = Filter()
         filter.departure = io.readNotEmpty("Введите пункт отправления: ")
         filter.destination = io.readNotEmpty("Введите пункт назначения: ")
+        filter.setDates()
     }
 
     private fun getFilters(userData: UserData?, init: Boolean = true) {
@@ -79,16 +80,22 @@ class FilterView(override val client: Client, val io: IOUtil, val routeView: Rou
                         defaultFilter()
                     }
                 } else {
-                    val filters = Json.decodeFromString<List<Filter>>(response.body!!.string())
+                    val body = response.body!!.string()
+                    val filters = Json.decodeFromString<List<Filter>>(body)
                     for (i in filters.indices) {
+                        filters[i].setDates()
                         println("Фильтр ${i + 1}:")
                         printFilter(filters[i])
                     }
                     getFilter(userData, init)
                 }
             }
-        } catch (_: Exception) {
+        } catch (ex: Exception) {
             println("Возникла непредвиденная ошибка. Возможно, вырубился сервер.")
+            if (init) {
+                println("Переход к ручному вводу параметров")
+                defaultFilter()
+            }
         }
     }
 
@@ -106,6 +113,7 @@ class FilterView(override val client: Client, val io: IOUtil, val routeView: Rou
                             println("Ошибка. Код возврата ${response.code}. Сообщение: ${response.body?.string()}")
                         } else {
                             filter = Json.decodeFromString<List<Filter>>(response.body!!.string())[0]
+                            filter.setDates()
                             flag = false
                         }
                     }
@@ -139,6 +147,10 @@ class FilterView(override val client: Client, val io: IOUtil, val routeView: Rou
     }
 
     private fun saveFilter(userData: UserData?) {
+        val start = filter.start
+        val end = filter.end
+        filter.start = null
+        filter.end = null
         try {
             val body = Json.encodeToString(filter).toRequestBody("application/json".toMediaType())
             val request = build(Request.Builder().url(client.url("filters")).post(body), userData)
@@ -146,6 +158,8 @@ class FilterView(override val client: Client, val io: IOUtil, val routeView: Rou
         } catch (_: Exception) {
             println("Возникла непредвиденная ошибка. Возможно, вырубился сервер.")
         }
+        filter.start = start
+        filter.end = end
     }
 
     private fun printFilter(filter: Filter) {

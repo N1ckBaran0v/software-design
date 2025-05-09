@@ -26,10 +26,12 @@ class RouteView(override val client: Client, val io: IOUtil, val raceView: RaceV
                     println("Ошибка. Код возврата ${response.code}. Сообщение: ${response.body?.string()}")
                 } else {
                     val routes = Json.decodeFromString<List<Route>>(response.body!!.string())
-                    executeRoutes(userData, routes)
+                    if (routes.isNotEmpty()) {
+                        executeRoutes(userData, routes)
+                    }
                 }
             }
-        } catch (_: Exception) {
+        } catch (ex: Exception) {
             println("Возникла непредвиденная ошибка. Возможно, вырубился сервер.")
         }
     }
