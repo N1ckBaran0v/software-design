@@ -90,31 +90,32 @@ public final class RouteServiceImpl implements RouteService {
 
     @Override
     public List<Route> getRoutes(Filter filter) {
-        filter.searchValidate();
-        var races = StreamSupport.stream(raceRepository.getRaces(systemRole, filter).spliterator(), false)
-                .map(RaceWrapper::new).toList();
-        var transfers = filter.transfers();
-        var map = new HashMap<String, List<RaceWrapper>>();
-        races.forEach(wrapper -> wrapper.race.schedule().forEach(schedule -> {
-            var name = schedule.name();
-            if (!map.containsKey(name)) {
-                map.put(name, new ArrayList<>());
-            }
-            map.get(name).add(wrapper);
-        }));
-        var used = new HashSet<RaceId>();
-        var visited = new HashSet<String>();
-        visited.add(filter.departure());
-        var testRoute = new Route(new ArrayList<>(transfers + 1),
-                new ArrayList<>(transfers + 1),
-                new ArrayList<>(transfers + 1));
-        var result = new ArrayList<Route>();
-        var departure = filter.departure();
-        if (map.containsKey(departure)) {
-            map.get(departure).forEach(wrapper -> searchRoute(result, testRoute, used, visited, filter,
-                    map, wrapper, find(wrapper.race.schedule(), departure, 0), transfers));
-        }
-        return result;
+//        filter.searchValidate();
+//        var races = StreamSupport.stream(raceRepository.getRaces(systemRole, filter).spliterator(), false)
+//                .map(RaceWrapper::new).toList();
+//        var transfers = filter.transfers();
+//        var map = new HashMap<String, List<RaceWrapper>>();
+//        races.forEach(wrapper -> wrapper.race.schedule().forEach(schedule -> {
+//            var name = schedule.name();
+//            if (!map.containsKey(name)) {
+//                map.put(name, new ArrayList<>());
+//            }
+//            map.get(name).add(wrapper);
+//        }));
+//        var used = new HashSet<RaceId>();
+//        var visited = new HashSet<String>();
+//        visited.add(filter.departure());
+//        var testRoute = new Route(new ArrayList<>(transfers + 1),
+//                new ArrayList<>(transfers + 1),
+//                new ArrayList<>(transfers + 1));
+//        var result = new ArrayList<Route>();
+//        var departure = filter.departure();
+//        if (map.containsKey(departure)) {
+//            map.get(departure).forEach(wrapper -> searchRoute(result, testRoute, used, visited, filter,
+//                    map, wrapper, find(wrapper.race.schedule(), departure, 0), transfers));
+//        }
+//        return result;
+        return null;
     }
 
     private void searchRoute(List<Route> routes,

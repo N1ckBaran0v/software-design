@@ -9,6 +9,7 @@ import traintickets.businesslogic.repository.RaceRepository;
 import java.sql.Connection;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -119,27 +120,69 @@ class RaceRepositoryImplIT extends PostgresIT {
     }
 
     @Test
-    void getRaces_positive_got() {
-        var filter = new Filter(null, null, null, null, 1, null, Timestamp.valueOf("2025-04-01 10:00:00"),
+    void getRaces_positive_got0() {
+        var filter = new Filter(null, null, "first", "second", 0, null, Timestamp.valueOf("2025-04-01 10:00:00"),
                 Timestamp.valueOf("2025-04-01 11:59:59"));
         var sched1 = new Schedule(new ScheduleId("1"), "first", null, Timestamp.valueOf("2025-04-01 10:10:00"), 0);
         var sched2 = new Schedule(new ScheduleId("2"), "second", Timestamp.valueOf("2025-04-01 11:40:00"), null, 5);
-        var race = new Race(new RaceId("1"), new TrainId("1"), List.of(sched1, sched2), true);
+        var raceId = new RaceId("1");
         var result = raceRepository.getRaces(adminRole, filter);
         assertNotNull(result);
-        var iterator = result.iterator();
+        var iterator = result.entrySet().iterator();
         assertTrue(iterator.hasNext());
-        assertEquals(race, iterator.next());
+        var entry = iterator.next();
+        assertEquals(raceId, entry.getKey());
+        assertEquals(2, entry.getValue().size());
+        assertEquals(sched1, entry.getValue().get(0));
+        assertEquals(sched2, entry.getValue().get(1));
+        assertFalse(iterator.hasNext());
+    }
+
+    @Test
+    void getRaces_positive_got1() {
+        var filter = new Filter(null, null, "first", "second", 1, null, Timestamp.valueOf("2025-04-01 10:00:00"),
+                Timestamp.valueOf("2025-04-01 11:59:59"));
+        var sched1 = new Schedule(new ScheduleId("1"), "first", null, Timestamp.valueOf("2025-04-01 10:10:00"), 0);
+        var sched2 = new Schedule(new ScheduleId("2"), "second", Timestamp.valueOf("2025-04-01 11:40:00"), null, 5);
+        var raceId = new RaceId("1");
+        var result = raceRepository.getRaces(adminRole, filter);
+        assertNotNull(result);
+        var iterator = result.entrySet().iterator();
+        assertTrue(iterator.hasNext());
+        var entry = iterator.next();
+        assertEquals(raceId, entry.getKey());
+        assertEquals(2, entry.getValue().size());
+        assertEquals(sched1, entry.getValue().get(0));
+        assertEquals(sched2, entry.getValue().get(1));
+        assertFalse(iterator.hasNext());
+    }
+
+    @Test
+    void getRaces_positive_got2() {
+        var filter = new Filter(null, null, "first", "second", 2, null, Timestamp.valueOf("2025-04-01 10:00:00"),
+                Timestamp.valueOf("2025-04-01 11:59:59"));
+        var sched1 = new Schedule(new ScheduleId("1"), "first", null, Timestamp.valueOf("2025-04-01 10:10:00"), 0);
+        var sched2 = new Schedule(new ScheduleId("2"), "second", Timestamp.valueOf("2025-04-01 11:40:00"), null, 5);
+        var raceId = new RaceId("1");
+        var result = raceRepository.getRaces(adminRole, filter);
+        assertNotNull(result);
+        var iterator = result.entrySet().iterator();
+        assertTrue(iterator.hasNext());
+        var entry = iterator.next();
+        assertEquals(raceId, entry.getKey());
+        assertEquals(2, entry.getValue().size());
+        assertEquals(sched1, entry.getValue().get(0));
+        assertEquals(sched2, entry.getValue().get(1));
         assertFalse(iterator.hasNext());
     }
 
     @Test
     void getRaces_positive_empty() {
-        var filter = new Filter(null, null, null, null, 1, null, Timestamp.valueOf("2025-04-01 00:00:00"),
+        var filter = new Filter(null, null, "first", "second", 1, null, Timestamp.valueOf("2025-04-01 00:00:00"),
                 Timestamp.valueOf("2025-04-01 11:11:11"));
         var result = raceRepository.getRaces(systemRole, filter);
         assertNotNull(result);
-        assertFalse(result.iterator().hasNext());
+        assertFalse(result.entrySet().iterator().hasNext());
     }
 
     @Test
