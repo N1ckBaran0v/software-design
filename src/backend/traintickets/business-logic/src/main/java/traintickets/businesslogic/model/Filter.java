@@ -32,7 +32,7 @@ public record Filter(UserId user,
     }
 
     private void validate() {
-        if (departure == null || destination == null || transfers < 0 || passengers == null) {
+        if (departure == null || destination == null || transfers < 0 || transfers > 1 || passengers == null) {
             throw new InvalidEntityException("Invalid parameters");
         }
         if (departure.equals(destination)) {

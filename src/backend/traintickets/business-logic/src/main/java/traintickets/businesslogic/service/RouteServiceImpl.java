@@ -10,17 +10,30 @@ import traintickets.businesslogic.repository.TicketRepository;
 import traintickets.businesslogic.repository.TrainRepository;
 
 import java.util.*;
-import java.util.stream.StreamSupport;
 
 public final class RouteServiceImpl implements RouteService {
     final class RaceWrapper {
-        private final Race race;
-        private final List<RailcarId> numbers;
-        private final HashMap<RailcarId, Railcar> railcars;
-        private final List<Map<Integer, List<Ticket>>> boughtAll;
+        private final RaceId raceId;
+        private final List<Schedule> schedule;
+        private List<RailcarId> numbers;
+        private HashMap<RailcarId, Railcar> railcars;
+        private List<Map<Integer, List<Ticket>>> boughtAll;
 
         RaceWrapper(Race race) {
-            this.race = race;
+            this.raceId = race.id();
+            this.schedule = race.schedule();
+            getBought(race);
+        }
+
+        RaceWrapper(RaceId raceId, List<Schedule> schedule) {
+            var race = raceRepository.getRace(systemRole, raceId).orElseThrow(
+                    () -> new EntityNotFoundException(String.format("No race with id %s found", raceId.id())));
+            this.raceId = raceId;
+            this.schedule = schedule;
+            getBought(race);
+        }
+
+        private void getBought(Race race) {
             var train = trainRepository.getTrain(systemRole, race.trainId()).orElseThrow(
                     () -> new EntityNotFoundException(String.format("No train with id %s found", race.trainId().id())));
             numbers = train.railcars();
@@ -40,8 +53,7 @@ public final class RouteServiceImpl implements RouteService {
             });
         }
 
-        List<List<Place>> getPlaces(Date departure,
-                                    Date destination) {
+        List<List<Place>> getPlaces(Date departure, Date destination) {
             var result = new ArrayList<List<Place>>();
             for (var i = 0; i < numbers.size(); ++i) {
                 var arr = new ArrayList<Place>();
@@ -90,10 +102,17 @@ public final class RouteServiceImpl implements RouteService {
 
     @Override
     public List<Route> getRoutes(Filter filter) {
-//        filter.searchValidate();
-//        var races = StreamSupport.stream(raceRepository.getRaces(systemRole, filter).spliterator(), false)
-//                .map(RaceWrapper::new).toList();
-//        var transfers = filter.transfers();
+        filter.searchValidate();
+        var races = raceRepository.getRaces(systemRole, filter).entrySet().stream()
+                .map(entry -> new RaceWrapper(entry.getKey(), entry.getValue())).toList();
+        var transfers = filter.transfers();
+        var result = new ArrayList<Route>();
+        if (transfers == 0) {
+            getRoutes0(result, races, filter);
+        } else {
+            getRoutes1(result, races, filter);
+        }
+        return result;
 //        var map = new HashMap<String, List<RaceWrapper>>();
 //        races.forEach(wrapper -> wrapper.race.schedule().forEach(schedule -> {
 //            var name = schedule.name();
@@ -108,124 +127,188 @@ public final class RouteServiceImpl implements RouteService {
 //        var testRoute = new Route(new ArrayList<>(transfers + 1),
 //                new ArrayList<>(transfers + 1),
 //                new ArrayList<>(transfers + 1));
-//        var result = new ArrayList<Route>();
+
 //        var departure = filter.departure();
 //        if (map.containsKey(departure)) {
 //            map.get(departure).forEach(wrapper -> searchRoute(result, testRoute, used, visited, filter,
 //                    map, wrapper, find(wrapper.race.schedule(), departure, 0), transfers));
 //        }
-//        return result;
-        return null;
     }
 
-    private void searchRoute(List<Route> routes,
-                             Route testRoute,
-                             Set<RaceId> used,
-                             Set<String> visited,
-                             Filter filter,
-                             Map<String, List<RaceWrapper>> map,
-                             RaceWrapper currentRace,
-                             int currentStation,
-                             int transfers) {
-        used.add(currentRace.race.id());
-        var races = testRoute.races();
-        var starts = testRoute.starts();
-        var schedule = currentRace.race.schedule();
-        races.add(currentRace.race.id());
-        starts.add(schedule.get(currentStation));
-        var dstPos = find(schedule, filter.destination(), currentStation);
-        if (dstPos != -1) {
-            if (validateRace(filter, currentRace, currentStation, dstPos)) {
-                saveRoute(routes, visited, currentStation, dstPos, schedule, testRoute);
-            }
-        } else if (transfers > 0) {
-            searchNext(routes, testRoute, used, visited, filter, map, currentRace, currentStation, transfers - 1);
+    private void getRoutes0(List<Route> routes, List<RaceWrapper> races, Filter filter) {
+        for (var wrapper : races) {
+            var departure = findSchedule(wrapper.schedule, filter.departure());
+            var destination = findSchedule(wrapper.schedule, filter.destination());
+            addDirect(routes, wrapper, filter, departure, destination);
         }
-        starts.removeLast();
-        races.removeLast();
-        used.remove(currentRace.race.id());
     }
 
-    private void searchNext(List<Route> routes,
-                            Route testRoute,
-                            Set<RaceId> used,
-                            Set<String> visited,
-                            Filter filter,
-                            Map<String, List<RaceWrapper>> map,
-                            RaceWrapper currentRace,
-                            int currentStation,
-                            int transfers) {
-        var schedule = currentRace.race.schedule();
-        var stop = schedule.size();
-        for (var i = currentStation + 1; i < stop; ++i) {
-            var current = schedule.get(i);
-            var name = current.name();
-            if (!visited.contains(name)) {
-                visited.add(name);
-                for (var wrapper : map.get(name)) {
-                    if (!used.contains(wrapper.race.id()) && validateRace(filter, currentRace, currentStation, i)) {
-                        testRoute.ends().add(current);
-                        var curr = wrapper.race.schedule();
-                        var pos = find(curr, name, 0);
-                        var arrivalTime = current.arrival();
-                        var departureTime = curr.get(pos).departure();
-                        if (arrivalTime != null && departureTime != null && arrivalTime.before(departureTime)) {
-                            searchRoute(routes, testRoute, used, visited, filter, map, wrapper, pos, transfers);
-                        }
-                        testRoute.ends().removeLast();
-                    }
+    private void addDirect(List<Route> routes, RaceWrapper wrapper, Filter filter, int departure, int destination) {
+        if (departure < destination && validateRace(filter, wrapper, departure, destination)) {
+            var raceIds = List.of(wrapper.raceId);
+            var departures = List.of(wrapper.schedule.get(departure));
+            var destinations = List.of(wrapper.schedule.get(destination));
+            routes.add(new Route(raceIds, departures, destinations));
+        }
+    }
+
+    private void getRoutes1(List<Route> routes, List<RaceWrapper> races, Filter filter) {
+        var startPositions = new HashMap<RaceId, Integer>();
+        var startSchedule = new HashMap<RaceId, Set<String>>();
+        var startWrappers = new HashMap<RaceId, RaceWrapper>();
+        var endPositions = new HashMap<RaceId, Integer>();
+        var endSchedule = new HashMap<RaceId, Set<String>>();
+        var endWrappers = new HashMap<RaceId, RaceWrapper>();
+        for (var wrapper : races) {
+            var departure = findSchedule(wrapper.schedule, filter.departure());
+            var destination = findSchedule(wrapper.schedule, filter.destination());
+            if (departure == -1) {
+                endPositions.put(wrapper.raceId, destination);
+                var set = new HashSet<String>();
+                for (var i = 0; i < destination; ++i) {
+                    set.add(wrapper.schedule.get(i).name());
                 }
+                endSchedule.put(wrapper.raceId, set);
+                endWrappers.put(wrapper.raceId, wrapper);
+            } else if (destination == -1) {
+                startPositions.put(wrapper.raceId, departure);
+                var set = new HashSet<String>();
+                for (var i = departure + 1; i < wrapper.schedule.size(); ++i) {
+                    set.add(wrapper.schedule.get(i).name());
+                }
+                startSchedule.put(wrapper.raceId, set);
+                startWrappers.put(wrapper.raceId, wrapper);
             } else {
-                stop = i;
+                addDirect(routes, wrapper, filter, departure, destination);
             }
         }
-        for (var i = currentStation + 1; i < stop; ++i) {
-            visited.remove(schedule.get(i).name());
+        for (var start : startPositions.keySet()) {
+            for (var end : endPositions.keySet()) {
+                var intersection = new HashSet<>(startSchedule.get(start));
+                intersection.retainAll(endSchedule.get(end));
+                if (!intersection.isEmpty()) {
+                    var station = intersection.iterator().next();
+                    var schedule1 = startWrappers.get(start).schedule;
+                    var schedule2 = endWrappers.get(end).schedule;
+                    var index1 = findSchedule(schedule1, station);
+                    var index2 = findSchedule(schedule2, station);
+                    var raceIds = List.of(start, end);
+                    var departures = List.of(schedule1.get(startPositions.get(start)), schedule2.get(index2));
+                    var destinations = List.of(schedule1.get(index1), schedule2.get(endPositions.get(end)));
+                    routes.add(new Route(raceIds, departures, destinations));
+                }
+            }
         }
     }
 
-    private void saveRoute(List<Route> routes,
-                           Set<String> visited,
-                           int currentStation,
-                           int dstPos,
-                           List<Schedule> schedule,
-                           Route testRoute) {
-        var stop = dstPos;
-        for (var i = currentStation + 1; i < stop; ++i) {
-            var station = schedule.get(i).name();
-            if (!visited.contains(station)) {
-                visited.add(station);
-            } else {
-                stop = i;
-            }
-        }
-        if (stop == dstPos && dstPos != currentStation) {
-            testRoute.ends().add(schedule.get(dstPos));
-            var races = new ArrayList<>(testRoute.races());
-            var starts = new ArrayList<>(testRoute.starts());
-            var ends = new ArrayList<>(testRoute.ends());
-            routes.add(new Route(races, starts, ends));
-        }
-        for (var i = currentStation + 1; i < stop; ++i) {
-            visited.remove(schedule.get(i).name());
-        }
-    }
-
-    private int find(List<Schedule> schedule, String name, int start) {
-        var result = -1;
-        for (var i = start; i < schedule.size(); ++i) {
-            if (name.equals(schedule.get(i).name())) {
-                result = i;
-                break;
-            }
-        }
-        return result;
-    }
+//    private void searchRoute(List<Route> routes,
+//                             Route testRoute,
+//                             Set<RaceId> used,
+//                             Set<String> visited,
+//                             Filter filter,
+//                             Map<String, List<RaceWrapper>> map,
+//                             RaceWrapper currentRace,
+//                             int currentStation,
+//                             int transfers) {
+//        used.add(currentRace.race.id());
+//        var races = testRoute.races();
+//        var starts = testRoute.starts();
+//        var schedule = currentRace.race.schedule();
+//        races.add(currentRace.race.id());
+//        starts.add(schedule.get(currentStation));
+//        var dstPos = find(schedule, filter.destination(), currentStation);
+//        if (dstPos != -1) {
+//            if (validateRace(filter, currentRace, currentStation, dstPos)) {
+//                saveRoute(routes, visited, currentStation, dstPos, schedule, testRoute);
+//            }
+//        } else if (transfers > 0) {
+//            searchNext(routes, testRoute, used, visited, filter, map, currentRace, currentStation, transfers - 1);
+//        }
+//        starts.removeLast();
+//        races.removeLast();
+//        used.remove(currentRace.race.id());
+//    }
+//
+//    private void searchNext(List<Route> routes,
+//                            Route testRoute,
+//                            Set<RaceId> used,
+//                            Set<String> visited,
+//                            Filter filter,
+//                            Map<String, List<RaceWrapper>> map,
+//                            RaceWrapper currentRace,
+//                            int currentStation,
+//                            int transfers) {
+//        var schedule = currentRace.race.schedule();
+//        var stop = schedule.size();
+//        for (var i = currentStation + 1; i < stop; ++i) {
+//            var current = schedule.get(i);
+//            var name = current.name();
+//            if (!visited.contains(name)) {
+//                visited.add(name);
+//                for (var wrapper : map.get(name)) {
+//                    if (!used.contains(wrapper.race.id()) && validateRace(filter, currentRace, currentStation, i)) {
+//                        testRoute.ends().add(current);
+//                        var curr = wrapper.race.schedule();
+//                        var pos = find(curr, name, 0);
+//                        var arrivalTime = current.arrival();
+//                        var departureTime = curr.get(pos).departure();
+//                        if (arrivalTime != null && departureTime != null && arrivalTime.before(departureTime)) {
+//                            searchRoute(routes, testRoute, used, visited, filter, map, wrapper, pos, transfers);
+//                        }
+//                        testRoute.ends().removeLast();
+//                    }
+//                }
+//            } else {
+//                stop = i;
+//            }
+//        }
+//        for (var i = currentStation + 1; i < stop; ++i) {
+//            visited.remove(schedule.get(i).name());
+//        }
+//    }
+//
+//    private void saveRoute(List<Route> routes,
+//                           Set<String> visited,
+//                           int currentStation,
+//                           int dstPos,
+//                           List<Schedule> schedule,
+//                           Route testRoute) {
+//        var stop = dstPos;
+//        for (var i = currentStation + 1; i < stop; ++i) {
+//            var station = schedule.get(i).name();
+//            if (!visited.contains(station)) {
+//                visited.add(station);
+//            } else {
+//                stop = i;
+//            }
+//        }
+//        if (stop == dstPos && dstPos != currentStation) {
+//            testRoute.ends().add(schedule.get(dstPos));
+//            var races = new ArrayList<>(testRoute.races());
+//            var starts = new ArrayList<>(testRoute.starts());
+//            var ends = new ArrayList<>(testRoute.ends());
+//            routes.add(new Route(races, starts, ends));
+//        }
+//        for (var i = currentStation + 1; i < stop; ++i) {
+//            visited.remove(schedule.get(i).name());
+//        }
+//    }
+//
+//    private int find(List<Schedule> schedule, String name, int start) {
+//        var result = -1;
+//        for (var i = start; i < schedule.size(); ++i) {
+//            if (name.equals(schedule.get(i).name())) {
+//                result = i;
+//                break;
+//            }
+//        }
+//        return result;
+//    }
 
     private boolean validateRace(Filter filter, RaceWrapper wrapper, int start, int end) {
         var passengers = new HashMap<>(filter.passengers());
-        var departure = wrapper.race.schedule().get(start).departure();
-        var arrival = wrapper.race.schedule().get(end).arrival();
+        var departure = wrapper.schedule.get(start).departure();
+        var arrival = wrapper.schedule.get(end).arrival();
         for (var railcar : wrapper.getPlaces(departure, arrival)) {
             for (var place : railcar) {
                 if (passengers.containsKey(place.purpose())) {
@@ -243,6 +326,17 @@ public final class RouteServiceImpl implements RouteService {
             }
         }
         return passengers.isEmpty();
+    }
+
+    private int findSchedule(List<Schedule> schedule, String name) {
+        var result = -1;
+        for (var i = 0; i < schedule.size(); ++i) {
+            if (name.equals(schedule.get(i).name())) {
+                result = i;
+                break;
+            }
+        }
+        return result;
     }
 
     @Override
