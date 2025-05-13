@@ -20,7 +20,6 @@ public final class JwtManagerImpl implements JwtManager {
     private final int expiration;
     private final long redisExpiration;
 
-    @SuppressWarnings("all")
     public JwtManagerImpl(JwtConfig jwtConfig, JedisConfig jedisConfig) {
         Objects.requireNonNull(jwtConfig);
         Objects.requireNonNull(jedisConfig);

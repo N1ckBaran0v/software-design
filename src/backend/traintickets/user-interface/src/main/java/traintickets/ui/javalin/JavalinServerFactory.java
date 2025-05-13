@@ -1,8 +1,6 @@
 package traintickets.ui.javalin;
 
 import io.javalin.Javalin;
-import io.javalin.config.JettyConfig;
-import io.javalin.http.GatewayTimeoutResponse;
 import io.javalin.http.HttpStatus;
 import traintickets.businesslogic.logger.UniLogger;
 import traintickets.businesslogic.logger.UniLoggerFactory;
@@ -31,7 +29,7 @@ public final class JavalinServerFactory implements ServerFactory {
     }
 
     @Override
-    public Server createRestServer(ServerParams serverParams) {
+    public Server createServer(ServerParams serverParams) {
         var javalin = Javalin.create(javalinConfig -> {
             javalinConfig.jetty.defaultHost = serverParams.host();
             javalinConfig.jetty.defaultPort = serverParams.port();

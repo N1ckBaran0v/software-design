@@ -9,7 +9,6 @@ import traintickets.businesslogic.model.Comment;
 import traintickets.businesslogic.model.CommentId;
 import traintickets.businesslogic.model.TrainId;
 import traintickets.businesslogic.transport.UserInfo;
-import traintickets.ui.exception.QueryParameterNotFoundException;
 
 import java.util.Objects;
 

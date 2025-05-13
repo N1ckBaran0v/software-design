@@ -1,5 +1,5 @@
 package traintickets.ui.api;
 
 public interface ServerFactory {
-    Server createRestServer(ServerParams serverParams);
+    Server createServer(ServerParams serverParams);
 }
