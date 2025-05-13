@@ -71,10 +71,7 @@ class RouteServiceImplTest {
                 new RaceId("4"), 1, place1, start4, end4, BigDecimal.valueOf(500));
         var ticket2 = new Ticket(new TicketId("2"), new UserId("2"), "adult",
                 new RaceId("4"), 2, place3, start4, end4, BigDecimal.valueOf(500));
-        given(raceRepository.getRaces(systemRole, filter)).willReturn(
-                Map.of(race1.id(), race1.schedule(), race4.id(), race4.schedule()));
-        given(raceRepository.getRace(systemRole, race1.id())).willReturn(Optional.of(race1));
-        given(raceRepository.getRace(systemRole, race4.id())).willReturn(Optional.of(race4));
+        given(raceRepository.getRaces(systemRole, filter)).willReturn(List.of(race1, race4));
         given(trainRepository.getTrain(systemRole, train1.id())).willReturn(Optional.of(train1));
         given(trainRepository.getTrain(systemRole, train4.id())).willReturn(Optional.of(train4));
         given(railcarRepository.getRailcarsByTrain(systemRole, train1.id())).willReturn(List.of(railcar1));
@@ -117,13 +114,7 @@ class RouteServiceImplTest {
                 new RaceId("4"), 1, place1, start4, end4, BigDecimal.valueOf(500));
         var ticket2 = new Ticket(new TicketId("2"), new UserId("2"), "adult",
                 new RaceId("4"), 2, place3, start4, end4, BigDecimal.valueOf(500));
-        given(raceRepository.getRaces(systemRole, filter)).willReturn(
-                Map.of(race1.id(), race1.schedule(), race2.id(), race2.schedule(),
-                        race3.id(), race3.schedule(), race4.id(), race4.schedule()));
-        given(raceRepository.getRace(systemRole, race1.id())).willReturn(Optional.of(race1));
-        given(raceRepository.getRace(systemRole, race2.id())).willReturn(Optional.of(race2));
-        given(raceRepository.getRace(systemRole, race3.id())).willReturn(Optional.of(race3));
-        given(raceRepository.getRace(systemRole, race4.id())).willReturn(Optional.of(race4));
+        given(raceRepository.getRaces(systemRole, filter)).willReturn(List.of(race1, race2, race3, race4));
         given(trainRepository.getTrain(systemRole, train1.id())).willReturn(Optional.of(train1));
         given(trainRepository.getTrain(systemRole, train2.id())).willReturn(Optional.of(train2));
         given(trainRepository.getTrain(systemRole, train3.id())).willReturn(Optional.of(train3));
@@ -145,7 +136,7 @@ class RouteServiceImplTest {
     void getRoutes_positive_empty() {
         var filter = new Filter(new UserId("1"), "filter", "start", "end", 1, Map.of("adult", 1),
                 Timestamp.valueOf("2025-03-19 08:00:00"), Timestamp.valueOf("2025-03-19 12:00:00"));
-        given(raceRepository.getRaces(systemRole, filter)).willReturn(Map.of());
+        given(raceRepository.getRaces(systemRole, filter)).willReturn(List.of());
         var result = routeService.getRoutes(filter);
         assertNotNull(result);
         assertTrue(result.isEmpty());

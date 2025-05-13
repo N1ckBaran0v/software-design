@@ -25,14 +25,6 @@ public final class RouteServiceImpl implements RouteService {
             getBought(race);
         }
 
-        RaceWrapper(RaceId raceId, List<Schedule> schedule) {
-            var race = raceRepository.getRace(systemRole, raceId).orElseThrow(
-                    () -> new EntityNotFoundException(String.format("No race with id %s found", raceId.id())));
-            this.raceId = raceId;
-            this.schedule = schedule;
-            getBought(race);
-        }
-
         private void getBought(Race race) {
             var train = trainRepository.getTrain(systemRole, race.trainId()).orElseThrow(
                     () -> new EntityNotFoundException(String.format("No train with id %s found", race.trainId().id())));
@@ -103,8 +95,8 @@ public final class RouteServiceImpl implements RouteService {
     @Override
     public List<Route> getRoutes(Filter filter) {
         filter.searchValidate();
-        var races = raceRepository.getRaces(systemRole, filter).entrySet().stream()
-                .map(entry -> new RaceWrapper(entry.getKey(), entry.getValue())).toList();
+        var races = raceRepository.getRaces(systemRole, filter).stream()
+                .map(RaceWrapper::new).toList();
         var transfers = filter.transfers();
         var result = new ArrayList<Route>();
         if (transfers == 0) {

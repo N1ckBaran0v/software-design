@@ -95,7 +95,7 @@ public final class RaceRepositoryImpl implements RaceRepository {
     }
 
     @Override
-    public Map<RaceId, List<Schedule>> getRaces(String role, Filter filter) {
+    public List<Race> getRaces(String role, Filter filter) {
         return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM schedule WHERE (arrival >= (?) AND arrival <= (?)) OR " +
@@ -109,7 +109,7 @@ public final class RaceRepositoryImpl implements RaceRepository {
                 statement.setTimestamp(4, end);
                 try (var resultSet = statement.executeQuery()) {
                     var result = getSchedules(resultSet);
-                    return filterSchedules(result, filter);
+                    return filterSchedules(connection, result, filter);
                 }
             }
         });
@@ -176,24 +176,26 @@ public final class RaceRepositoryImpl implements RaceRepository {
         return new Schedule(id, name, arrival, departure, multiplier);
     }
 
-    private Map<RaceId, List<Schedule>> filterSchedules(Map<RaceId, List<Schedule>> schedules, Filter filter) {
-        var result = (Map<RaceId, List<Schedule>>) new HashMap<RaceId, List<Schedule>>();
+    private List<Race> filterSchedules(Connection connection,
+                                       Map<RaceId, List<Schedule>> schedules,
+                                       Filter filter) throws SQLException {
+        var result = new ArrayList<Race>();
         if (filter.transfers() == 0) {
             for (var entry : schedules.entrySet()) {
                 if (containsStations(entry.getValue(), filter.departure(), filter.destination()) == 2) {
-                    result.put(entry.getKey(), entry.getValue());
+                    addRace(connection, result, entry);
                 }
             }
         } else if (filter.transfers() == 1) {
             for (var entry : schedules.entrySet()) {
                 if (containsStations(entry.getValue(), filter.departure(), filter.destination()) > 0) {
-                    result.put(entry.getKey(), entry.getValue());
+                    addRace(connection, result, entry);
                 }
             }
         } else {
             for (var entry : schedules.entrySet()) {
                 if (entry.getValue().size() > 1) {
-                    result.put(entry.getKey(), entry.getValue());
+                    addRace(connection, result, entry);
                 }
             }
         }
@@ -212,5 +214,32 @@ public final class RaceRepositoryImpl implements RaceRepository {
             }
         }
         return found.size();
+    }
+
+    private void addRace(Connection connection,
+                         List<Race> races,
+                         Map.Entry<RaceId, List<Schedule>> entry) throws SQLException {
+        try (var statement = connection.prepareStatement(
+                "SELECT * FROM races WHERE id = (?) and finished = FALSE;"
+        )) {
+            statement.setLong(1, Long.parseLong(entry.getKey().id()));
+            try (var resultSet = statement.executeQuery()) {
+                var race = getRace(resultSet, entry.getValue());
+                if (race != null) {
+                    races.add(race);
+                }
+            }
+        }
+    }
+
+    private Race getRace(ResultSet resultSet, List<Schedule> schedule) throws SQLException {
+        var answer = (Race) null;
+        if (resultSet.next()) {
+            var raceId = new RaceId(String.valueOf(resultSet.getLong("id")));
+            var trainId = new TrainId(String.valueOf(resultSet.getLong("train_id")));
+            var finished = resultSet.getBoolean("finished");
+            answer = new Race(raceId, trainId, schedule, finished);
+        }
+        return answer;
     }
 }

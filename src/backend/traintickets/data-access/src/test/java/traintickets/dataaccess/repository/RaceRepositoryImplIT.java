@@ -9,7 +9,6 @@ import traintickets.businesslogic.repository.RaceRepository;
 import java.sql.Connection;
 import java.sql.Timestamp;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -122,57 +121,45 @@ class RaceRepositoryImplIT extends PostgresIT {
     @Test
     void getRaces_positive_got0() {
         var filter = new Filter(null, null, "first", "second", 0, null, Timestamp.valueOf("2025-04-01 10:00:00"),
-                Timestamp.valueOf("2025-04-01 11:59:59"));
-        var sched1 = new Schedule(new ScheduleId("1"), "first", null, Timestamp.valueOf("2025-04-01 10:10:00"), 0);
-        var sched2 = new Schedule(new ScheduleId("2"), "second", Timestamp.valueOf("2025-04-01 11:40:00"), null, 5);
-        var raceId = new RaceId("1");
+                Timestamp.valueOf("2025-04-01 12:00:00"));
+        var sched1 = new Schedule(new ScheduleId("3"), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0);
+        var sched2 = new Schedule(new ScheduleId("4"), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5);
+        var race = new Race(new RaceId("2"), new TrainId("2"), List.of(sched1, sched2), false);
         var result = raceRepository.getRaces(adminRole, filter);
         assertNotNull(result);
-        var iterator = result.entrySet().iterator();
+        var iterator = result.iterator();
         assertTrue(iterator.hasNext());
-        var entry = iterator.next();
-        assertEquals(raceId, entry.getKey());
-        assertEquals(2, entry.getValue().size());
-        assertEquals(sched1, entry.getValue().get(0));
-        assertEquals(sched2, entry.getValue().get(1));
+        assertEquals(race, iterator.next());
         assertFalse(iterator.hasNext());
     }
 
     @Test
     void getRaces_positive_got1() {
         var filter = new Filter(null, null, "first", "second", 1, null, Timestamp.valueOf("2025-04-01 10:00:00"),
-                Timestamp.valueOf("2025-04-01 11:59:59"));
-        var sched1 = new Schedule(new ScheduleId("1"), "first", null, Timestamp.valueOf("2025-04-01 10:10:00"), 0);
-        var sched2 = new Schedule(new ScheduleId("2"), "second", Timestamp.valueOf("2025-04-01 11:40:00"), null, 5);
-        var raceId = new RaceId("1");
+                Timestamp.valueOf("2025-04-01 12:00:00"));
+        var sched1 = new Schedule(new ScheduleId("3"), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0);
+        var sched2 = new Schedule(new ScheduleId("4"), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5);
+        var race = new Race(new RaceId("2"), new TrainId("2"), List.of(sched1, sched2), false);
         var result = raceRepository.getRaces(adminRole, filter);
         assertNotNull(result);
-        var iterator = result.entrySet().iterator();
+        var iterator = result.iterator();
         assertTrue(iterator.hasNext());
-        var entry = iterator.next();
-        assertEquals(raceId, entry.getKey());
-        assertEquals(2, entry.getValue().size());
-        assertEquals(sched1, entry.getValue().get(0));
-        assertEquals(sched2, entry.getValue().get(1));
+        assertEquals(race, iterator.next());
         assertFalse(iterator.hasNext());
     }
 
     @Test
     void getRaces_positive_got2() {
         var filter = new Filter(null, null, "first", "second", 2, null, Timestamp.valueOf("2025-04-01 10:00:00"),
-                Timestamp.valueOf("2025-04-01 11:59:59"));
-        var sched1 = new Schedule(new ScheduleId("1"), "first", null, Timestamp.valueOf("2025-04-01 10:10:00"), 0);
-        var sched2 = new Schedule(new ScheduleId("2"), "second", Timestamp.valueOf("2025-04-01 11:40:00"), null, 5);
-        var raceId = new RaceId("1");
+                Timestamp.valueOf("2025-04-01 12:00:00"));
+        var sched1 = new Schedule(new ScheduleId("3"), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0);
+        var sched2 = new Schedule(new ScheduleId("4"), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5);
+        var race = new Race(new RaceId("2"), new TrainId("2"), List.of(sched1, sched2), false);
         var result = raceRepository.getRaces(adminRole, filter);
         assertNotNull(result);
-        var iterator = result.entrySet().iterator();
+        var iterator = result.iterator();
         assertTrue(iterator.hasNext());
-        var entry = iterator.next();
-        assertEquals(raceId, entry.getKey());
-        assertEquals(2, entry.getValue().size());
-        assertEquals(sched1, entry.getValue().get(0));
-        assertEquals(sched2, entry.getValue().get(1));
+        assertEquals(race, iterator.next());
         assertFalse(iterator.hasNext());
     }
 
@@ -182,13 +169,13 @@ class RaceRepositoryImplIT extends PostgresIT {
                 Timestamp.valueOf("2025-04-01 11:11:11"));
         var result = raceRepository.getRaces(systemRole, filter);
         assertNotNull(result);
-        assertFalse(result.entrySet().iterator().hasNext());
+        assertFalse(result.iterator().hasNext());
     }
 
     @Test
     void updateRace_positive_updates() {
-        var sched1 = new Schedule(new ScheduleId("1"), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0);
-        var sched2 = new Schedule(new ScheduleId("2"), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5);
+        var sched1 = new Schedule(new ScheduleId("3"), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0);
+        var sched2 = new Schedule(new ScheduleId("4"), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5);
         var race = new Race(new RaceId("2"), new TrainId("2"), List.of(sched1, sched2), true);
         raceRepository.updateRace(carrierRole, race.id(), race.finished());
         jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
