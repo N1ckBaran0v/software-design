@@ -31,7 +31,7 @@ public final class JwtManagerImpl implements JwtManager {
                 .withClaimPresence("role")
                 .build();
         expiration = jwtConfig.expiration();
-        redisExpiration = 2L * expiration;
+        redisExpiration = 2L * 60L * 60L * expiration;
         jedisPool = new JedisPool(jedisConfig.host(), jedisConfig.port(), null, jedisConfig.password());
     }
 
@@ -73,13 +73,9 @@ public final class JwtManagerImpl implements JwtManager {
 
     @Override
     public void updateUser(UserId userId) {
-        var version = getVersion(userId);
-        var newVersion = UUID.randomUUID().toString();
-        while (newVersion.equals(version)) {
-            newVersion = UUID.randomUUID().toString();
-        }
+        var version = UUID.randomUUID().toString();
         try (var resource = jedisPool.getResource()) {
-            resource.setex(userId.id(), redisExpiration, newVersion);
+            resource.setex(userId.id(), redisExpiration, version);
         }
     }
 
