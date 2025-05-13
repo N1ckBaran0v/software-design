@@ -23,8 +23,8 @@ security:
         appName: system_role
         dbName: _system_role
 redis:
-    host: nigga
-    port: 6666
+    host: localhost
+    port: 6379
     password: s3cr3tr3d1s
 log:
     level: DEBUG
