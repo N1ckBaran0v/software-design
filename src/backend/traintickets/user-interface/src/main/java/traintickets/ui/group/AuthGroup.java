@@ -24,7 +24,5 @@ public final class AuthGroup extends AbstractEndpointGroup {
         post("/register", authController::register);
         before("/login", securityConfiguration::unauthorizedOnly);
         post("/login", authController::login);
-        before("/logout", securityConfiguration::authorizedOnly);
-        post("/logout", authController::logout);
     }
 }

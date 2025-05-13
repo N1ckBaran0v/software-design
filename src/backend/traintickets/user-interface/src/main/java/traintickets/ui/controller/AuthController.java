@@ -30,9 +30,4 @@ public final class AuthController {
         ctx.json(Map.of("token", authService.login(form)));
         logger.debug("logged in");
     }
-
-    public void logout(Context ctx) {
-        authService.logout(Objects.requireNonNull(ctx.header("Authorization")).substring(7));
-        logger.debug("logged out");
-    }
 }

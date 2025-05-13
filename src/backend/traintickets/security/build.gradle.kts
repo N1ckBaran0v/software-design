@@ -8,6 +8,7 @@ group = "traintickets.security"
 dependencies {
     api(project(":business-logic"))
     implementation("com.auth0:java-jwt:4.5.0")
+    implementation("redis.clients:jedis:6.0.0")
 }
 
 tasks.jar {

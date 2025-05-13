@@ -41,7 +41,8 @@ public final class AuthServiceImpl implements AuthService {
         var name = form.name();
         var user = new User(null, username, password, name, clientRole, true);
         user.validate();
-        return jwtManager.generateToken(UserInfo.of(userRepository.addUser(systemRole, user)));
+        var registered = userRepository.addUser(systemRole, user);
+        return jwtManager.generateToken(registered.id(), registered.role());
     }
 
     @Override
@@ -54,11 +55,6 @@ public final class AuthServiceImpl implements AuthService {
         if (!user.active()) {
             throw new UserWasBannedException(user.username());
         }
-        return jwtManager.generateToken(UserInfo.of(user));
-    }
-
-    @Override
-    public void logout(String token) {
-        jwtManager.invalidateToken(token);
+        return jwtManager.generateToken(user.id(), user.role());
     }
 }

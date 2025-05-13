@@ -58,7 +58,7 @@ class UserServiceImplTest {
         var userId = new UserId("1");
         userService.deleteUser(userId);
         verify(userRepository).deleteUser(systemRole, userId);
-        verify(jwtManager).invalidateTokens(userId);
+        verify(jwtManager).updateUser(userId);
     }
 
     @Test
@@ -114,7 +114,7 @@ class UserServiceImplTest {
     void updateUser_positive_updated() {
         var userId = new UserId("1");
         var user = new TransportUser(userId, "random_username", "qwerty123", "Zubenko Mikhail");
-        var userInfo = new UserInfo(new UserId("1"), "user_role");
+        var userInfo = new UserInfo(new UserId("1"), "user_role", null);
         userService.updateUser(userInfo, user);
         verify(userRepository).updateUserPartially(systemRole, user);
     }
@@ -122,7 +122,7 @@ class UserServiceImplTest {
     @Test
     void updateUser_negative_invalid() {
         var user = new TransportUser(new UserId("1"), "random_username", "qwerty123", "Zubenko Mikhail");
-        var userInfo = new UserInfo(new UserId("2"), "user_role");
+        var userInfo = new UserInfo(new UserId("2"), "user_role", null);
         assertThrows(InvalidEntityException.class, () -> userService.updateUser(userInfo ,user));
         verify(userRepository, never()).updateUserPartially(any(), any());
     }
@@ -132,7 +132,7 @@ class UserServiceImplTest {
         var user = new User(new UserId("1"), "random_username", "qwerty123", "Zubenko Mikhail", "admin", true);
         userService.updateUserByAdmin(user);
         verify(userRepository).updateUserCompletely(systemRole, user);
-        verify(jwtManager).invalidateTokens(any());
+        verify(jwtManager).updateUser(any());
     }
 
     @Test
@@ -140,7 +140,7 @@ class UserServiceImplTest {
         var user = new User(new UserId("1"), "random_username_long", "qwerty123", "Zubenko Mikhail", "client", true);
         assertThrows(InvalidEntityException.class, () -> userService.updateUserByAdmin(user));
         verify(userRepository, never()).updateUserCompletely(any(), any());
-        verify(jwtManager, never()).invalidateTokens(any());
+        verify(jwtManager, never()).updateUser(any());
     }
 
     @Test
@@ -148,6 +148,6 @@ class UserServiceImplTest {
         var user = new User(new UserId("1"), "random_username", "qwerty123", "Zubenko Mikhail", "client", false);
         userService.updateUserByAdmin(user);
         verify(userRepository).updateUserCompletely(systemRole, user);
-        verify(jwtManager).invalidateTokens(any());
+        verify(jwtManager).updateUser(any());
     }
 }

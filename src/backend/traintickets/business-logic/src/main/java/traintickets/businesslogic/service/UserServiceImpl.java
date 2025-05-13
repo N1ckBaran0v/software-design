@@ -33,7 +33,7 @@ public final class UserServiceImpl implements UserService {
     @Override
     public void deleteUser(UserId userId) {
         userRepository.deleteUser(systemRole, userId);
-        jwtManager.invalidateTokens(userId);
+        jwtManager.updateUser(userId);
     }
 
     @Override
@@ -72,7 +72,7 @@ public final class UserServiceImpl implements UserService {
         if (user.id() == null) {
             throw new InvalidEntityException("All data required");
         }
-        jwtManager.invalidateTokens(user.id());
         userRepository.updateUserCompletely(systemRole, user);
+        jwtManager.updateUser(user.id());
     }
 }

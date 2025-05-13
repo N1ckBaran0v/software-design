@@ -1,7 +1,6 @@
 package traintickets.ui.javalin;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonParseException;
 import io.javalin.json.JsonMapper;
 import org.jetbrains.annotations.NotNull;
 
