@@ -36,6 +36,10 @@ class JwtManagerImplIT {
         assertThrows(InvalidTokenException.class, () -> jwtManager.validateToken(token));
         var newToken = jwtManager.generateToken(id, role);
         assertNotNull(jwtManager.validateToken(newToken).version());
+        jwtManager.updateUser(id);
+        assertThrows(InvalidTokenException.class, () -> jwtManager.validateToken(newToken));
+        var newestToken = jwtManager.generateToken(id, role);
+        assertNotNull(jwtManager.validateToken(newestToken).version());
     }
 
     @AfterEach
