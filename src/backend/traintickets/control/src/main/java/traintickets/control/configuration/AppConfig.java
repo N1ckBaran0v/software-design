@@ -4,6 +4,7 @@ public final class AppConfig {
     private ServerConfig server;
     private DatabaseConfig database;
     private SecurityConfig security;
+    private RedisConfig redis;
     private LogConfig log;
 
     public ServerConfig getServer() {
@@ -28,6 +29,14 @@ public final class AppConfig {
 
     public void setSecurity(SecurityConfig security) {
         this.security = security;
+    }
+
+    public RedisConfig getRedis() {
+        return redis;
+    }
+
+    public void setRedis(RedisConfig redis) {
+        this.redis = redis;
     }
 
     public LogConfig getLog() {

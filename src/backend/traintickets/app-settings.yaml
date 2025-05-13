@@ -22,5 +22,9 @@ security:
     systemRole:
         appName: system_role
         dbName: _system_role
+redis:
+    host: nigga
+    port: 6666
+    password: s3cr3tr3d1s
 log:
     level: DEBUG
