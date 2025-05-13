@@ -7,7 +7,6 @@ import traintickets.businesslogic.repository.UserRepository;
 import traintickets.businesslogic.jwt.JwtManager;
 import traintickets.businesslogic.transport.LoginForm;
 import traintickets.businesslogic.transport.RegisterForm;
-import traintickets.businesslogic.transport.UserInfo;
 
 import java.util.Objects;
 
