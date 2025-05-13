@@ -12,7 +12,7 @@ public final class CommentGroup extends AbstractEndpointGroup {
     private final SecurityConfiguration securityConfiguration;
 
     public CommentGroup(CommentController commentController, SecurityConfiguration securityConfiguration) {
-        super("/comments");
+        super("/trains/{trainId}/comments");
         this.commentController = Objects.requireNonNull(commentController);
         this.securityConfiguration = Objects.requireNonNull(securityConfiguration);
     }

@@ -21,14 +21,12 @@ public final class AuthController {
 
     public void register(Context ctx) {
         var form = ctx.bodyAsClass(RegisterForm.class);
-        logger.debug("register form: %s", form);
         ctx.json(Map.of("token", authService.register(form)));
         logger.debug("registered");
     }
 
     public void login(Context ctx) {
         var form = ctx.bodyAsClass(LoginForm.class);
-        logger.debug("login form: %s", form);
         ctx.json(Map.of("token", authService.login(form)));
         logger.debug("logged in");
     }

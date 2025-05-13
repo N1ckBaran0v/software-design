@@ -16,7 +16,7 @@ import traintickets.console.utils.IOUtil
 class CommentView(override val client: Client, val io: IOUtil): ExecutableView(client) {
     fun readComments(userData: UserData?, trainId: TrainId) {
         try {
-            val request = build(Request.Builder().url(client.url("comments?trainId=${trainId.id}")).get(), userData)
+            val request = build(Request.Builder().url(client.url("trains/${trainId.id}/comments")).get(), userData)
             client.client.newCall(request).execute().use { response ->
                 if (response.code < 300) {
                     val comments = Json.decodeFromString<List<Comment>>(response.body!!.string())
@@ -38,7 +38,7 @@ class CommentView(override val client: Client, val io: IOUtil): ExecutableView(c
             io.printList(list)
             when (io.readNum(list.size)) {
                 0 -> createComment(userData, trainId)
-                1 -> deleteComment(userData)
+                1 -> deleteComment(userData, trainId)
                 else -> flag = false
             }
         }
@@ -52,7 +52,7 @@ class CommentView(override val client: Client, val io: IOUtil): ExecutableView(c
                 val text = readLine() ?: ""
                 val comment = Comment(null, UserId(userData.id), trainId, score, text)
                 val body = Json.encodeToString(comment).toRequestBody("application/json".toMediaType())
-                val request = build(Request.Builder().url(client.url("comments")).post(body), userData)
+                val request = build(Request.Builder().url(client.url("trains/${trainId.id}/comments")).post(body), userData)
                 execute(request)
             } else {
                 println("Вы не авторизованы.")
@@ -62,11 +62,11 @@ class CommentView(override val client: Client, val io: IOUtil): ExecutableView(c
         }
     }
 
-    private fun deleteComment(userData: UserData?) {
+    private fun deleteComment(userData: UserData?, trainId: TrainId) {
         try {
             val id = io.readNotEmpty("Введите id комментария: ")
             val body = Json.encodeToString("").toRequestBody("application/json".toMediaType())
-            val request = build(Request.Builder().url(client.url("comments/$id")).delete(body), userData)
+            val request = build(Request.Builder().url(client.url("trains/${trainId.id}/comments/$id")).delete(body), userData)
             execute(request)
         } catch (_: Exception) {
             println("Возникла непредвиденная ошибка. Возможно, вырубился сервер (или вы не авторизованы).")

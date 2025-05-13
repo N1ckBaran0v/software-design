@@ -31,11 +31,8 @@ public final class CommentController {
     }
 
     public void getComments(Context ctx, UserInfo userInfo) {
-        var trainId = ctx.queryParam("trainId");
+        var trainId = ctx.pathParam("trainId");
         logger.debug("trainId: %s", trainId);
-        if (trainId == null) {
-            throw new QueryParameterNotFoundException("trainId");
-        }
         commentService.getComments(userInfo, new TrainId(trainId));
         logger.debug("comments got");
     }

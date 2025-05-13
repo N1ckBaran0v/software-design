@@ -82,11 +82,9 @@ public final class UserController {
                 throw new ForbiddenException();
             }
             var user = ctx.bodyAsClass(User.class);
-            logger.debug("user: %s", user);
             userService.updateUserByAdmin(user);
         } else {
             var user = ctx.bodyAsClass(TransportUser.class);
-            logger.debug("user: %s", user);
             if (!userId.equals(user.id())) {
                 throw new ForbiddenException();
             }
