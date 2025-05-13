@@ -36,7 +36,7 @@ class FilterView(override val client: Client, val io: IOUtil, val routeView: Rou
             "Изменить количество пересадок",
             "Изменить список пассажиров",
             "Изменить минимальное время отправления",
-            "Изменить максимально время прибытия",
+            "Изменить максимальное время прибытия",
             "Выбрать другой фильтр",
             "Сохранить фильтр",
             "Применить фильтр",
@@ -133,6 +133,9 @@ class FilterView(override val client: Client, val io: IOUtil, val routeView: Rou
         val list = listOf("Добавить пассажира", "Выход")
         val map = mutableMapOf<String, Int>()
         var flag = true
+        val key = io.readNotEmpty("Введите тип пассажира: ")
+        val value = io.readNum("Введите количество: ")
+        map[key] = value
         while (flag) {
             io.printList(list)
             if (io.readNum(2) == 0) {

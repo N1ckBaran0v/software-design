@@ -4,6 +4,7 @@ public final class AppConfig {
     private ServerConfig server;
     private DatabaseConfig database;
     private SecurityConfig security;
+    private LogConfig log;
 
     public ServerConfig getServer() {
         return server;
@@ -27,5 +28,13 @@ public final class AppConfig {
 
     public void setSecurity(SecurityConfig security) {
         this.security = security;
+    }
+
+    public LogConfig getLog() {
+        return log;
+    }
+
+    public void setLog(LogConfig log) {
+        this.log = log;
     }
 }

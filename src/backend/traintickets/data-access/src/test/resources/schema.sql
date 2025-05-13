@@ -64,7 +64,6 @@ CREATE TABLE schedule (
     multiplier   DOUBLE PRECISION
 );
 
-
 CREATE TABLE tickets (
     id          BIGSERIAL,
     user_id     BIGINT,

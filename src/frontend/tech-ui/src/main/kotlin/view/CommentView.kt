@@ -19,7 +19,8 @@ class CommentView(override val client: Client, val io: IOUtil): ExecutableView(c
             val request = build(Request.Builder().url(client.url("trains/${trainId.id}/comments")).get(), userData)
             client.client.newCall(request).execute().use { response ->
                 if (response.code < 300) {
-                    val comments = Json.decodeFromString<List<Comment>>(response.body!!.string())
+                    val body = response.body!!.string()
+                    val comments = Json.decodeFromString<List<Comment>>(body)
                     executeComments(userData, trainId, comments)
                 } else {
                     println("Код возврата ${response.code}. Тело ответа: ${response.body?.string()}")

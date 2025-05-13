@@ -33,7 +33,7 @@ public final class CommentController {
     public void getComments(Context ctx, UserInfo userInfo) {
         var trainId = ctx.pathParam("trainId");
         logger.debug("trainId: %s", trainId);
-        commentService.getComments(userInfo, new TrainId(trainId));
+        ctx.json(commentService.getComments(userInfo, new TrainId(trainId)));
         logger.debug("comments got");
     }
 

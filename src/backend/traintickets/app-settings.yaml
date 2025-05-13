@@ -1,8 +1,9 @@
 server:
     host: localhost
     port: 8080
+    timeout: 30000
 database:
-    url: jdbc:postgresql://localhost:5555/train_tickets_postgres
+    url: jdbc:postgresql://localhost:5432/train_tickets_postgres
     username: train_database_admin
     password: s3cr3tpassw0rd
     poolSize: 20
@@ -21,3 +22,5 @@ security:
     systemRole:
         appName: system_role
         dbName: _system_role
+log:
+    level: DEBUG

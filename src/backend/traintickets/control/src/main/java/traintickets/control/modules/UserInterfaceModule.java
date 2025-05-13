@@ -31,7 +31,11 @@ public final class UserInterfaceModule implements ContextModule {
         builder.
                 addSingleton(Server.class, beanProvider -> {
                     var restServerFactory = beanProvider.getInstance(ServerFactory.class);
-                    var serverParams = new ServerParams(serverConfig.getHost(), serverConfig.getPort());
+                    var serverParams = new ServerParams(
+                            serverConfig.getHost(),
+                            serverConfig.getPort(),
+                            serverConfig.getTimeout()
+                    );
                     return restServerFactory.createRestServer(serverParams);
                 })
                 .addSingleton(ServerFactory.class, beanProvider -> {

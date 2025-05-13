@@ -15,7 +15,7 @@ data class Filter(
     var departure: String? = null,
     var destination: String? = null,
     var transfers: Int = 0,
-    var passengers: MutableMap<String, Int> = mutableMapOf(),
+    var passengers: MutableMap<String, Int> = mutableMapOf("взрослый" to 1),
     var start: String? = null,
     var end: String? = null,
 ) {
