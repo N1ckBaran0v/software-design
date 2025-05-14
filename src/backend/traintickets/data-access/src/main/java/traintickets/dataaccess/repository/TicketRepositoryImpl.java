@@ -9,6 +9,7 @@ import traintickets.businesslogic.repository.TicketRepository;
 import traintickets.jdbc.api.JdbcTemplate;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -98,7 +99,8 @@ public final class TicketRepositoryImpl implements TicketRepository {
                 }
                 multiplier = BigDecimal.valueOf(resultSet.getDouble("multiplier")).subtract(multiplier);
                 placeCost = placeCost.multiply(multiplier);
-                if (placeCost.compareTo(ticket.cost()) != 0) {
+                placeCost = placeCost.setScale(2, RoundingMode.HALF_UP);
+                if (placeCost.compareTo(ticket.cost().setScale(2, RoundingMode.HALF_UP)) != 0) {
                     throw new InvalidEntityException("Invalid cost");
                 }
             }

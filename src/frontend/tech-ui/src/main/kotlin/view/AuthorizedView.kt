@@ -60,22 +60,6 @@ class AuthorizedView(
     }
 
     private fun exit(userData: UserData) {
-        try {
-            val body = "".toRequestBody("application/json".toMediaType())
-            val request = Request.Builder()
-                .url(client.url("auth/logout"))
-                .post(body)
-                .addHeader("Authorization", "Bearer ${userData.token}")
-                .build()
-            client.client.newCall(request).execute().use { response ->
-                if (response.code >= 400) {
-                    println("Ошибка. Код возврата ${response.code}. Сообщение: ${response.body?.string()}")
-                    println("Хотя какая разница, есть ли ошибка:)")
-                }
-            }
-        } catch (_: Exception) {
-            println("Возникла непредвиденная ошибка. Возможно, вырубился сервер.")
-        }
         loop = false
     }
 }
