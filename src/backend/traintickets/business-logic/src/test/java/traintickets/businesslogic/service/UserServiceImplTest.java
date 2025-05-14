@@ -117,6 +117,7 @@ class UserServiceImplTest {
         var userInfo = new UserInfo(new UserId("1"), "user_role", null);
         userService.updateUser(userInfo, user);
         verify(userRepository).updateUserPartially(systemRole, user);
+        verify(jwtManager).updateUser(user.id());
     }
 
     @Test
@@ -125,6 +126,7 @@ class UserServiceImplTest {
         var userInfo = new UserInfo(new UserId("2"), "user_role", null);
         assertThrows(InvalidEntityException.class, () -> userService.updateUser(userInfo ,user));
         verify(userRepository, never()).updateUserPartially(any(), any());
+        verify(jwtManager, never()).updateUser(any());
     }
 
     @Test
@@ -132,7 +134,7 @@ class UserServiceImplTest {
         var user = new User(new UserId("1"), "random_username", "qwerty123", "Zubenko Mikhail", "admin", true);
         userService.updateUserByAdmin(user);
         verify(userRepository).updateUserCompletely(systemRole, user);
-        verify(jwtManager).updateUser(any());
+        verify(jwtManager).updateUser(user.id());
     }
 
     @Test
@@ -148,6 +150,6 @@ class UserServiceImplTest {
         var user = new User(new UserId("1"), "random_username", "qwerty123", "Zubenko Mikhail", "client", false);
         userService.updateUserByAdmin(user);
         verify(userRepository).updateUserCompletely(systemRole, user);
-        verify(jwtManager).updateUser(any());
+        verify(jwtManager).updateUser(user.id());
     }
 }
