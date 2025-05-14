@@ -15,3 +15,5 @@ out/
 
 ### Custom ###
 *.jar
+bin/
+.kotlin/
