@@ -64,6 +64,7 @@ public final class UserServiceImpl implements UserService {
                     String.format("Invalid userId: expected '%s', but got '%s'", userId.id(), user.id().id()));
         }
         userRepository.updateUserPartially(systemRole, user);
+        jwtManager.updateUser(user.id());
     }
 
     @Override
