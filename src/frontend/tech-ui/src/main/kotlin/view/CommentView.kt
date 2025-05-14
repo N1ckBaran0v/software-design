@@ -14,16 +14,20 @@ import traintickets.console.utils.IOUtil
 
 @Component
 class CommentView(override val client: Client, val io: IOUtil): ExecutableView(client) {
+    private var flag = false
     fun readComments(userData: UserData?, trainId: TrainId) {
         try {
-            val request = build(Request.Builder().url(client.url("trains/${trainId.id}/comments")).get(), userData)
-            client.client.newCall(request).execute().use { response ->
-                if (response.code < 300) {
-                    val body = response.body!!.string()
-                    val comments = Json.decodeFromString<List<Comment>>(body)
-                    executeComments(userData, trainId, comments)
-                } else {
-                    println("Код возврата ${response.code}. Тело ответа: ${response.body?.string()}")
+            flag = true
+            while (flag) {
+                val request = build(Request.Builder().url(client.url("trains/${trainId.id}/comments")).get(), userData)
+                client.client.newCall(request).execute().use { response ->
+                    if (response.code < 300) {
+                        val body = response.body!!.string()
+                        val comments = Json.decodeFromString<List<Comment>>(body)
+                        executeComments(userData, trainId, comments)
+                    } else {
+                        println("Код возврата ${response.code}. Тело ответа: ${response.body?.string()}")
+                    }
                 }
             }
         } catch (_: Exception) {
@@ -33,15 +37,12 @@ class CommentView(override val client: Client, val io: IOUtil): ExecutableView(c
 
     fun executeComments(userData: UserData?, trainId: TrainId, comments: List<Comment>) {
         val list = listOf("Добавить комментарий", "Удалить комментарий", "Выход")
-        var flag = true
-        while (flag) {
-            printComments(comments)
-            io.printList(list)
-            when (io.readNum(list.size)) {
-                0 -> createComment(userData, trainId)
-                1 -> deleteComment(userData, trainId)
-                else -> flag = false
-            }
+        printComments(comments)
+        io.printList(list)
+        when (io.readNum(list.size)) {
+            0 -> createComment(userData, trainId)
+            1 -> deleteComment(userData, trainId)
+            else -> flag = false
         }
     }
 

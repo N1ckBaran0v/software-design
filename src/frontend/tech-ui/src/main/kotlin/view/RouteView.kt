@@ -31,7 +31,7 @@ class RouteView(override val client: Client, val io: IOUtil, val raceView: RaceV
                     }
                 }
             }
-        } catch (ex: Exception) {
+        } catch (_: Exception) {
             println("Возникла непредвиденная ошибка. Возможно, вырубился сервер.")
         }
     }

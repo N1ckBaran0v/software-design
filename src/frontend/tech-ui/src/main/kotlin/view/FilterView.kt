@@ -90,7 +90,7 @@ class FilterView(override val client: Client, val io: IOUtil, val routeView: Rou
                     getFilter(userData, init)
                 }
             }
-        } catch (ex: Exception) {
+        } catch (_: Exception) {
             println("Возникла непредвиденная ошибка. Возможно, вырубился сервер.")
             if (init) {
                 println("Переход к ручному вводу параметров")
