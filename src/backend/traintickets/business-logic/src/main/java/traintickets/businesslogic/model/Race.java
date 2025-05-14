@@ -2,9 +2,10 @@ package traintickets.businesslogic.model;
 
 import traintickets.businesslogic.exception.InvalidEntityException;
 
+import java.io.Serializable;
 import java.util.List;
 
-public record Race(RaceId id, TrainId trainId, List<Schedule> schedule, boolean finished) {
+public record Race(RaceId id, TrainId trainId, List<Schedule> schedule, boolean finished) implements Serializable {
     public void validate() {
         if (trainId == null || schedule == null || finished) {
             throw new InvalidEntityException("All data required");

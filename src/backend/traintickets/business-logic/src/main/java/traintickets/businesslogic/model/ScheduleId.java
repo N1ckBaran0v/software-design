@@ -1,7 +1,10 @@
 package traintickets.businesslogic.model;
 
-public final class ScheduleId extends AbstractId {
-    public ScheduleId(Object id) {
-        super(id);
+import java.io.Serializable;
+import java.util.Objects;
+
+public record ScheduleId(String id) implements Serializable {
+    public ScheduleId(String id) {
+        this.id = Objects.requireNonNull(id);
     }
 }

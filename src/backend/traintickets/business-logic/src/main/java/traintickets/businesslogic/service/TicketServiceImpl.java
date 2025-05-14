@@ -6,6 +6,7 @@ import traintickets.businesslogic.model.Ticket;
 import traintickets.businesslogic.model.UserId;
 import traintickets.businesslogic.payment.PaymentData;
 import traintickets.businesslogic.repository.TicketRepository;
+import traintickets.businesslogic.transport.UserInfo;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -20,7 +21,7 @@ public final class TicketServiceImpl implements TicketService {
     }
 
     @Override
-    public void buyTickets(List<Ticket> tickets, PaymentData paymentData) {
+    public void buyTickets(UserInfo userInfo, List<Ticket> tickets, PaymentData paymentData) {
         if (tickets.isEmpty()) {
             throw new InvalidEntityException("Tickets cannot be empty");
         }
@@ -30,11 +31,12 @@ public final class TicketServiceImpl implements TicketService {
             sum = sum.add(ticket.cost());
         }
         paymentData.setSum(sum);
-        ticketRepository.addTickets(tickets, paymentData);
+        ticketRepository.addTickets(userInfo.role(), tickets, paymentData);
     }
 
     @Override
-    public List<Ticket> getTickets(UserId userId) {
-        return StreamSupport.stream(ticketRepository.getTicketsByUser(userId).spliterator(), false).toList();
+    public List<Ticket> getTickets(UserInfo userInfo, UserId userId) {
+        return StreamSupport.stream(ticketRepository
+                .getTicketsByUser(userInfo.role(), userId).spliterator(), false).toList();
     }
 }

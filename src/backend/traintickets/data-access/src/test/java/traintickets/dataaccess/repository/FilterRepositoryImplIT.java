@@ -7,9 +7,9 @@ import traintickets.businesslogic.model.Filter;
 import traintickets.businesslogic.model.UserId;
 import traintickets.businesslogic.repository.FilterRepository;
 
-import java.math.BigDecimal;
+
 import java.sql.Connection;
-import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -20,19 +20,19 @@ class FilterRepositoryImplIT extends PostgresIT {
     @Override
     public void setUp() {
         super.setUp();
-        filterRepository = new FilterRepositoryImpl(jdbcTemplate, roleName);
+        filterRepository = new FilterRepositoryImpl(jdbcTemplate);
     }
 
     @Override
     protected void insertData() {
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+        jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "insert into users_view (user_name, pass_word, real_name, user_role, is_active) values " +
                             "('first', 'qwerty123', 'Иванов Иван Иванович', 'userRole', TRUE), " +
                             "('second', 'qwerty123', 'Петров Пётр Петрович', 'userRole', TRUE); " +
-                            "insert into filters (user_id, filter_name, departure, destination, train_class, transfers, min_cost, max_cost) values " +
-                            "(1, 'first', 'first', 'second', 'Экспресс', 0, 100, 10000), " +
-                            "(1, 'second', 'first', 'second', 'Скорый', 1, 100, 10000); " +
+                            "insert into filters (user_id, filter_name, departure, destination, transfers) values " +
+                            "(1, 'first', 'first', 'second', 0), " +
+                            "(1, 'second', 'first', 'second', 1); " +
                             "insert into passengers (filter_id, passengers_type, passengers_count) values " +
                             "(1, 'adult', 2), (1, 'child', 1), (2, 'adult', 1); "
             )) {
@@ -43,23 +43,19 @@ class FilterRepositoryImplIT extends PostgresIT {
 
     @Test
     void addFilter_positive_added() {
-        var filter = new Filter(new UserId(2L), "first", "first", "second", "Экспресс", 0,
-                List.of("adult"), null, null, BigDecimal.TEN, BigDecimal.valueOf(10000));
-        filterRepository.addFilter(filter);
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+        var filter = new Filter(new UserId("2"), "first", "first", "second", 0, Map.of("adult", 1), null, null);
+        filterRepository.addFilter(userRole, filter);
+        jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM filters WHERE id = 3;"
             )) {
                 try (var resultSet = statement.executeQuery()) {
                     assertTrue(resultSet.next());
-                    assertEquals(filter.user().id(), resultSet.getLong("user_id"));
+                    assertEquals(filter.user().id(), String.valueOf(resultSet.getLong("user_id")));
                     assertEquals("first", resultSet.getString("filter_name"));
                     assertEquals("first", resultSet.getString("departure"));
                     assertEquals("second", resultSet.getString("destination"));
-                    assertEquals("Экспресс", resultSet.getString("train_class"));
                     assertEquals(0, resultSet.getInt("transfers"));
-                    assertEquals(BigDecimal.TEN, resultSet.getBigDecimal("min_cost"));
-                    assertEquals(BigDecimal.valueOf(10000), resultSet.getBigDecimal("max_cost"));
                     assertFalse(resultSet.next());
                 }
             }
@@ -78,10 +74,9 @@ class FilterRepositoryImplIT extends PostgresIT {
 
     @Test
     void addFilter_negative_exists() {
-        var filter = new Filter(new UserId(1L), "first", "first", "second", "Экспресс", 0,
-                List.of("adult"), null, null, BigDecimal.TEN, BigDecimal.valueOf(10000));
-        assertThrows(EntityAlreadyExistsException.class, () -> filterRepository.addFilter(filter));
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+        var filter = new Filter(new UserId("1"), "first", "first", "second", 0, Map.of("adult", 1), null, null);
+        assertThrows(EntityAlreadyExistsException.class, () -> filterRepository.addFilter(adminRole, filter));
+        jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM filters WHERE id = 3;"
             )) {
@@ -101,24 +96,21 @@ class FilterRepositoryImplIT extends PostgresIT {
 
     @Test
     void getFilter_positive_found() {
-        var filter = new Filter(new UserId(1L), "first", "first", "second", "Экспресс", 0,
-                List.of("adult", "adult", "child"), null, null, BigDecimal.valueOf(100), BigDecimal.valueOf(10000));
-        var result = filterRepository.getFilter(new UserId(1), "first");
+        var filter = new Filter(new UserId("1"), "first", "first", "second", 0, Map.of("adult", 2, "child", 1), null, null);
+        var result = filterRepository.getFilter(userRole, new UserId("1"), "first");
         assertEquals(filter, result.orElse(null));
     }
 
     @Test
     void getFilter_positive_notFound() {
-        assertNull(filterRepository.getFilter(new UserId(1L), "third").orElse(null));
+        assertNull(filterRepository.getFilter(adminRole, new UserId("1"), "third").orElse(null));
     }
 
     @Test
     void getFilters_positive_got() {
-        var filter1 = new Filter(new UserId(1L), "first", "first", "second", "Экспресс", 0,
-                List.of("adult", "adult", "child"), null, null, BigDecimal.valueOf(100), BigDecimal.valueOf(10000));
-        var filter2 = new Filter(new UserId(1L), "second", "first", "second", "Скорый", 1,
-                List.of("adult"), null, null, BigDecimal.valueOf(100), BigDecimal.valueOf(10000));
-        var result = filterRepository.getFilters(new UserId(1L));
+        var filter1 = new Filter(new UserId("1"), "first", "first", "second", 0, Map.of("adult", 2, "child", 1), null, null);
+        var filter2 = new Filter(new UserId("1"), "second", "first", "second", 1, Map.of("adult", 1), null, null);
+        var result = filterRepository.getFilters(userRole, new UserId("1"));
         assertNotNull(result);
         var iterator = result.iterator();
         assertTrue(iterator.hasNext());
@@ -130,15 +122,15 @@ class FilterRepositoryImplIT extends PostgresIT {
 
     @Test
     void getFilters_positive_empty() {
-        var result = filterRepository.getFilters(new UserId(2L));
+        var result = filterRepository.getFilters(adminRole, new UserId("2"));
         assertNotNull(result);
         assertFalse(result.iterator().hasNext());
     }
 
     @Test
     void deleteFilter_positive_deleted() {
-        filterRepository.deleteFilter(new UserId(1L), "first");
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+        filterRepository.deleteFilter(userRole, new UserId("1"), "first");
+        jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM filters WHERE id = 1;"
             )) {

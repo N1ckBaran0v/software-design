@@ -1,10 +1,12 @@
 package traintickets.businesslogic.service;
 
 import traintickets.businesslogic.api.CommentService;
+import traintickets.businesslogic.exception.InvalidEntityException;
 import traintickets.businesslogic.model.CommentId;
 import traintickets.businesslogic.model.Comment;
 import traintickets.businesslogic.model.TrainId;
 import traintickets.businesslogic.repository.CommentRepository;
+import traintickets.businesslogic.transport.UserInfo;
 
 import java.util.List;
 import java.util.Objects;
@@ -18,18 +20,22 @@ public final class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public void addComment(Comment comment) {
+    public void addComment(UserInfo userInfo, Comment comment) {
         comment.validate();
-        commentRepository.addComment(comment);
+        if (!userInfo.userId().equals(comment.author())) {
+            throw new InvalidEntityException("Invalid userId");
+        }
+        commentRepository.addComment(userInfo.role(), comment);
     }
 
     @Override
-    public List<Comment> getComments(TrainId trainId) {
-        return StreamSupport.stream(commentRepository.getComments(trainId).spliterator(), false).toList();
+    public List<Comment> getComments(UserInfo userInfo, TrainId trainId) {
+        var role = userInfo.role();
+        return StreamSupport.stream(commentRepository.getComments(role, trainId).spliterator(), false).toList();
     }
 
     @Override
-    public void deleteComment(CommentId commentId) {
-        commentRepository.deleteComment(commentId);
+    public void deleteComment(UserInfo userInfo, CommentId commentId) {
+        commentRepository.deleteComment(userInfo.role(), commentId);
     }
 }

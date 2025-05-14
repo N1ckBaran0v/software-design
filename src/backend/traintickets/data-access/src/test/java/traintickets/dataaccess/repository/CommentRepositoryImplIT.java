@@ -19,18 +19,18 @@ class CommentRepositoryImplIT extends PostgresIT {
     @Override
     void setUp() {
         super.setUp();
-        commentRepository = new CommentRepositoryImpl(jdbcTemplate, roleName);
+        commentRepository = new CommentRepositoryImpl(jdbcTemplate);
     }
 
     @Override
     protected void insertData() {
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+        jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "insert into users_view (user_name, pass_word, real_name, user_role, is_active) values " +
                             "('first', 'qwerty123', 'Иванов Иван Иванович', 'userRole', TRUE), " +
                             "('second', 'qwerty123', 'Петров Пётр Петрович', 'userRole', TRUE); " +
                             "insert into trains (train_class) values ('Скорый'); " +
-                            "insert into comments (user_id, train_id, score, comment_text) values " +
+                            "insert into train_comments (user_id, train_id, score, comment_text) values " +
                             "(1, 1, 5, 'Лучший поезд'), " +
                             "(2, 1, 1, 'Грубые проводники'); "
             )) {
@@ -41,14 +41,14 @@ class CommentRepositoryImplIT extends PostgresIT {
 
     @Test
     void addComment_positive_added() {
-        var comment = new Comment(null, new UserId(1L), new TrainId(1L), 4, "Упс, не туда нажал");
-        commentRepository.addComment(comment);
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
-            try (var statement = connection.prepareStatement("select * from comments where id = 3;")) {
+        var comment = new Comment(null, new UserId("1"), new TrainId("1"), 4, "Упс, не туда нажал");
+        commentRepository.addComment(userRole, comment);
+        jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+            try (var statement = connection.prepareStatement("select * from train_comments where id = 3;")) {
                 try (var resultSet = statement.executeQuery()) {
                     assertTrue(resultSet.next());
-                    assertEquals(comment.author().id(), resultSet.getLong("user_id"));
-                    assertEquals(comment.train().id(), resultSet.getLong("train_id"));
+                    assertEquals(comment.author().id(), String.valueOf(resultSet.getLong("user_id")));
+                    assertEquals(comment.train().id(), String.valueOf(resultSet.getLong("train_id")));
                     assertEquals(comment.score(), resultSet.getInt("score"));
                     assertEquals(comment.text(), resultSet.getString("comment_text"));
                     assertFalse(resultSet.next());
@@ -59,10 +59,10 @@ class CommentRepositoryImplIT extends PostgresIT {
 
     @Test
     void getComments_positive_got() {
-        var trainId = new TrainId(1L);
-        var comment1 = new Comment(new CommentId(1L), new UserId(1L), trainId, 5, "Лучший поезд");
-        var comment2 = new Comment(new CommentId(2L), new UserId(2L), trainId, 1, "Грубые проводники");
-        var result = commentRepository.getComments(trainId);
+        var trainId = new TrainId("1");
+        var comment1 = new Comment(new CommentId("1"), new UserId("1"), trainId, 5, "Лучший поезд");
+        var comment2 = new Comment(new CommentId("2"), new UserId("2"), trainId, 1, "Грубые проводники");
+        var result = commentRepository.getComments(adminRole, trainId);
         assertNotNull(result);
         var iterator = result.iterator();
         assertTrue(iterator.hasNext());
@@ -74,19 +74,32 @@ class CommentRepositoryImplIT extends PostgresIT {
 
     @Test
     void getComments_positive_empty() {
-        var result = commentRepository.getComments(new TrainId(3L));
+        var result = commentRepository.getComments(userRole, new TrainId("3"));
         assertNotNull(result);
         assertFalse(result.iterator().hasNext());
     }
 
     @Test
     void deleteComment_positive_deleted() {
-        var commentId = new CommentId(1L);
-        commentRepository.deleteComment(commentId);
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
-            try (var statement = connection.prepareStatement("select * from comments where id = 1;")) {
+        var commentId = new CommentId("1");
+        commentRepository.deleteComment(adminRole, commentId);
+        jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+            try (var statement = connection.prepareStatement("select * from train_comments where id = 1;")) {
                 try (var resultSet = statement.executeQuery()) {
                     assertFalse(resultSet.next());
+                }
+            }
+        });
+    }
+
+    @Test
+    void deleteComment_negative_denied() {
+        var commentId = new CommentId("1");
+        assertThrows(RuntimeException.class, () -> commentRepository.deleteComment(carrierRole, commentId));
+        jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+            try (var statement = connection.prepareStatement("select * from train_comments where id = 1;")) {
+                try (var resultSet = statement.executeQuery()) {
+                    assertTrue(resultSet.next());
                 }
             }
         });

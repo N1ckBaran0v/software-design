@@ -2,6 +2,7 @@ package traintickets.businesslogic.model;
 
 import traintickets.businesslogic.exception.InvalidEntityException;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 public record Ticket(TicketId ticketId,
@@ -12,7 +13,7 @@ public record Ticket(TicketId ticketId,
                      Place place,
                      Schedule start,
                      Schedule end,
-                     BigDecimal cost) {
+                     BigDecimal cost) implements Serializable {
     public void validate() {
         if (owner == null || passenger == null || race == null || railcar < 1 ||
                 place == null || start == null || end == null || cost == null) {

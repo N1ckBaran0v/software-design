@@ -2,26 +2,37 @@ package traintickets.businesslogic.model;
 
 import traintickets.businesslogic.exception.InvalidEntityException;
 
-import java.math.BigDecimal;
+import java.io.Serializable;
 import java.util.Date;
-import java.util.List;
+import java.util.Map;
 
 public record Filter(UserId user,
                      String name,
                      String departure,
                      String destination,
-                     String trainClass,
                      int transfers,
-                     List<String> passengers,
+                     Map<String, Integer> passengers,
                      Date start,
-                     Date end,
-                     BigDecimal minCost,
-                     BigDecimal maxCost) {
+                     Date end) implements Serializable {
+    public void saveValidate() {
+        if (user == null || name == null) {
+            throw new InvalidEntityException("User and name are required");
+        }
+        validate();
+    }
 
-    public void validate() {
-        if (user == null || name == null || departure == null || destination == null || trainClass == null ||
-                transfers < 0 || passengers == null || start== null || end == null ||
-                minCost == null || maxCost == null) {
+    public void searchValidate() {
+        if (start == null || end == null) {
+            throw new InvalidEntityException("Start and end are required");
+        }
+        if (end.before(start)) {
+            throw new InvalidEntityException("Start date cannot be after end date");
+        }
+        validate();
+    }
+
+    private void validate() {
+        if (departure == null || destination == null || transfers < 0 || transfers > 1 || passengers == null) {
             throw new InvalidEntityException("Invalid parameters");
         }
         if (departure.equals(destination)) {
@@ -30,11 +41,10 @@ public record Filter(UserId user,
         if (passengers.isEmpty()) {
             throw new InvalidEntityException("Passengers cannot be empty");
         }
-        if (end.before(start)) {
-            throw new InvalidEntityException("Start date cannot be after end date");
-        }
-        if (minCost.compareTo(maxCost) > 0) {
-            throw new InvalidEntityException("Min cost cannot be greater than max cost");
+        for (var entry : passengers.entrySet()) {
+            if (entry.getKey() == null || entry.getValue() == null || entry.getValue() < 1) {
+                throw new InvalidEntityException("Invalid passengers data");
+            }
         }
     }
 }

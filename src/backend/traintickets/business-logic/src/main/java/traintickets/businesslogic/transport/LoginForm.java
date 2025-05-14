@@ -1,4 +1,6 @@
 package traintickets.businesslogic.transport;
 
-public record LoginForm(String username, String password) {
+import java.io.Serializable;
+
+public record LoginForm(String username, String password) implements Serializable {
 }

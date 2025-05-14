@@ -19,12 +19,12 @@ class RaceRepositoryImplIT extends PostgresIT {
     @Override
     void setUp() {
         super.setUp();
-        raceRepository = new RaceRepositoryImpl(jdbcTemplate, roleName);
+        raceRepository = new RaceRepositoryImpl(jdbcTemplate);
     }
 
     @Override
     protected void insertData() {
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+        jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "insert into trains (train_class) values ('фирменный'), ('Скорый'); " +
                             "insert into races (train_id, finished) values " +
@@ -35,7 +35,7 @@ class RaceRepositoryImplIT extends PostgresIT {
                             "(2, 'first', null, '2025-04-01 11:00:00+03', 0), " +
                             "(2, 'second', '2025-04-01 12:00:00+03', null, 5); " +
                             "insert into railcars (railcar_model, railcar_type) values (1, 'сидячий'); " +
-                            "insert into railcarsintrains (train_id, railcar_id) values (1, 1); "
+                            "insert into railcars_in_trains (train_id, railcar_id) values (1, 1); "
             )) {
                 statement.execute();
             }
@@ -46,15 +46,15 @@ class RaceRepositoryImplIT extends PostgresIT {
     void addRace_positive_added() {
         var sched1 = new Schedule(null, "first", null, Timestamp.valueOf("2025-04-01 11:50:00"), 0);
         var sched2 = new Schedule(null, "second", Timestamp.valueOf("2025-04-01 13:20:00"), null, 5);
-        var race = new Race(null, new TrainId(1L), List.of(sched1, sched2), false);
-        raceRepository.addRace(race);
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+        var race = new Race(null, new TrainId("1"), List.of(sched1, sched2), false);
+        raceRepository.addRace(carrierRole, race);
+        jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM races WHERE id = 3;"
             )) {
                 try (var resultSet = statement.executeQuery()) {
                     assertTrue(resultSet.next());
-                    assertEquals(race.trainId().id(), resultSet.getLong("train_id"));
+                    assertEquals(race.trainId().id(), String.valueOf(resultSet.getLong("train_id")));
                     assertFalse(resultSet.getBoolean("finished"));
                     assertFalse(resultSet.next());
                 }
@@ -81,11 +81,11 @@ class RaceRepositoryImplIT extends PostgresIT {
 
     @Test
     void addRace_negative_reserved() {
-        var sched1 = new Schedule(new ScheduleId(1L), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0);
-        var sched2 = new Schedule(new ScheduleId(2L), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5);
-        var race = new Race(null, new TrainId(1L), List.of(sched1, sched2), false);
-        assertThrows(TrainAlreadyReservedException.class, () -> raceRepository.addRace(race));
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+        var sched1 = new Schedule(new ScheduleId("1"), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0);
+        var sched2 = new Schedule(new ScheduleId("2"), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5);
+        var race = new Race(null, new TrainId("1"), List.of(sched1, sched2), false);
+        assertThrows(TrainAlreadyReservedException.class, () -> raceRepository.addRace(adminRole, race));
+        jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM races WHERE id = 3;"
             )) {
@@ -105,27 +105,57 @@ class RaceRepositoryImplIT extends PostgresIT {
 
     @Test
     void getRace_positive_found() {
-        var id = new RaceId(1L);
-        var sched1 = new Schedule(new ScheduleId(1L), "first", null, Timestamp.valueOf("2025-04-01 10:10:00"), 0);
-        var sched2 = new Schedule(new ScheduleId(2L), "second", Timestamp.valueOf("2025-04-01 11:40:00"), null, 5);
-        var race = new Race(id, new TrainId(1L), List.of(sched1, sched2), true);
-        var result = raceRepository.getRace(id).orElse(null);
+        var id = new RaceId("1");
+        var sched1 = new Schedule(new ScheduleId("1"), "first", null, Timestamp.valueOf("2025-04-01 10:10:00"), 0);
+        var sched2 = new Schedule(new ScheduleId("2"), "second", Timestamp.valueOf("2025-04-01 11:40:00"), null, 5);
+        var race = new Race(id, new TrainId("1"), List.of(sched1, sched2), true);
+        var result = raceRepository.getRace(systemRole, id).orElse(null);
         assertEquals(race, result);
     }
 
     @Test
     void getRace_positive_notFound() {
-        assertNull(raceRepository.getRace(new RaceId(3)).orElse(null));
+        assertNull(raceRepository.getRace(carrierRole, new RaceId("3")).orElse(null));
     }
 
     @Test
-    void getRaces_positive_got() {
-        var filter = new Filter(null, null, null, null, null, 1, null, Timestamp.valueOf("2025-04-01 10:00:00"),
-                Timestamp.valueOf("2025-04-01 11:59:59"), null, null);
-        var sched1 = new Schedule(new ScheduleId(1L), "first", null, Timestamp.valueOf("2025-04-01 10:10:00"), 0);
-        var sched2 = new Schedule(new ScheduleId(2L), "second", Timestamp.valueOf("2025-04-01 11:40:00"), null, 5);
-        var race = new Race(new RaceId(1L), new TrainId(1L), List.of(sched1, sched2), true);
-        var result = raceRepository.getRaces(filter);
+    void getRaces_positive_got0() {
+        var filter = new Filter(null, null, "first", "second", 0, null, Timestamp.valueOf("2025-04-01 10:00:00"),
+                Timestamp.valueOf("2025-04-01 12:00:00"));
+        var sched1 = new Schedule(new ScheduleId("3"), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0);
+        var sched2 = new Schedule(new ScheduleId("4"), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5);
+        var race = new Race(new RaceId("2"), new TrainId("2"), List.of(sched1, sched2), false);
+        var result = raceRepository.getRaces(adminRole, filter);
+        assertNotNull(result);
+        var iterator = result.iterator();
+        assertTrue(iterator.hasNext());
+        assertEquals(race, iterator.next());
+        assertFalse(iterator.hasNext());
+    }
+
+    @Test
+    void getRaces_positive_got1() {
+        var filter = new Filter(null, null, "first", "second", 1, null, Timestamp.valueOf("2025-04-01 10:00:00"),
+                Timestamp.valueOf("2025-04-01 12:00:00"));
+        var sched1 = new Schedule(new ScheduleId("3"), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0);
+        var sched2 = new Schedule(new ScheduleId("4"), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5);
+        var race = new Race(new RaceId("2"), new TrainId("2"), List.of(sched1, sched2), false);
+        var result = raceRepository.getRaces(adminRole, filter);
+        assertNotNull(result);
+        var iterator = result.iterator();
+        assertTrue(iterator.hasNext());
+        assertEquals(race, iterator.next());
+        assertFalse(iterator.hasNext());
+    }
+
+    @Test
+    void getRaces_positive_got2() {
+        var filter = new Filter(null, null, "first", "second", 2, null, Timestamp.valueOf("2025-04-01 10:00:00"),
+                Timestamp.valueOf("2025-04-01 12:00:00"));
+        var sched1 = new Schedule(new ScheduleId("3"), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0);
+        var sched2 = new Schedule(new ScheduleId("4"), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5);
+        var race = new Race(new RaceId("2"), new TrainId("2"), List.of(sched1, sched2), false);
+        var result = raceRepository.getRaces(adminRole, filter);
         assertNotNull(result);
         var iterator = result.iterator();
         assertTrue(iterator.hasNext());
@@ -135,26 +165,26 @@ class RaceRepositoryImplIT extends PostgresIT {
 
     @Test
     void getRaces_positive_empty() {
-        var filter = new Filter(null, null, null, null, null, 1, null, Timestamp.valueOf("2025-04-01 00:00:00"),
-                Timestamp.valueOf("2025-04-01 11:11:11"), null, null);
-        var result = raceRepository.getRaces(filter);
+        var filter = new Filter(null, null, "first", "second", 1, null, Timestamp.valueOf("2025-04-01 00:00:00"),
+                Timestamp.valueOf("2025-04-01 11:11:11"));
+        var result = raceRepository.getRaces(systemRole, filter);
         assertNotNull(result);
         assertFalse(result.iterator().hasNext());
     }
 
     @Test
     void updateRace_positive_updates() {
-        var sched1 = new Schedule(new ScheduleId(1L), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0);
-        var sched2 = new Schedule(new ScheduleId(2L), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5);
-        var race = new Race(new RaceId(2L), new TrainId(2L), List.of(sched1, sched2), true);
-        raceRepository.updateRace(race);
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+        var sched1 = new Schedule(new ScheduleId("3"), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0);
+        var sched2 = new Schedule(new ScheduleId("4"), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5);
+        var race = new Race(new RaceId("2"), new TrainId("2"), List.of(sched1, sched2), true);
+        raceRepository.updateRace(carrierRole, race.id(), race.finished());
+        jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM races WHERE id = 2;"
             )) {
                 try (var resultSet = statement.executeQuery()) {
                     assertTrue(resultSet.next());
-                    assertEquals(race.trainId().id(), resultSet.getLong("train_id"));
+                    assertEquals(race.trainId().id(), String.valueOf(resultSet.getLong("train_id")));
                     assertTrue(resultSet.getBoolean("finished"));
                     assertFalse(resultSet.next());
                 }

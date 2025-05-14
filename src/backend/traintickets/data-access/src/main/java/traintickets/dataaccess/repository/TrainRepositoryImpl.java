@@ -10,16 +10,14 @@ import java.util.Date;
 
 public final class TrainRepositoryImpl implements TrainRepository {
     private final JdbcTemplate jdbcTemplate;
-    private final String carrierRoleName;
 
-    public TrainRepositoryImpl(JdbcTemplate jdbcTemplate, String carrierRoleName) {
+    public TrainRepositoryImpl(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = Objects.requireNonNull(jdbcTemplate);
-        this.carrierRoleName = Objects.requireNonNull(carrierRoleName);
     }
 
     @Override
-    public void addTrain(Train train) {
-        jdbcTemplate.executeCons(carrierRoleName, Connection.TRANSACTION_SERIALIZABLE, connection -> {
+    public void addTrain(String role, Train train) {
+        jdbcTemplate.executeCons(role, Connection.TRANSACTION_SERIALIZABLE, connection -> {
             var trainId = saveTrain(train, connection);
             saveRailcars(train, connection, trainId);
         });
@@ -40,11 +38,11 @@ public final class TrainRepositoryImpl implements TrainRepository {
 
     private void saveRailcars(Train train, Connection connection, long trainId) throws SQLException {
         try (var statement = connection.prepareStatement(
-                "INSERT INTO railcarsintrains (train_id, railcar_id) VALUES (?, ?);"
+                "INSERT INTO railcars_in_trains (train_id, railcar_id) VALUES (?, ?);"
         )) {
             for (var railcar : train.railcars()) {
                 statement.setLong(1, trainId);
-                statement.setLong(2, ((Number) railcar.id()).longValue());
+                statement.setLong(2, Long.parseLong(railcar.id()));
                 statement.addBatch();
             }
             statement.executeBatch();
@@ -52,12 +50,12 @@ public final class TrainRepositoryImpl implements TrainRepository {
     }
 
     @Override
-    public Optional<Train> getTrain(TrainId trainId) {
-        return jdbcTemplate.executeFunc(carrierRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+    public Optional<Train> getTrain(String role, TrainId trainId) {
+        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM trains WHERE id = (?);"
             )) {
-                statement.setLong(1, ((Number) trainId.id()).longValue());
+                statement.setLong(1, Long.parseLong(trainId.id()));
                 try (var resultSet = statement.executeQuery()) {
                     return Optional.ofNullable(getTrain(connection, resultSet));
                 }
@@ -66,8 +64,8 @@ public final class TrainRepositoryImpl implements TrainRepository {
     }
 
     @Override
-    public Iterable<Train> getTrains(Date start, Date end) {
-        return jdbcTemplate.executeFunc(carrierRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+    public Iterable<Train> getTrains(String role, Date start, Date end) {
+        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
                     "WITH bad_races AS (SELECT DISTINCT race_id FROM schedule " +
                             "WHERE departure > (?) AND departure < (?) " +
@@ -97,7 +95,7 @@ public final class TrainRepositoryImpl implements TrainRepository {
     private Train getTrain(Connection connection, ResultSet resultSet) throws SQLException {
         var answer = (Train) null;
         if (resultSet.next()) {
-            var trainId = new TrainId(resultSet.getLong("id"));
+            var trainId = new TrainId(String.valueOf(resultSet.getLong("id")));
             var trainClass = resultSet.getString("train_class");
             var railcarIds = getRailcarIds(connection, trainId);
             answer = new Train(trainId, trainClass, railcarIds);
@@ -108,12 +106,12 @@ public final class TrainRepositoryImpl implements TrainRepository {
     private List<RailcarId> getRailcarIds(Connection connection, TrainId trainId) throws SQLException {
         var railcarIds = new ArrayList<RailcarId>();
         try (var statement = connection.prepareStatement(
-                "SELECT * FROM railcarsintrains WHERE train_id = (?);"
+                "SELECT * FROM railcars_in_trains WHERE train_id = (?);"
         )) {
-            statement.setLong(1, ((Number) trainId.id()).longValue());
+            statement.setLong(1, Long.parseLong(trainId.id()));
             try (var resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
-                    railcarIds.add(new RailcarId(resultSet.getLong("railcar_id")));
+                    railcarIds.add(new RailcarId(String.valueOf(resultSet.getLong("railcar_id"))));
                 }
             }
         }
@@ -123,7 +121,7 @@ public final class TrainRepositoryImpl implements TrainRepository {
     private Train getTrain(ResultSet resultSet) throws SQLException {
         var answer = (Train) null;
         if (resultSet.next()) {
-            var trainId = new TrainId(resultSet.getLong("id"));
+            var trainId = new TrainId(String.valueOf(resultSet.getLong("id")));
             var trainClass = resultSet.getString("train_class");
             answer = new Train(trainId, trainClass, List.of());
         }

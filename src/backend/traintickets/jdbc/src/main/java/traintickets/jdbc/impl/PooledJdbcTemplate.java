@@ -1,40 +1,34 @@
 package traintickets.jdbc.impl;
 
-import traintickets.jdbc.exception.UserNotFoundException;
+import traintickets.jdbc.model.DatabaseParams;
 
 import java.sql.Connection;
 import java.sql.Driver;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.Callable;
 
 public final class PooledJdbcTemplate extends AbstractJdbcTemplate {
-    private final Map<String, ConnectionPool> pools;
+    private final ConnectionPool connectionPool;
 
-    public PooledJdbcTemplate(Driver driver, String url, Map<String, String> users, int poolSize) {
-        this.pools = new HashMap<>();
-        users.forEach((user, password) -> {
-            var props = new Properties();
-            props.setProperty("user", user);
-            props.setProperty("password", password);
-            var provider = (Callable<Connection>) () -> driver.connect(url, props);
-            var pool = new ConnectionPool(provider, poolSize);
-            pools.put(user, pool);
-        });
+    public PooledJdbcTemplate(Driver driver, DatabaseParams params) {
+        super(params.roles());
+        var properties = new Properties();
+        properties.setProperty("user", params.username());
+        properties.setProperty("password", params.password());
+        this.connectionPool = new ConnectionPool(() -> driver.connect(params.url(), properties), params.poolSize());
     }
 
     @Override
     protected Connection getConnection(String user) {
-        var pool = pools.get(user);
-        if (pool == null) {
-            throw new UserNotFoundException(user);
-        }
-        return pool.getConnection();
+        return connectionPool.getConnection();
     }
 
     @Override
     protected void releaseConnection(String user, Connection connection) {
-        pools.get(user).releaseConnection(connection);
+        connectionPool.releaseConnection(connection);
+    }
+
+    @Override
+    public void close() {
+        connectionPool.close();
     }
 }

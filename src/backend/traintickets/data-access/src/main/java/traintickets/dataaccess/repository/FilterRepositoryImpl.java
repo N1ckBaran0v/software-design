@@ -10,23 +10,18 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 public final class FilterRepositoryImpl implements FilterRepository {
     private final JdbcTemplate jdbcTemplate;
-    private final String userRoleName;
 
-    public FilterRepositoryImpl(JdbcTemplate jdbcTemplate, String userRoleName) {
+    public FilterRepositoryImpl(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = Objects.requireNonNull(jdbcTemplate);
-        this.userRoleName = Objects.requireNonNull(userRoleName);
     }
 
     @Override
-    public void addFilter(Filter filter) {
-        jdbcTemplate.executeCons(userRoleName, Connection.TRANSACTION_SERIALIZABLE, connection -> {
+    public void addFilter(String role, Filter filter) {
+        jdbcTemplate.executeCons(role, Connection.TRANSACTION_SERIALIZABLE, connection -> {
             checkIfExists(filter, connection);
             var filterId = saveFilter(filter, connection);
             savePassengers(filter, connection, filterId);
@@ -37,7 +32,7 @@ public final class FilterRepositoryImpl implements FilterRepository {
         try (var statement = connection.prepareStatement(
                 "SELECT * FROM filters where user_id = (?) AND filter_name = (?);"
         )) {
-            statement.setLong(1, ((Number) filter.user().id()).longValue());
+            statement.setLong(1, Long.parseLong(filter.user().id()));
             statement.setString(2, filter.name());
             try (var resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
@@ -50,18 +45,15 @@ public final class FilterRepositoryImpl implements FilterRepository {
 
     private long saveFilter(Filter filter, Connection connection) throws SQLException {
         try (var statement = connection.prepareStatement(
-                "INSERT INTO filters (user_id, filter_name, departure, destination, train_class, transfers, min_cost, max_cost) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?);",
+                "INSERT INTO filters (user_id, filter_name, departure, destination, transfers) " +
+                        "VALUES (?, ?, ?, ?, ?);",
                 Statement.RETURN_GENERATED_KEYS
         )) {
-            statement.setLong(1, ((Number) filter.user().id()).longValue());
+            statement.setLong(1, Long.parseLong(filter.user().id()));
             statement.setString(2, filter.name());
             statement.setString(3, filter.departure());
             statement.setString(4, filter.destination());
-            statement.setString(5, filter.trainClass());
-            statement.setInt(6, filter.transfers());
-            statement.setBigDecimal(7, filter.minCost());
-            statement.setBigDecimal(8, filter.maxCost());
+            statement.setInt(5, filter.transfers());
             statement.executeUpdate();
             var rs = statement.getGeneratedKeys();
             rs.next();
@@ -74,12 +66,10 @@ public final class FilterRepositoryImpl implements FilterRepository {
                 "INSERT INTO passengers (filter_id, passengers_type, passengers_count) " +
                         "VALUES (?, ?, ?);"
         )) {
-            var map = new HashMap<String, Integer>();
-            filter.passengers().forEach(passenger -> map.put(passenger, map.getOrDefault(passenger, 0) + 1));
-            for (var key : map.keySet()) {
+            for (var entry : filter.passengers().entrySet()) {
                 statement.setLong(1, filterId);
-                statement.setString(2, key);
-                statement.setInt(3, map.get(key));
+                statement.setString(2, entry.getKey());
+                statement.setInt(3, entry.getValue());
                 statement.addBatch();
             }
             statement.executeBatch();
@@ -87,12 +77,12 @@ public final class FilterRepositoryImpl implements FilterRepository {
     }
 
     @Override
-    public Optional<Filter> getFilter(UserId userId, String name) {
-        return jdbcTemplate.executeFunc(userRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+    public Optional<Filter> getFilter(String role, UserId userId, String name) {
+        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM filters WHERE user_id = (?) AND filter_name = (?);"
             )) {
-                statement.setLong(1, ((Number) userId.id()).longValue());
+                statement.setLong(1, Long.parseLong(userId.id()));
                 statement.setString(2, name);
                 try (var resultSet = statement.executeQuery()) {
                     return Optional.ofNullable(getFilter(connection, resultSet));
@@ -102,12 +92,12 @@ public final class FilterRepositoryImpl implements FilterRepository {
     }
 
     @Override
-    public Iterable<Filter> getFilters(UserId userId) {
-        return jdbcTemplate.executeFunc(userRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+    public Iterable<Filter> getFilters(String role, UserId userId) {
+        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM filters WHERE user_id = (?);"
             )) {
-                statement.setLong(1, ((Number) userId.id()).longValue());
+                statement.setLong(1, Long.parseLong(userId.id()));
                 try (var resultSet = statement.executeQuery()) {
                     var list = new ArrayList<Filter>();
                     var filter = getFilter(connection, resultSet);
@@ -122,12 +112,12 @@ public final class FilterRepositoryImpl implements FilterRepository {
     }
 
     @Override
-    public void deleteFilter(UserId userId, String name) {
-        jdbcTemplate.executeCons(userRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+    public void deleteFilter(String role, UserId userId, String name) {
+        jdbcTemplate.executeCons(role, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
                     "DELETE FROM filters WHERE user_id = (?) AND filter_name = (?);"
             )) {
-                statement.setLong(1, ((Number) userId.id()).longValue());
+                statement.setLong(1, Long.parseLong(userId.id()));
                 statement.setString(2, name);
                 statement.execute();
             }
@@ -137,23 +127,19 @@ public final class FilterRepositoryImpl implements FilterRepository {
     private Filter getFilter(Connection connection, ResultSet resultSet) throws SQLException {
         var answer = (Filter) null;
         if (resultSet.next()) {
-            var userId = new UserId(resultSet.getLong("user_id"));
+            var userId = new UserId(String.valueOf(resultSet.getLong("user_id")));
             var name = resultSet.getString("filter_name");
             var departure = resultSet.getString("departure");
             var destination = resultSet.getString("destination");
-            var trainClass = resultSet.getString("train_class");
             var transfers = resultSet.getInt("transfers");
-            var minCost = resultSet.getBigDecimal("min_cost");
-            var maxCost = resultSet.getBigDecimal("max_cost");
-            var passengers = new ArrayList<String>();
+            var passengers = new HashMap<String, Integer>();
             getPassengers(connection, resultSet.getLong("id"), passengers);
-            answer = new Filter(userId, name, departure, destination, trainClass,
-                    transfers, passengers, null, null, minCost, maxCost);
+            answer = new Filter(userId, name, departure, destination, transfers, passengers, null, null);
         }
         return answer;
     }
 
-    private void getPassengers(Connection connection, long filterId, ArrayList<String> passengers)
+    private void getPassengers(Connection connection, long filterId, Map<String, Integer> passengers)
             throws SQLException {
         try (var statement = connection.prepareStatement(
                 "SELECT * FROM passengers WHERE filter_id = (?);"
@@ -163,9 +149,7 @@ public final class FilterRepositoryImpl implements FilterRepository {
                 while (resultSet.next()) {
                     var passengerType = resultSet.getString("passengers_type");
                     var passengerCount = resultSet.getInt("passengers_count");
-                    for (var i = 0; i < passengerCount; ++i) {
-                        passengers.add(passengerType);
-                    }
+                    passengers.put(passengerType, passengerCount);
                 }
             }
         }

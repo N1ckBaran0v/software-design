@@ -7,11 +7,14 @@ group = "traintickets.control"
 
 dependencies {
     api(project(":business-logic"))
-    api(project(":di"))
     api(project(":data-access"))
+    api(project(":di"))
     api(project(":jdbc"))
+    api(project(":logger"))
     api(project(":payment"))
     api(project(":security"))
+    api(project(":user-interface"))
+    implementation("org.yaml:snakeyaml:2.4")
 }
 
 tasks.jar {

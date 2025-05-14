@@ -12,16 +12,14 @@ import java.util.Objects;
 
 public final class RailcarRepositoryImpl implements RailcarRepository {
     private final JdbcTemplate jdbcTemplate;
-    private final String carrierRoleName;
 
-    public RailcarRepositoryImpl(JdbcTemplate jdbcTemplate, String carrierRoleName) {
+    public RailcarRepositoryImpl(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = Objects.requireNonNull(jdbcTemplate);
-        this.carrierRoleName = Objects.requireNonNull(carrierRoleName);
     }
 
     @Override
-    public void addRailcar(Railcar railcar) {
-        jdbcTemplate.executeCons(carrierRoleName, Connection.TRANSACTION_SERIALIZABLE, connection -> {
+    public void addRailcar(String role, Railcar railcar) {
+        jdbcTemplate.executeCons(role, Connection.TRANSACTION_SERIALIZABLE, connection -> {
             checkIfExists(railcar, connection);
             var railcarId = saveRailcar(railcar, connection);
             savePlaces(railcar, connection, railcarId);
@@ -74,8 +72,8 @@ public final class RailcarRepositoryImpl implements RailcarRepository {
     }
 
     @Override
-    public Iterable<Railcar> getRailcarsByType(String type) {
-        return jdbcTemplate.executeFunc(carrierRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+    public Iterable<Railcar> getRailcarsByType(String role, String type) {
+        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM railcars where railcar_type = (?);"
             )) {
@@ -86,13 +84,13 @@ public final class RailcarRepositoryImpl implements RailcarRepository {
     }
 
     @Override
-    public Iterable<Railcar> getRailcarsByTrain(TrainId trainId) {
-        return jdbcTemplate.executeFunc(carrierRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+    public Iterable<Railcar> getRailcarsByTrain(String role, TrainId trainId) {
+        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
-                    "WITH railcars_ids AS (SELECT DISTINCT railcar_id FROM railcarsintrains WHERE train_id = (?)) " +
+                    "WITH railcars_ids AS (SELECT DISTINCT railcar_id FROM railcars_in_trains WHERE train_id = (?)) " +
                             "SELECT * FROM railcars WHERE id IN (SELECT * FROM railcars_ids);"
             )) {
-                statement.setLong(1, ((Number) trainId.id()).longValue());
+                statement.setLong(1, Long.parseLong(trainId.id()));
                 return extractRailcars(connection, statement);
             }
         });
@@ -113,7 +111,7 @@ public final class RailcarRepositoryImpl implements RailcarRepository {
     private Railcar getRailcar(Connection connection, ResultSet resultSet) throws SQLException {
         var answer = (Railcar) null;
         if (resultSet.next()) {
-            var railcarId = new RailcarId(resultSet.getLong("id"));
+            var railcarId = new RailcarId(String.valueOf(resultSet.getLong("id")));
             var model = resultSet.getString("railcar_model");
             var type = resultSet.getString("railcar_type");
             var places = getPlaces(connection, railcarId);
@@ -127,10 +125,10 @@ public final class RailcarRepositoryImpl implements RailcarRepository {
         try (var statement = connection.prepareStatement(
                 "SELECT * FROM places WHERE railcar_id = (?);"
         )) {
-            statement.setLong(1, ((Number) railcarId.id()).longValue());
+            statement.setLong(1, Long.parseLong(railcarId.id()));
             try (var resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
-                    var id = new PlaceId(resultSet.getLong("id"));
+                    var id = new PlaceId(String.valueOf(resultSet.getLong("id")));
                     var number = resultSet.getInt("place_number");
                     var description = resultSet.getString("description");
                     var purpose = resultSet.getString("purpose");

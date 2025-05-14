@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import traintickets.businesslogic.exception.InvalidEntityException;
 import traintickets.businesslogic.exception.PaymentException;
 import traintickets.businesslogic.exception.PlaceAlreadyReservedException;
 import traintickets.businesslogic.model.*;
@@ -37,12 +38,12 @@ class TicketRepositoryImplIT extends PostgresIT {
     @Override
     public void setUp() {
         super.setUp();
-        ticketRepository = new TicketRepositoryImpl(jdbcTemplate, paymentManager, roleName);
+        ticketRepository = new TicketRepositoryImpl(jdbcTemplate, paymentManager);
     }
 
     @Override
     protected void insertData() {
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+        jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "insert into trains (train_class) values ('фирменный'); " +
                             "insert into races (train_id, finished) values " +
@@ -53,7 +54,7 @@ class TicketRepositoryImplIT extends PostgresIT {
                             "(2, 'first', null, '2025-04-01 11:00:00+03', 0), " +
                             "(2, 'second', '2025-04-01 12:00:00+03', null, 5); " +
                             "insert into railcars (railcar_model, railcar_type) values (1, 'сидячий'); " +
-                            "insert into railcarsintrains (train_id, railcar_id) values (1, 1); " +
+                            "insert into railcars_in_trains (train_id, railcar_id) values (1, 1); " +
                             "insert into places (railcar_id, place_number, description, purpose, place_cost) " +
                             "values (1, 1, '', 'universal', 100), (1, 2, '', 'universal', 100); " +
                             "insert into users (user_name, pass_word, real_name, user_role, is_active) values " +
@@ -69,25 +70,25 @@ class TicketRepositoryImplIT extends PostgresIT {
 
     @Test
     void addTickets_positive_added() {
-        var ticket = new Ticket(null, new UserId(2L), "adult", new RaceId(2L), 1,
-                new Place(new PlaceId(2L), 2, "", "universal", BigDecimal.valueOf(100)),
-                new Schedule(new ScheduleId(3L), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0),
-                new Schedule(new ScheduleId(4L), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5),
+        var ticket = new Ticket(null, new UserId("2"), "adult", new RaceId("2"), 1,
+                new Place(new PlaceId("2"), 2, "", "universal", BigDecimal.valueOf(100)),
+                new Schedule(new ScheduleId("3"), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0),
+                new Schedule(new ScheduleId("4"), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5),
                 BigDecimal.valueOf(500));
-        ticketRepository.addTickets(List.of(ticket), paymentData);
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+        ticketRepository.addTickets(userRole, List.of(ticket), paymentData);
+        jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM tickets WHERE id = 4;"
             )) {
                 try (var resultSet = statement.executeQuery()) {
                     assertTrue(resultSet.next());
-                    assertEquals(ticket.owner().id(), resultSet.getLong("user_id"));
+                    assertEquals(ticket.owner().id(), String.valueOf(resultSet.getLong("user_id")));
                     assertEquals(ticket.passenger(), resultSet.getString("passenger"));
-                    assertEquals(ticket.race().id(), resultSet.getLong("race_id"));
+                    assertEquals(ticket.race().id(), String.valueOf(resultSet.getLong("race_id")));
                     assertEquals(ticket.railcar(), resultSet.getInt("railcar"));
-                    assertEquals(ticket.place().id().id(), resultSet.getLong("place_id"));
-                    assertEquals(ticket.start().id().id(), resultSet.getLong("departure"));
-                    assertEquals(ticket.end().id().id(), resultSet.getLong("destination"));
+                    assertEquals(ticket.place().id().id(), String.valueOf(resultSet.getLong("place_id")));
+                    assertEquals(ticket.start().id().id(), String.valueOf(resultSet.getLong("departure")));
+                    assertEquals(ticket.end().id().id(), String.valueOf(resultSet.getLong("destination")));
                     assertEquals(ticket.cost(), resultSet.getBigDecimal("ticket_cost"));
                     assertFalse(resultSet.next());
                 }
@@ -97,16 +98,37 @@ class TicketRepositoryImplIT extends PostgresIT {
     }
 
     @Test
+    void addTickets_negative_finished() {
+        var ticket = new Ticket(null, new UserId("2"), "adult", new RaceId("1"), 1,
+                new Place(new PlaceId("1"), 1, "", "universal", BigDecimal.valueOf(100)),
+                new Schedule(new ScheduleId("3"), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0),
+                new Schedule(new ScheduleId("4"), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5),
+                BigDecimal.valueOf(500));
+        assertThrows(InvalidEntityException.class,
+                () -> ticketRepository.addTickets(adminRole, List.of(ticket), paymentData));
+        verify(paymentManager, never()).pay(any());
+        jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+            try (var statement = connection.prepareStatement(
+                    "SELECT * FROM tickets WHERE id = 4;"
+            )) {
+                try (var resultSet = statement.executeQuery()) {
+                    assertFalse(resultSet.next());
+                }
+            }
+        });
+    }
+
+    @Test
     void addTickets_negative_reserved() {
-        var ticket = new Ticket(null, new UserId(2L), "adult", new RaceId(2L), 1,
-                new Place(new PlaceId(1L), 1, "", "universal", BigDecimal.valueOf(100)),
-                new Schedule(new ScheduleId(3L), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0),
-                new Schedule(new ScheduleId(4L), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5),
+        var ticket = new Ticket(null, new UserId("2"), "adult", new RaceId("2"), 1,
+                new Place(new PlaceId("1"), 1, "", "universal", BigDecimal.valueOf(100)),
+                new Schedule(new ScheduleId("3"), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0),
+                new Schedule(new ScheduleId("4"), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5),
                 BigDecimal.valueOf(500));
         assertThrows(PlaceAlreadyReservedException.class,
-                () -> ticketRepository.addTickets(List.of(ticket), paymentData));
+                () -> ticketRepository.addTickets(userRole, List.of(ticket), paymentData));
         verify(paymentManager, never()).pay(any());
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+        jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM tickets WHERE id = 4;"
             )) {
@@ -119,15 +141,15 @@ class TicketRepositoryImplIT extends PostgresIT {
 
     @Test
     void addTickets_negative_paymentRejected() {
-        var ticket = new Ticket(null, new UserId(2L), "adult", new RaceId(2L), 1,
-                new Place(new PlaceId(2L), 2, "", "universal", BigDecimal.valueOf(100)),
-                new Schedule(new ScheduleId(3L), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0),
-                new Schedule(new ScheduleId(4L), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5),
+        var ticket = new Ticket(null, new UserId("2"), "adult", new RaceId("2"), 1,
+                new Place(new PlaceId("2"), 2, "", "universal", BigDecimal.valueOf(100)),
+                new Schedule(new ScheduleId("3"), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0),
+                new Schedule(new ScheduleId("4"), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5),
                 BigDecimal.valueOf(500));
         willThrow(PaymentException.class).given(paymentManager).pay(paymentData);
         assertThrows(PaymentException.class,
-                () -> ticketRepository.addTickets(List.of(ticket), paymentData));
-        jdbcTemplate.executeCons(roleName, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+                () -> ticketRepository.addTickets(adminRole, List.of(ticket), paymentData));
+        jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM tickets WHERE id = 4;"
             )) {
@@ -140,17 +162,17 @@ class TicketRepositoryImplIT extends PostgresIT {
 
     @Test
     void getTicketsByUser_positive_got() {
-        var userId = new UserId(1L);
-        var place = new Place(new PlaceId(1L), 1, "", "universal", BigDecimal.valueOf(100));
-        var ticket1 = new Ticket(new TicketId(1L), userId, "adult", new RaceId(1L), 1, place,
-                new Schedule(new ScheduleId(1L), "first", null, Timestamp.valueOf("2025-04-01 10:10:00"), 0),
-                new Schedule(new ScheduleId(2L), "second", Timestamp.valueOf("2025-04-01 11:40:00"), null, 5),
+        var userId = new UserId("1");
+        var place = new Place(new PlaceId("1"), 1, "", "universal", BigDecimal.valueOf(100));
+        var ticket1 = new Ticket(new TicketId("1"), userId, "adult", new RaceId("1"), 1, place,
+                new Schedule(new ScheduleId("1"), "first", null, Timestamp.valueOf("2025-04-01 10:10:00"), 0),
+                new Schedule(new ScheduleId("2"), "second", Timestamp.valueOf("2025-04-01 11:40:00"), null, 5),
                 BigDecimal.valueOf(500));
-        var ticket2 = new Ticket(new TicketId(3L), userId, "adult", new RaceId(2L), 1, place,
-                new Schedule(new ScheduleId(3L), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0),
-                new Schedule(new ScheduleId(4L), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5),
+        var ticket2 = new Ticket(new TicketId("3"), userId, "adult", new RaceId("2"), 1, place,
+                new Schedule(new ScheduleId("3"), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0),
+                new Schedule(new ScheduleId("4"), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5),
                 BigDecimal.valueOf(500));
-        var result = ticketRepository.getTicketsByUser(userId);
+        var result = ticketRepository.getTicketsByUser(userRole, userId);
         assertNotNull(result);
         var iterator = result.iterator();
         assertTrue(iterator.hasNext());
@@ -162,25 +184,25 @@ class TicketRepositoryImplIT extends PostgresIT {
 
     @Test
     void getTicketsByUser_positive_empty() {
-        var result = ticketRepository.getTicketsByUser(new UserId(3));
+        var result = ticketRepository.getTicketsByUser(adminRole, new UserId("3"));
         assertNotNull(result);
         assertFalse(result.iterator().hasNext());
     }
 
     @Test
     void getTicketsByRace_positive_got() {
-        var raceId = new RaceId(1L);
-        var ticket1 = new Ticket(new TicketId(1L), new UserId(1L), "adult", raceId, 1,
-                new Place(new PlaceId(1L), 1, "", "universal", BigDecimal.valueOf(100)),
-                new Schedule(new ScheduleId(1L), "first", null, Timestamp.valueOf("2025-04-01 10:10:00"), 0),
-                new Schedule(new ScheduleId(2L), "second", Timestamp.valueOf("2025-04-01 11:40:00"), null, 5),
+        var raceId = new RaceId("1");
+        var ticket1 = new Ticket(new TicketId("1"), new UserId("1"), "adult", raceId, 1,
+                new Place(new PlaceId("1"), 1, "", "universal", BigDecimal.valueOf(100)),
+                new Schedule(new ScheduleId("1"), "first", null, Timestamp.valueOf("2025-04-01 10:10:00"), 0),
+                new Schedule(new ScheduleId("2"), "second", Timestamp.valueOf("2025-04-01 11:40:00"), null, 5),
                 BigDecimal.valueOf(500));
-        var ticket2 = new Ticket(new TicketId(2L), new UserId(2L), "adult", raceId, 1,
-                new Place(new PlaceId(2L), 2, "", "universal", BigDecimal.valueOf(100)),
-                new Schedule(new ScheduleId(1L), "first", null, Timestamp.valueOf("2025-04-01 10:10:00"), 0),
-                new Schedule(new ScheduleId(2L), "second", Timestamp.valueOf("2025-04-01 11:40:00"), null, 5),
+        var ticket2 = new Ticket(new TicketId("2"), new UserId("2"), "adult", raceId, 1,
+                new Place(new PlaceId("2"), 2, "", "universal", BigDecimal.valueOf(100)),
+                new Schedule(new ScheduleId("1"), "first", null, Timestamp.valueOf("2025-04-01 10:10:00"), 0),
+                new Schedule(new ScheduleId("2"), "second", Timestamp.valueOf("2025-04-01 11:40:00"), null, 5),
                 BigDecimal.valueOf(500));
-        var result = ticketRepository.getTicketsByRace(raceId);
+        var result = ticketRepository.getTicketsByRace(userRole, raceId);
         assertNotNull(result);
         var iterator = result.iterator();
         assertTrue(iterator.hasNext());
@@ -192,7 +214,7 @@ class TicketRepositoryImplIT extends PostgresIT {
 
     @Test
     void getTicketsByRace_positive_empty() {
-        var result = ticketRepository.getTicketsByRace(new RaceId(3));
+        var result = ticketRepository.getTicketsByRace(adminRole, new RaceId("3"));
         assertNotNull(result);
         assertFalse(result.iterator().hasNext());
     }

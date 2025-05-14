@@ -4,11 +4,13 @@ import traintickets.businesslogic.exception.EntityAlreadyExistsException;
 import traintickets.businesslogic.model.User;
 import traintickets.businesslogic.model.UserId;
 import traintickets.businesslogic.repository.UserRepository;
+import traintickets.businesslogic.transport.TransportUser;
 import traintickets.jdbc.api.JdbcTemplate;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Optional;
@@ -16,34 +18,51 @@ import java.util.stream.StreamSupport;
 
 public final class UserRepositoryImpl implements UserRepository {
     private final JdbcTemplate jdbcTemplate;
-    private final String systemRoleName;
 
-    public UserRepositoryImpl(JdbcTemplate jdbcTemplate, String systemRoleName) {
+    public UserRepositoryImpl(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = Objects.requireNonNull(jdbcTemplate);
-        this.systemRoleName = Objects.requireNonNull(systemRoleName);
     }
 
     @Override
-    public void addUser(User user) {
-        jdbcTemplate.executeCons(systemRoleName, Connection.TRANSACTION_SERIALIZABLE, connection -> {
-            checkIfExists(user, connection);
+    public User addUser(String role, User user) {
+        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_SERIALIZABLE, connection -> {
+            checkIfExists(user.id(), user.username(), connection);
             try (var statement = connection.prepareStatement(
                     "INSERT INTO users_view (user_name, pass_word, real_name, user_role, is_active)\n" +
-                            "VALUES (?, ?, ?, ?, ?);"
+                            "VALUES (?, ?, ?, ?, ?);",
+                    Statement.RETURN_GENERATED_KEYS
             )) {
                 statement.setString(1, user.username());
                 statement.setString(2, user.password());
                 statement.setString(3, user.name());
                 statement.setString(4, user.role());
                 statement.setBoolean(5, user.active());
-                statement.execute();
+                statement.executeUpdate();
+                var rs = statement.getGeneratedKeys();
+                rs.next();
+                var userId = new UserId(String.valueOf(rs.getLong(1)));
+                return new User(userId, user.username(), user.password(), user.name(), user.role(), user.active());
             }
         });
     }
 
     @Override
-    public Optional<User> getUser(String username) {
-        return jdbcTemplate.executeFunc(systemRoleName, Connection.TRANSACTION_READ_COMMITTED, connection -> {
+    public Optional<User> getUserById(String role, UserId userId) {
+        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_READ_COMMITTED, connection -> {
+            try (var statement = connection.prepareStatement(
+                    "SELECT * FROM users_view WHERE id = (?);"
+            )) {
+                statement.setLong(1, Long.parseLong(userId.id()));
+                try (var resultSet = statement.executeQuery()) {
+                    return Optional.ofNullable(getUser(resultSet));
+                }
+            }
+        });
+    }
+
+    @Override
+    public Optional<User> getUserByUsername(String role, String username) {
+        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_READ_COMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM users_view WHERE user_name = (?);"
             )) {
@@ -56,8 +75,8 @@ public final class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public Iterable<User> getUsers(Iterable<UserId> userIds) {
-        return jdbcTemplate.executeFunc(systemRoleName, Connection.TRANSACTION_READ_COMMITTED, connection -> {
+    public Iterable<User> getUsers(String role, Iterable<UserId> userIds) {
+        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_READ_COMMITTED, connection -> {
             var ids = StreamSupport.stream(userIds.spliterator(), false).map(id -> String.valueOf(id.id())).toList();
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM users_view WHERE id IN ('" + String.join("', '", ids) + "');"
@@ -76,9 +95,9 @@ public final class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public void updateUser(User user) {
-        jdbcTemplate.executeCons(systemRoleName, Connection.TRANSACTION_SERIALIZABLE, connection -> {
-            checkIfExists(user, connection);
+    public void updateUserCompletely(String role, User user) {
+        jdbcTemplate.executeCons(role, Connection.TRANSACTION_SERIALIZABLE, connection -> {
+            checkIfExists(user.id(), user.username(), connection);
             try (var statement = connection.prepareStatement(
                     "UPDATE users_view SET " +
                             "user_name = (?), " +
@@ -93,34 +112,53 @@ public final class UserRepositoryImpl implements UserRepository {
                 statement.setString(3, user.name());
                 statement.setString(4, user.role());
                 statement.setBoolean(5, user.active());
-                statement.setLong(6, ((Number) user.id().id()).longValue());
+                statement.setLong(6, Long.parseLong(user.id().id()));
                 statement.execute();
             }
         });
     }
 
     @Override
-    public void deleteUser(UserId userId) {
-        jdbcTemplate.executeCons(systemRoleName, Connection.TRANSACTION_READ_COMMITTED, conn -> {
-            try (var statement = conn.prepareStatement(
-                    "DELETE FROM users_view WHERE id = (?);"
+    public void updateUserPartially(String role, TransportUser user) {
+        jdbcTemplate.executeCons(role, Connection.TRANSACTION_SERIALIZABLE, connection -> {
+            checkIfExists(user.id(), user.username(), connection);
+            try (var statement = connection.prepareStatement(
+                    "UPDATE users_view SET " +
+                            "user_name = (?), " +
+                            "pass_word = (?), " +
+                            "real_name = (?) " +
+                            "WHERE id = (?);"
             )) {
-                statement.setLong(1, ((Number) userId.id()).longValue());
+                statement.setString(1, user.username());
+                statement.setString(2, user.password());
+                statement.setString(3, user.name());
+                statement.setLong(4, Long.parseLong(user.id().id()));
                 statement.execute();
             }
         });
     }
 
-    private void checkIfExists(User user, Connection connection) throws SQLException {
+    @Override
+    public void deleteUser(String role, UserId userId) {
+        jdbcTemplate.executeCons(role, Connection.TRANSACTION_READ_COMMITTED, conn -> {
+            try (var statement = conn.prepareStatement(
+                    "DELETE FROM users_view WHERE id = (?);"
+            )) {
+                statement.setLong(1, Long.parseLong(userId.id()));
+                statement.execute();
+            }
+        });
+    }
+
+    private void checkIfExists(UserId userId, String username, Connection connection) throws SQLException {
         try (var statement = connection.prepareStatement(
                 "SELECT * FROM users_view WHERE user_name = (?);"
         )) {
-            statement.setString(1, user.username());
+            statement.setString(1, username);
             try (var resultSet = statement.executeQuery()) {
                 var found = getUser(resultSet);
-                if (found != null && !found.id().equals(user.id())) {
-                    throw new EntityAlreadyExistsException(String.format(
-                            "User %s already exists", user.username()));
+                if (found != null && !found.id().equals(userId)) {
+                    throw new EntityAlreadyExistsException(String.format("User %s already exists", username));
                 }
             }
         }
@@ -129,7 +167,7 @@ public final class UserRepositoryImpl implements UserRepository {
     private User getUser(ResultSet resultSet) throws SQLException {
         var result = (User) null;
         if (resultSet.next()) {
-            var id = new UserId(resultSet.getLong("id"));
+            var id = new UserId(String.valueOf(resultSet.getLong("id")));
             var username = resultSet.getString("user_name");
             var password = resultSet.getString("pass_word");
             var name = resultSet.getString("real_name");

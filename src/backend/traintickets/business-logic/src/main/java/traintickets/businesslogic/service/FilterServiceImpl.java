@@ -2,9 +2,10 @@ package traintickets.businesslogic.service;
 
 import traintickets.businesslogic.api.FilterService;
 import traintickets.businesslogic.exception.EntityNotFoundException;
+import traintickets.businesslogic.exception.InvalidEntityException;
 import traintickets.businesslogic.model.Filter;
-import traintickets.businesslogic.model.UserId;
 import traintickets.businesslogic.repository.FilterRepository;
+import traintickets.businesslogic.transport.UserInfo;
 
 import java.util.List;
 import java.util.Objects;
@@ -18,24 +19,27 @@ public final class FilterServiceImpl implements FilterService {
     }
 
     @Override
-    public void addFilter(Filter filter) {
-        filter.validate();
-        filterRepository.addFilter(filter);
+    public void addFilter(UserInfo userInfo, Filter filter) {
+        filter.saveValidate();
+        if (!userInfo.userId().equals(filter.user())) {
+            throw new InvalidEntityException("Invalid userId");
+        }
+        filterRepository.addFilter(userInfo.role(), filter);
     }
 
     @Override
-    public Filter getFilter(UserId userId, String filterName) {
-        return filterRepository.getFilter(userId, filterName).orElseThrow(
+    public Filter getFilter(UserInfo userInfo, String filterName) {
+        return filterRepository.getFilter(userInfo.role(), userInfo.userId(), filterName).orElseThrow(
                 () -> new EntityNotFoundException(String.format("Filter %s not found", filterName)));
     }
 
     @Override
-    public List<Filter> getFilters(UserId userId) {
-        return StreamSupport.stream(filterRepository.getFilters(userId).spliterator(), false).toList();
+    public List<Filter> getFilters(UserInfo userInfo) {
+        return StreamSupport.stream(filterRepository.getFilters(userInfo.role(), userInfo.userId()).spliterator(), false).toList();
     }
 
     @Override
-    public void deleteFilter(UserId userId, String filterName) {
-        filterRepository.deleteFilter(userId, filterName);
+    public void deleteFilter(UserInfo userInfo, String filterName) {
+        filterRepository.deleteFilter(userInfo.role(), userInfo.userId(), filterName);
     }
 }

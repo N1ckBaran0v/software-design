@@ -2,7 +2,6 @@ package traintickets.dataaccess.factory;
 
 import traintickets.jdbc.api.JdbcTemplate;
 import traintickets.jdbc.api.JdbcTemplateFactory;
-import traintickets.jdbc.exception.NoUserRegisteredException;
 import traintickets.jdbc.impl.PooledJdbcTemplate;
 import traintickets.jdbc.model.DatabaseParams;
 
@@ -28,9 +27,6 @@ public final class PostgresJdbcTemplateFactory implements JdbcTemplateFactory {
     @Override
     public JdbcTemplate create(DatabaseParams params) {
         Objects.requireNonNull(params);
-        if (params.users().isEmpty()) {
-            throw new NoUserRegisteredException();
-        }
-        return new PooledJdbcTemplate(POSTGRES_DRIVER, params.url(), params.users(), params.poolSize());
+        return new PooledJdbcTemplate(POSTGRES_DRIVER, params);
     }
 }

@@ -6,23 +6,18 @@ import traintickets.businesslogic.repository.RaceRepository;
 import traintickets.jdbc.api.JdbcTemplate;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 public final class RaceRepositoryImpl implements RaceRepository {
     private final JdbcTemplate jdbcTemplate;
-    private final String carrierRoleName;
 
-    public RaceRepositoryImpl(JdbcTemplate jdbcTemplate, String carrierRoleName) {
+    public RaceRepositoryImpl(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = Objects.requireNonNull(jdbcTemplate);
-        this.carrierRoleName = Objects.requireNonNull(carrierRoleName);
     }
 
     @Override
-    public void addRace(Race race) {
-        jdbcTemplate.executeCons(carrierRoleName, Connection.TRANSACTION_SERIALIZABLE, connection -> {
+    public void addRace(String role, Race race) {
+        jdbcTemplate.executeCons(role, Connection.TRANSACTION_SERIALIZABLE, connection -> {
             var startTime = new Timestamp(race.schedule().getFirst().departure().getTime());
             var endTime = new Timestamp(race.schedule().getLast().arrival().getTime());
             checkIfReserved(race, connection, startTime, endTime);
@@ -43,7 +38,7 @@ public final class RaceRepositoryImpl implements RaceRepository {
             statement.setTimestamp(2, endTime);
             statement.setTimestamp(3, startTime);
             statement.setTimestamp(4, endTime);
-            statement.setLong(5, ((Number) race.trainId().id()).longValue());
+            statement.setLong(5, Long.parseLong(race.trainId().id()));
             try (var resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
                     throw new TrainAlreadyReservedException(race.trainId());
@@ -57,7 +52,7 @@ public final class RaceRepositoryImpl implements RaceRepository {
                 "INSERT INTO races (train_id, finished) VALUES (?, ?);",
                 Statement.RETURN_GENERATED_KEYS
         )) {
-            statement.setLong(1, ((Number) race.trainId().id()).longValue());
+            statement.setLong(1, Long.parseLong(race.trainId().id()));
             statement.setBoolean(2, false);
             statement.executeUpdate();
             var rs = statement.getGeneratedKeys();
@@ -86,12 +81,12 @@ public final class RaceRepositoryImpl implements RaceRepository {
     }
 
     @Override
-    public Optional<Race> getRace(RaceId raceId) {
-        return jdbcTemplate.executeFunc(carrierRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+    public Optional<Race> getRace(String role, RaceId raceId) {
+        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM races WHERE id = (?);"
             )) {
-                statement.setLong(1, ((Number) raceId.id()).longValue());
+                statement.setLong(1, Long.parseLong(raceId.id()));
                 try (var resultSet = statement.executeQuery()) {
                     return Optional.ofNullable(getRace(connection, resultSet));
                 }
@@ -100,38 +95,34 @@ public final class RaceRepositoryImpl implements RaceRepository {
     }
 
     @Override
-    public Iterable<Race> getRaces(Filter filter) {
-        return jdbcTemplate.executeFunc(carrierRoleName, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+    public List<Race> getRaces(String role, Filter filter) {
+        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
-                    "WITH races_time AS (SELECT race_id, MIN(departure) as start_time, MAX(arrival) as end_time " +
-                            "FROM schedule GROUP BY race_id), " +
-                            "good_races AS (SELECT race_id FROM races_time WHERE " +
-                            "start_time >= (?) AND end_time <= (?)) " +
-                            "SELECT * FROM races WHERE id IN (SELECT * FROM good_races);"
+                    "SELECT * FROM schedule WHERE (arrival >= (?) AND arrival <= (?)) OR " +
+                            "(departure >= (?) AND departure <= (?));"
             )) {
-                statement.setTimestamp(1, new Timestamp(filter.start().getTime()));
-                statement.setTimestamp(2, new Timestamp(filter.end().getTime()));
+                var start = new Timestamp(filter.start().getTime());
+                var end = new Timestamp(filter.end().getTime());
+                statement.setTimestamp(1, start);
+                statement.setTimestamp(2, end);
+                statement.setTimestamp(3, start);
+                statement.setTimestamp(4, end);
                 try (var resultSet = statement.executeQuery()) {
-                    var result = new ArrayList<Race>();
-                    var race = getRace(connection, resultSet);
-                    while (race != null) {
-                        result.add(race);
-                        race = getRace(connection, resultSet);
-                    }
-                    return result;
+                    var result = getSchedules(resultSet);
+                    return filterSchedules(connection, result, filter);
                 }
             }
         });
     }
 
     @Override
-    public void updateRace(Race race) {
-        jdbcTemplate.executeCons(carrierRoleName, Connection.TRANSACTION_READ_COMMITTED, connection -> {
+    public void updateRace(String role, RaceId raceId, boolean isFinished) {
+        jdbcTemplate.executeCons(role, Connection.TRANSACTION_READ_COMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "UPDATE races SET finished = (?) WHERE id = (?);"
             )) {
-                statement.setBoolean(1, race.finished());
-                statement.setLong(2, ((Number) race.id().id()).longValue());
+                statement.setBoolean(1, isFinished);
+                statement.setLong(2, Long.parseLong(raceId.id()));
                 statement.executeUpdate();
             }
         });
@@ -140,8 +131,8 @@ public final class RaceRepositoryImpl implements RaceRepository {
     private Race getRace(Connection connection, ResultSet resultSet) throws SQLException {
         var answer = (Race) null;
         if (resultSet.next()) {
-            var raceId = new RaceId(resultSet.getLong("id"));
-            var trainId = new TrainId(resultSet.getLong("train_id"));
+            var raceId = new RaceId(String.valueOf(resultSet.getLong("id")));
+            var trainId = new TrainId(String.valueOf(resultSet.getLong("train_id")));
             var finished = resultSet.getBoolean("finished");
             var schedule = getSchedule(connection, raceId);
             answer = new Race(raceId, trainId, schedule, finished);
@@ -154,18 +145,101 @@ public final class RaceRepositoryImpl implements RaceRepository {
         try (var statement = connection.prepareStatement(
                 "SELECT * FROM schedule WHERE race_id = (?);"
         )) {
-            statement.setLong(1, ((Number) raceId.id()).longValue());
+            statement.setLong(1, Long.parseLong(raceId.id()));
             try (var resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
-                    var id = new ScheduleId(resultSet.getLong("id"));
-                    var name = resultSet.getString("station_name");
-                    var arrival = resultSet.getTimestamp("arrival");
-                    var departure = resultSet.getTimestamp("departure");
-                    var multiplier = resultSet.getDouble("multiplier");
-                    schedule.add(new Schedule(id, name, arrival, departure, multiplier));
+                    schedule.add(getSchedule(resultSet));
                 }
             }
         }
         return schedule;
+    }
+
+    private Map<RaceId, List<Schedule>> getSchedules(ResultSet resultSet) throws SQLException {
+        var result = new HashMap<RaceId, List<Schedule>>();
+        while (resultSet.next()) {
+            var raceId = new RaceId(String.valueOf(resultSet.getLong("race_id")));
+            if (!result.containsKey(raceId)) {
+                result.put(raceId, new ArrayList<>());
+            }
+            result.get(raceId).add(getSchedule(resultSet));
+        }
+        return result;
+    }
+
+    private Schedule getSchedule(ResultSet resultSet) throws SQLException {
+        var id = new ScheduleId(String.valueOf(resultSet.getLong("id")));
+        var name = resultSet.getString("station_name");
+        var arrival = resultSet.getTimestamp("arrival");
+        var departure = resultSet.getTimestamp("departure");
+        var multiplier = resultSet.getDouble("multiplier");
+        return new Schedule(id, name, arrival, departure, multiplier);
+    }
+
+    private List<Race> filterSchedules(Connection connection,
+                                       Map<RaceId, List<Schedule>> schedules,
+                                       Filter filter) throws SQLException {
+        var result = new ArrayList<Race>();
+        if (filter.transfers() == 0) {
+            for (var entry : schedules.entrySet()) {
+                if (containsStations(entry.getValue(), filter.departure(), filter.destination()) == 2) {
+                    addRace(connection, result, entry);
+                }
+            }
+        } else if (filter.transfers() == 1) {
+            for (var entry : schedules.entrySet()) {
+                if (containsStations(entry.getValue(), filter.departure(), filter.destination()) > 0) {
+                    addRace(connection, result, entry);
+                }
+            }
+        } else {
+            for (var entry : schedules.entrySet()) {
+                if (entry.getValue().size() > 1) {
+                    addRace(connection, result, entry);
+                }
+            }
+        }
+        return result;
+    }
+
+    private int containsStations(List<Schedule> schedules, String... stations) {
+        var found = new HashSet<String>();
+        if (schedules.size() > 1) {
+            for (var schedule : schedules) {
+                for (var station : stations) {
+                    if (station.equals(schedule.name())) {
+                        found.add(station);
+                    }
+                }
+            }
+        }
+        return found.size();
+    }
+
+    private void addRace(Connection connection,
+                         List<Race> races,
+                         Map.Entry<RaceId, List<Schedule>> entry) throws SQLException {
+        try (var statement = connection.prepareStatement(
+                "SELECT * FROM races WHERE id = (?) and finished = FALSE;"
+        )) {
+            statement.setLong(1, Long.parseLong(entry.getKey().id()));
+            try (var resultSet = statement.executeQuery()) {
+                var race = getRace(resultSet, entry.getValue());
+                if (race != null) {
+                    races.add(race);
+                }
+            }
+        }
+    }
+
+    private Race getRace(ResultSet resultSet, List<Schedule> schedule) throws SQLException {
+        var answer = (Race) null;
+        if (resultSet.next()) {
+            var raceId = new RaceId(String.valueOf(resultSet.getLong("id")));
+            var trainId = new TrainId(String.valueOf(resultSet.getLong("train_id")));
+            var finished = resultSet.getBoolean("finished");
+            answer = new Race(raceId, trainId, schedule, finished);
+        }
+        return answer;
     }
 }

@@ -7,63 +7,63 @@ import traintickets.businesslogic.exception.UserWasBannedException;
 import traintickets.businesslogic.model.User;
 import traintickets.businesslogic.model.UserId;
 import traintickets.businesslogic.repository.UserRepository;
-import traintickets.businesslogic.session.SessionManager;
+import traintickets.businesslogic.jwt.JwtManager;
+import traintickets.businesslogic.transport.TransportUser;
 import traintickets.businesslogic.transport.UserInfo;
 
 import java.util.Objects;
-import java.util.UUID;
 
 public final class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
-    private final SessionManager sessionManager;
+    private final JwtManager jwtManager;
+    private final String systemRole;
 
-    public UserServiceImpl(UserRepository userRepository, SessionManager sessionManager) {
+    public UserServiceImpl(UserRepository userRepository, JwtManager jwtManager, String systemRole) {
         this.userRepository = Objects.requireNonNull(userRepository);
-        this.sessionManager = Objects.requireNonNull(sessionManager);
+        this.jwtManager = Objects.requireNonNull(jwtManager);
+        this.systemRole = Objects.requireNonNull(systemRole);
     }
 
     @Override
     public void createUser(User user) {
         user.validate();
-        userRepository.addUser(user);
+        userRepository.addUser(systemRole, user);
     }
 
     @Override
     public void deleteUser(UserId userId) {
-        userRepository.deleteUser(userId);
-        sessionManager.endSessions(userId);
+        userRepository.deleteUser(systemRole, userId);
+        jwtManager.updateUser(userId);
     }
 
     @Override
-    public User getUser(String username) {
-        var result = userRepository.getUser(username).orElseThrow(
-                () -> new EntityNotFoundException(String.format("User with username '%s' not found", username)));
-        if (!result.active()) {
-            throw new UserWasBannedException(username);
+    public TransportUser getUser(UserId userId) {
+        var user = userRepository.getUserById(systemRole, userId).orElseThrow(
+                () -> new EntityNotFoundException(String.format("User with id '%s' not found", userId.id())));
+        if (!user.active()) {
+            throw new UserWasBannedException(userId);
         }
-        return result;
+        return TransportUser.from(user);
     }
 
     @Override
     public User getUserByAdmin(String username) {
-        return userRepository.getUser(username).orElseThrow(
+        return userRepository.getUserByUsername(systemRole, username).orElseThrow(
                 () -> new EntityNotFoundException(String.format("User with username '%s' not found", username)));
     }
 
     @Override
-    public void updateUser(UUID sessionId, User user) {
-        user.validate();
+    public void updateUser(UserInfo userInfo, TransportUser user) {
+        user.toUser("someRole", true).validate();
         if (user.id() == null) {
             throw new InvalidEntityException("All data required");
         }
-        if (!user.active()) {
-            throw new InvalidEntityException("User can be banned only by admin");
+        var userId = userInfo.userId();
+        if (!userId.equals(user.id())) {
+            throw new InvalidEntityException(
+                    String.format("Invalid userId: expected '%s', but got '%s'", userId.id(), user.id().id()));
         }
-        var userInfo = sessionManager.getUserInfo(sessionId);
-        if (!userInfo.role().equals(user.role())) {
-            throw new InvalidEntityException("User role may be changed only by admin");
-        }
-        userRepository.updateUser(user);
+        userRepository.updateUserPartially(systemRole, user);
     }
 
     @Override
@@ -72,7 +72,7 @@ public final class UserServiceImpl implements UserService {
         if (user.id() == null) {
             throw new InvalidEntityException("All data required");
         }
-        sessionManager.updateUserInfo(new UserInfo(user.id(), user.role()));
-        userRepository.updateUser(user);
+        userRepository.updateUserCompletely(systemRole, user);
+        jwtManager.updateUser(user.id());
     }
 }
