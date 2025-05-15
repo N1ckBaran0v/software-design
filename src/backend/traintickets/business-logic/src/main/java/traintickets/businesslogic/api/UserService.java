@@ -6,10 +6,10 @@ import traintickets.businesslogic.transport.TransportUser;
 import traintickets.businesslogic.transport.UserInfo;
 
 public interface UserService {
-    void createUser(User user);
-    void deleteUser(UserId userId);
-    TransportUser getUser(UserId userId);
-    User getUserByAdmin(String username);
+    void createUser(UserInfo userInfo, User user);
+    void deleteUser(UserInfo userInfo, UserId userId);
+    TransportUser getUser(UserInfo userInfo, UserId userId);
+    User getUserByAdmin(UserInfo userInfo, String username);
     void updateUser(UserInfo userInfo, TransportUser user);
-    void updateUserByAdmin(User user);
+    void updateUserByAdmin(UserInfo userInfo, User user);
 }

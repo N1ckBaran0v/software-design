@@ -224,7 +224,7 @@ class UserRepositoryImplIT extends PostgresIT {
     @Test
     void deleteUser_positive_banned() {
         var id = new UserId("1");
-        userRepository.deleteUser(systemRole, id);
+        userRepository.deleteUser(adminRole, id);
         jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "select * from users_view where user_name = 'first';"
@@ -241,13 +241,13 @@ class UserRepositoryImplIT extends PostgresIT {
     @Test
     void deleteUser_positive_notFound() {
         var id = new UserId("3");
-        userRepository.deleteUser(systemRole, id);
+        userRepository.deleteUser(adminRole, id);
     }
 
     @Test
     void deleteUser_positive_alreadyBanned() {
         var id = new UserId("2");
-        userRepository.deleteUser(systemRole, id);
+        userRepository.deleteUser(adminRole, id);
         jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "select * from users_view where user_name = 'second';"
@@ -262,9 +262,43 @@ class UserRepositoryImplIT extends PostgresIT {
     }
 
     @Test
-    void deleteUser_negative_denied() {
+    void deleteUser_negative_denied1() {
         var id = new UserId("1");
-        assertThrows(RuntimeException.class, () -> userRepository.deleteUser(adminRole, id));
+        assertThrows(RuntimeException.class, () -> userRepository.deleteUser(systemRole, id));
+        jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+            try (var statement = connection.prepareStatement(
+                    "select * from users_view where user_name = 'first';"
+            )) {
+                try (var resultSet = statement.executeQuery()) {
+                    assertTrue(resultSet.next());
+                    assertTrue(resultSet.getBoolean("is_active"));
+                    assertFalse(resultSet.next());
+                }
+            }
+        });
+    }
+
+    @Test
+    void deleteUser_negative_denied2() {
+        var id = new UserId("1");
+        assertThrows(RuntimeException.class, () -> userRepository.deleteUser(carrierRole, id));
+        jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
+            try (var statement = connection.prepareStatement(
+                    "select * from users_view where user_name = 'first';"
+            )) {
+                try (var resultSet = statement.executeQuery()) {
+                    assertTrue(resultSet.next());
+                    assertTrue(resultSet.getBoolean("is_active"));
+                    assertFalse(resultSet.next());
+                }
+            }
+        });
+    }
+
+    @Test
+    void deleteUser_negative_denied3() {
+        var id = new UserId("1");
+        assertThrows(RuntimeException.class, () -> userRepository.deleteUser(userRole, id));
         jdbcTemplate.executeCons(superuser, Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "select * from users_view where user_name = 'first';"

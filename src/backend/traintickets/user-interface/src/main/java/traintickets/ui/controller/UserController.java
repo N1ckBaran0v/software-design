@@ -31,18 +31,18 @@ public final class UserController {
         this.adminRole = Objects.requireNonNull(adminRole);
     }
 
-    public void createUser(Context ctx) {
+    public void createUser(Context ctx, UserInfo userInfo) {
         var user = ctx.bodyAsClass(User.class);
         logger.debug("user: %s", user);
-        userService.createUser(user);
+        userService.createUser(userInfo, user);
         ctx.status(HttpStatus.CREATED);
         logger.debug("user created");
     }
 
-    public void deleteUser(Context ctx) {
+    public void deleteUser(Context ctx, UserInfo userInfo) {
         var userId = ctx.pathParam("userId");
         logger.debug("user: %s", userId);
-        userService.deleteUser(new UserId(userId));
+        userService.deleteUser(userInfo, new UserId(userId));
         ctx.status(HttpStatus.NO_CONTENT);
         logger.debug("user deleted");
     }
@@ -54,7 +54,7 @@ public final class UserController {
         if (!userId.equals(userInfo.userId())) {
             throw new ForbiddenException();
         }
-        ctx.json(userService.getUser(userId));
+        ctx.json(userService.getUser(userInfo, userId));
         logger.debug("user got");
     }
 
@@ -67,7 +67,7 @@ public final class UserController {
             logger.debug("users got");
         } else {
             logger.debug("username: %s", username);
-            ctx.json(userService.getUserByAdmin(username));
+            ctx.json(userService.getUserByAdmin(userInfo, username));
             logger.debug("user got");
         }
     }
@@ -82,7 +82,7 @@ public final class UserController {
                 throw new ForbiddenException();
             }
             var user = ctx.bodyAsClass(User.class);
-            userService.updateUserByAdmin(user);
+            userService.updateUserByAdmin(userInfo, user);
         } else {
             var user = ctx.bodyAsClass(TransportUser.class);
             if (!userId.equals(user.id())) {

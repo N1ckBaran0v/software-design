@@ -42,22 +42,25 @@ class UserServiceImplTest {
     @Test
     void createUser_positive_created() {
         var user = new User(null, "random_username", "qwerty123", "Zubenko Mikhail", "client", true);
-        userService.createUser(user);
-        verify(userRepository).addUser(systemRole, user);
+        var userInfo = new UserInfo(new UserId("1"), "admin_role");
+        userService.createUser(userInfo, user);
+        verify(userRepository).addUser(userInfo.role(), user);
     }
 
     @Test
     void createUser_negative_invalid() {
         var user = new User(null, "random_username_long", "qwerty123", "Zubenko Mikhail", "client", true);
-        assertThrows(InvalidEntityException.class, () -> userService.createUser(user));
+        var userInfo = new UserInfo(new UserId("1"), "admin_role");
+        assertThrows(InvalidEntityException.class, () -> userService.createUser(userInfo, user));
         verify(userRepository, never()).addUser(any(), any());
     }
 
     @Test
     void deleteUser_positive_deleted() {
         var userId = new UserId("1");
-        userService.deleteUser(userId);
-        verify(userRepository).deleteUser(systemRole, userId);
+        var userInfo = new UserInfo(new UserId("1"), "admin_role");
+        userService.deleteUser(userInfo, userId);
+        verify(userRepository).deleteUser(userInfo.role(), userId);
         verify(jwtManager).updateUser(userId);
     }
 
@@ -65,48 +68,61 @@ class UserServiceImplTest {
     void getUser_positive_found() {
         var userId = new UserId("1");
         var user = new User(userId, "random_username", "qwerty123", "Zubenko Mikhail", "client", true);
+        var userInfo = new UserInfo(userId, "user_role");
         given(userRepository.getUserById(systemRole, userId)).willReturn(Optional.of(user));
-        var result = userService.getUser(userId);
+        var result = userService.getUser(userInfo, userId);
         assertEquals(TransportUser.from(user), result);
+    }
+
+    @Test
+    void getUser_negative_another() {
+        var userInfo = new UserInfo(new UserId("2"), "user_role");
+        assertThrows(InvalidEntityException.class, () -> userService.getUser(userInfo, new UserId("1")));
+        verify(userRepository, never()).getUserById(any(), any());
     }
 
     @Test
     void getUser_negative_notFound() {
         var userId = new UserId("1");
+        var userInfo = new UserInfo(userId, "user_role");
         given(userRepository.getUserById(systemRole, userId)).willReturn(Optional.empty());
-        assertThrows(EntityNotFoundException.class, () -> userService.getUser(userId));
+        assertThrows(EntityNotFoundException.class, () -> userService.getUser(userInfo, userId));
     }
 
     @Test
     void getUser_negative_banned() {
         var userId = new UserId("1");
         var user = new User(userId, "random_username", "qwerty123", "Zubenko Mikhail", "client", false);
+        var userInfo = new UserInfo(userId, "user_role");
         given(userRepository.getUserById(systemRole, userId)).willReturn(Optional.of(user));
-        assertThrows(UserWasBannedException.class, () -> userService.getUser(userId));
+        assertThrows(UserWasBannedException.class, () -> userService.getUser(userInfo, userId));
     }
 
     @Test
     void getUserByAdmin_positive_found() {
         var username = "random_username";
         var user = new User(new UserId("1"), username, "qwerty123", "Zubenko Mikhail", "client", true);
-        given(userRepository.getUserByUsername(systemRole, username)).willReturn(Optional.of(user));
-        var result = userService.getUserByAdmin(username);
+        var userInfo = new UserInfo(new UserId("1"), "admin_role");
+        given(userRepository.getUserByUsername(userInfo.role(), username)).willReturn(Optional.of(user));
+        var result = userService.getUserByAdmin(userInfo, username);
         assertSame(user, result);
     }
 
     @Test
     void getUserByAdmin_negative_notFound() {
         var username = "random_username";
-        given(userRepository.getUserByUsername(systemRole, username)).willReturn(Optional.empty());
-        assertThrows(EntityNotFoundException.class, () -> userService.getUserByAdmin(username));
+        var userInfo = new UserInfo(new UserId("1"), "admin_role");
+        given(userRepository.getUserByUsername(userInfo.role(), username)).willReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class, () -> userService.getUserByAdmin(userInfo, username));
     }
 
     @Test
     void getUserByAdmin_positive_banned() {
         var username = "random_username";
         var user = new User(new UserId("1"), username, "qwerty123", "Zubenko Mikhail", "client", false);
-        given(userRepository.getUserByUsername(systemRole, username)).willReturn(Optional.of(user));
-        var result = userService.getUserByAdmin(username);
+        var userInfo = new UserInfo(new UserId("1"), "admin_role");
+        given(userRepository.getUserByUsername(userInfo.role(), username)).willReturn(Optional.of(user));
+        var result = userService.getUserByAdmin(userInfo, username);
         assertSame(result, user);
     }
 
@@ -114,7 +130,7 @@ class UserServiceImplTest {
     void updateUser_positive_updated() {
         var userId = new UserId("1");
         var user = new TransportUser(userId, "random_username", "qwerty123", "Zubenko Mikhail");
-        var userInfo = new UserInfo(new UserId("1"), "user_role", null);
+        var userInfo = new UserInfo(userId, "user_role");
         userService.updateUser(userInfo, user);
         verify(userRepository).updateUserPartially(systemRole, user);
         verify(jwtManager).updateUser(user.id());
@@ -123,7 +139,7 @@ class UserServiceImplTest {
     @Test
     void updateUser_negative_invalid() {
         var user = new TransportUser(new UserId("1"), "random_username", "qwerty123", "Zubenko Mikhail");
-        var userInfo = new UserInfo(new UserId("2"), "user_role", null);
+        var userInfo = new UserInfo(new UserId("2"), "user_role");
         assertThrows(InvalidEntityException.class, () -> userService.updateUser(userInfo ,user));
         verify(userRepository, never()).updateUserPartially(any(), any());
         verify(jwtManager, never()).updateUser(any());
@@ -132,15 +148,17 @@ class UserServiceImplTest {
     @Test
     void updateUserByAdmin_positive_updated() {
         var user = new User(new UserId("1"), "random_username", "qwerty123", "Zubenko Mikhail", "admin", true);
-        userService.updateUserByAdmin(user);
-        verify(userRepository).updateUserCompletely(systemRole, user);
+        var userInfo = new UserInfo(new UserId("2"), "admin_role");
+        userService.updateUserByAdmin(userInfo, user);
+        verify(userRepository).updateUserCompletely(userInfo.role(), user);
         verify(jwtManager).updateUser(user.id());
     }
 
     @Test
     void updateUserByAdmin_negative_invalid() {
         var user = new User(new UserId("1"), "random_username_long", "qwerty123", "Zubenko Mikhail", "client", true);
-        assertThrows(InvalidEntityException.class, () -> userService.updateUserByAdmin(user));
+        var userInfo = new UserInfo(new UserId("2"), "admin_role");
+        assertThrows(InvalidEntityException.class, () -> userService.updateUserByAdmin(userInfo, user));
         verify(userRepository, never()).updateUserCompletely(any(), any());
         verify(jwtManager, never()).updateUser(any());
     }
@@ -148,8 +166,9 @@ class UserServiceImplTest {
     @Test
     void updateUserByAdmin_positive_banned() {
         var user = new User(new UserId("1"), "random_username", "qwerty123", "Zubenko Mikhail", "client", false);
-        userService.updateUserByAdmin(user);
-        verify(userRepository).updateUserCompletely(systemRole, user);
+        var userInfo = new UserInfo(new UserId("2"), "admin_role");
+        userService.updateUserByAdmin(userInfo, user);
+        verify(userRepository).updateUserCompletely(userInfo.role(), user);
         verify(jwtManager).updateUser(user.id());
     }
 }

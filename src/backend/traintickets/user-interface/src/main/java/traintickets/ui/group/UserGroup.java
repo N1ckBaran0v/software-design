@@ -21,13 +21,8 @@ public final class UserGroup extends AbstractEndpointGroup {
 
     @Override
     public void addEndpoints() {
-        before(ctx -> {
-            if (ctx.method().equals(HandlerType.POST) || ctx.method().equals(HandlerType.DELETE)) {
-                securityConfiguration.forAdmin(ctx);
-            }
-        });
-        post(userController::createUser);
-        delete("/{userId}", userController::deleteUser);
+        post(ctx -> userController.createUser(ctx, securityConfiguration.forAdmin(ctx)));
+        delete("/{userId}", ctx -> userController.deleteUser(ctx, securityConfiguration.forAdmin(ctx)));
         get(ctx -> {
             var username = ctx.queryParam("username");
             var raceId = ctx.queryParam("raceId");

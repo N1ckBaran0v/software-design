@@ -25,19 +25,22 @@ public final class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void createUser(User user) {
+    public void createUser(UserInfo userInfo, User user) {
         user.validate();
-        userRepository.addUser(systemRole, user);
+        userRepository.addUser(userInfo.role(), user);
     }
 
     @Override
-    public void deleteUser(UserId userId) {
-        userRepository.deleteUser(systemRole, userId);
+    public void deleteUser(UserInfo userInfo, UserId userId) {
+        userRepository.deleteUser(userInfo.role(), userId);
         jwtManager.updateUser(userId);
     }
 
     @Override
-    public TransportUser getUser(UserId userId) {
+    public TransportUser getUser(UserInfo userInfo, UserId userId) {
+        if (!userId.equals(userInfo.userId())) {
+            throw new InvalidEntityException("Invalid userId");
+        }
         var user = userRepository.getUserById(systemRole, userId).orElseThrow(
                 () -> new EntityNotFoundException(String.format("User with id '%s' not found", userId.id())));
         if (!user.active()) {
@@ -47,8 +50,8 @@ public final class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User getUserByAdmin(String username) {
-        return userRepository.getUserByUsername(systemRole, username).orElseThrow(
+    public User getUserByAdmin(UserInfo userInfo, String username) {
+        return userRepository.getUserByUsername(userInfo.role(), username).orElseThrow(
                 () -> new EntityNotFoundException(String.format("User with username '%s' not found", username)));
     }
 
@@ -68,12 +71,12 @@ public final class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updateUserByAdmin(User user) {
+    public void updateUserByAdmin(UserInfo userInfo, User user) {
         user.validate();
         if (user.id() == null) {
             throw new InvalidEntityException("All data required");
         }
-        userRepository.updateUserCompletely(systemRole, user);
+        userRepository.updateUserCompletely(userInfo.role(), user);
         jwtManager.updateUser(user.id());
     }
 }

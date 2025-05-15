@@ -33,7 +33,7 @@ GRANT SELECT, INSERT ON schedule TO _admin_role;
 GRANT SELECT, INSERT ON tickets TO _admin_role;
 GRANT ALL ON train_comments TO _admin_role;
 GRANT SELECT, INSERT ON trains TO _admin_role;
-GRANT SELECT ON users_view TO _admin_role;
+GRANT ALL ON users_view TO _admin_role;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO _admin_role;
 
 CREATE ROLE _system_role;
@@ -47,5 +47,5 @@ GRANT SELECT ON schedule TO _system_role;
 GRANT SELECT ON tickets TO _system_role;
 GRANT SELECT ON train_comments TO _system_role;
 GRANT SELECT ON trains TO _system_role;
-GRANT ALL ON users_view TO _system_role;
+GRANT SELECT, INSERT, UPDATE ON users_view TO _system_role;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO _system_role;
