@@ -7,7 +7,7 @@ group = "traintickets.control"
 
 dependencies {
     api(project(":business-logic"))
-    api(project(":data-access"))
+    api(project(":data-access-postgres"))
     api(project(":di"))
     api(project(":jdbc"))
     api(project(":logger"))

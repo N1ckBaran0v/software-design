@@ -3,6 +3,7 @@ server:
     port: 8080
     timeout: 30000
 database:
+    type: postgresql
     url: jdbc:postgresql://localhost:5432/train_tickets_postgres
     username: train_database_admin
     password: s3cr3tpassw0rd

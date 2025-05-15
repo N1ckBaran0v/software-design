@@ -1,10 +1,19 @@
 package traintickets.control.configuration;
 
 public final class DatabaseConfig {
+    private String type;
     private String url;
     private String username;
     private String password;
     private int poolSize;
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
 
     public String getUrl() {
         return url;
