@@ -16,8 +16,8 @@ public final class RaceRepositoryImpl implements RaceRepository {
     }
 
     @Override
-    public void addRace(String role, Race race) {
-        jdbcTemplate.executeCons(role, Connection.TRANSACTION_SERIALIZABLE, connection -> {
+    public void addRace(Race race) {
+        jdbcTemplate.executeCons(Connection.TRANSACTION_SERIALIZABLE, connection -> {
             var startTime = new Timestamp(race.schedule().getFirst().departure().getTime());
             var endTime = new Timestamp(race.schedule().getLast().arrival().getTime());
             checkIfReserved(race, connection, startTime, endTime);
@@ -81,8 +81,8 @@ public final class RaceRepositoryImpl implements RaceRepository {
     }
 
     @Override
-    public Optional<Race> getRace(String role, RaceId raceId) {
-        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+    public Optional<Race> getRace(RaceId raceId) {
+        return jdbcTemplate.executeFunc(Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM races WHERE id = (?);"
             )) {
@@ -95,8 +95,8 @@ public final class RaceRepositoryImpl implements RaceRepository {
     }
 
     @Override
-    public List<Race> getRaces(String role, Filter filter) {
-        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+    public List<Race> getRaces(Filter filter) {
+        return jdbcTemplate.executeFunc(Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM schedule WHERE (arrival >= (?) AND arrival <= (?)) OR " +
                             "(departure >= (?) AND departure <= (?));"
@@ -116,8 +116,8 @@ public final class RaceRepositoryImpl implements RaceRepository {
     }
 
     @Override
-    public void updateRace(String role, RaceId raceId, boolean isFinished) {
-        jdbcTemplate.executeCons(role, Connection.TRANSACTION_READ_COMMITTED, connection -> {
+    public void updateRace(RaceId raceId, boolean isFinished) {
+        jdbcTemplate.executeCons(Connection.TRANSACTION_READ_COMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "UPDATE races SET finished = (?) WHERE id = (?);"
             )) {

@@ -30,12 +30,11 @@ class AuthServiceImplTest {
     private JwtManager jwtManager;
 
     private final String clientRole = "client_role";
-    private final String systemRole = "system_role";
     private AuthServiceImpl authService;
 
     @BeforeEach
     void setUp() {
-        authService = new AuthServiceImpl(userRepository, jwtManager, clientRole, systemRole);
+        authService = new AuthServiceImpl(userRepository, jwtManager, clientRole);
     }
 
     @Test
@@ -43,7 +42,7 @@ class AuthServiceImplTest {
         var form = new RegisterForm("random_username", "qwerty123", "qwerty123", "Zubenko Mikhail");
         var userId = new UserId("1");
         var user = new User(userId, "random_username", "qwerty123", "Zubenko Mikhail", "user_role", true);
-        given(userRepository.addUser(any(), any())).willReturn(user);
+        given(userRepository.addUser(any())).willReturn(user);
         var token = "random_maybe_invalid_jwt_token";
         given(jwtManager.generateToken(userId, user.role())).willReturn(token);
         var result = authService.register(form);
@@ -55,7 +54,7 @@ class AuthServiceImplTest {
     void register_negative_empty() {
         var form = new RegisterForm("random_username", null, "qwerty123", "Zubenko Mikhail");
         assertThrows(InvalidEntityException.class, () -> authService.register(form));
-        verify(userRepository, never()).addUser(any(), any());
+        verify(userRepository, never()).addUser(any());
         verify(jwtManager, never()).generateToken(any(), any());
     }
 
@@ -63,7 +62,7 @@ class AuthServiceImplTest {
     void register_negative_invalid() {
         var form = new RegisterForm("random_username_long", "qwerty123", "qwerty123", "Zubenko Mikhail");
         assertThrows(InvalidEntityException.class, () -> authService.register(form));
-        verify(userRepository, never()).addUser(any(), any());
+        verify(userRepository, never()).addUser(any());
         verify(jwtManager, never()).generateToken(any(), any());
     }
 
@@ -71,7 +70,7 @@ class AuthServiceImplTest {
     void register_negative_mismatches() {
         var form = new RegisterForm("random_username", "qwerty123", "qwertu123", "Zubenko Mikhail");
         assertThrows(PasswordsMismatchesException.class, () -> authService.register(form));
-        verify(userRepository, never()).addUser(any(), any());
+        verify(userRepository, never()).addUser(any());
         verify(jwtManager, never()).generateToken(any(), any());
     }
 
@@ -81,7 +80,7 @@ class AuthServiceImplTest {
         var password = "qwerty123";
         var form = new LoginForm(username, password);
         var user = new User(new UserId("1"), username, password, "Zubenko Mikhail", clientRole, true);
-        given(userRepository.getUserByUsername(systemRole, username)).willReturn(Optional.of(user));
+        given(userRepository.getUserByUsername(username)).willReturn(Optional.of(user));
         var token = "random_maybe_invalid_jwt_token";
         given(jwtManager.generateToken(user.id(), user.role())).willReturn(token);
         var result = authService.login(form);
@@ -94,7 +93,7 @@ class AuthServiceImplTest {
         var username = "random_username";
         var password = "qwerty123";
         var form = new LoginForm(username, password);
-        given(userRepository.getUserByUsername(systemRole, username)).willReturn(Optional.empty());
+        given(userRepository.getUserByUsername(username)).willReturn(Optional.empty());
         assertThrows(EntityNotFoundException.class, () -> authService.login(form));
         verify(jwtManager, never()).generateToken(any(), any());
     }
@@ -104,7 +103,7 @@ class AuthServiceImplTest {
         var username = "random_username";
         var form = new LoginForm(username, "qwerty1234");
         var user = new User(null, username, "qwerty123", "Zubenko Mikhail", clientRole, true);
-        given(userRepository.getUserByUsername(systemRole, username)).willReturn(Optional.of(user));
+        given(userRepository.getUserByUsername(username)).willReturn(Optional.of(user));
         assertThrows(InvalidPasswordException.class, () -> authService.login(form));
         verify(jwtManager, never()).generateToken(any(), any());
     }
@@ -115,7 +114,7 @@ class AuthServiceImplTest {
         var password = "qwerty123";
         var form = new LoginForm(username, password);
         var user = new User(null, username, password, "Zubenko Mikhail", clientRole, false);
-        given(userRepository.getUserByUsername(systemRole, username)).willReturn(Optional.of(user));
+        given(userRepository.getUserByUsername(username)).willReturn(Optional.of(user));
         assertThrows(UserWasBannedException.class, () -> authService.login(form));
         verify(jwtManager, never()).generateToken(any(), any());
     }

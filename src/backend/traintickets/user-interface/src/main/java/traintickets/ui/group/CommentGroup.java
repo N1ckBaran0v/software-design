@@ -20,7 +20,13 @@ public final class CommentGroup extends AbstractEndpointGroup {
     @Override
     public void addEndpoints() {
         post(ctx -> commentController.addComment(ctx, securityConfiguration.forUser(ctx)));
-        get(ctx -> commentController.getComments(ctx, securityConfiguration.authorizedOnly(ctx)));
-        delete("/{commentId}", ctx -> commentController.deleteComment(ctx, securityConfiguration.forAdmin(ctx)));
+        get(ctx -> {
+            securityConfiguration.forUser(ctx);
+            commentController.getComments(ctx);
+        });
+        delete("/{commentId}", ctx -> {
+            securityConfiguration.forAdmin(ctx);
+            commentController.deleteComment(ctx);
+        });
     }
 }

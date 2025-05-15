@@ -10,18 +10,9 @@ database:
 security:
     secret: s3cr3tc0d3
     expiration: 1
-    userRole:
-        appName: user_role
-        dbName: _user_role
-    carrierRole:
-        appName: carrier_role
-        dbName: _carrier_role
-    adminRole:
-        appName: admin_role
-        dbName: _admin_role
-    systemRole:
-        appName: system_role
-        dbName: _system_role
+    userRole: user_role
+    carrierRole: carrier_role
+    adminRole: admin_role
 redis:
     host: localhost
     port: 6379

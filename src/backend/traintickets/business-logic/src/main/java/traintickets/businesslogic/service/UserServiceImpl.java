@@ -16,23 +16,21 @@ import java.util.Objects;
 public final class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final JwtManager jwtManager;
-    private final String systemRole;
 
-    public UserServiceImpl(UserRepository userRepository, JwtManager jwtManager, String systemRole) {
+    public UserServiceImpl(UserRepository userRepository, JwtManager jwtManager) {
         this.userRepository = Objects.requireNonNull(userRepository);
         this.jwtManager = Objects.requireNonNull(jwtManager);
-        this.systemRole = Objects.requireNonNull(systemRole);
     }
 
     @Override
-    public void createUser(UserInfo userInfo, User user) {
+    public void createUser(User user) {
         user.validate();
-        userRepository.addUser(userInfo.role(), user);
+        userRepository.addUser(user);
     }
 
     @Override
-    public void deleteUser(UserInfo userInfo, UserId userId) {
-        userRepository.deleteUser(userInfo.role(), userId);
+    public void deleteUser(UserId userId) {
+        userRepository.deleteUser(userId);
         jwtManager.updateUser(userId);
     }
 
@@ -41,7 +39,7 @@ public final class UserServiceImpl implements UserService {
         if (!userId.equals(userInfo.userId())) {
             throw new InvalidEntityException("Invalid userId");
         }
-        var user = userRepository.getUserById(systemRole, userId).orElseThrow(
+        var user = userRepository.getUserById(userId).orElseThrow(
                 () -> new EntityNotFoundException(String.format("User with id '%s' not found", userId.id())));
         if (!user.active()) {
             throw new UserWasBannedException(userId);
@@ -50,8 +48,8 @@ public final class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User getUserByAdmin(UserInfo userInfo, String username) {
-        return userRepository.getUserByUsername(userInfo.role(), username).orElseThrow(
+    public User getUserByAdmin(String username) {
+        return userRepository.getUserByUsername(username).orElseThrow(
                 () -> new EntityNotFoundException(String.format("User with username '%s' not found", username)));
     }
 
@@ -66,17 +64,17 @@ public final class UserServiceImpl implements UserService {
             throw new InvalidEntityException(
                     String.format("Invalid userId: expected '%s', but got '%s'", userId.id(), user.id().id()));
         }
-        userRepository.updateUserPartially(systemRole, user);
+        userRepository.updateUserPartially(user);
         jwtManager.updateUser(user.id());
     }
 
     @Override
-    public void updateUserByAdmin(UserInfo userInfo, User user) {
+    public void updateUserByAdmin(User user) {
         user.validate();
         if (user.id() == null) {
             throw new InvalidEntityException("All data required");
         }
-        userRepository.updateUserCompletely(userInfo.role(), user);
+        userRepository.updateUserCompletely(user);
         jwtManager.updateUser(user.id());
     }
 }

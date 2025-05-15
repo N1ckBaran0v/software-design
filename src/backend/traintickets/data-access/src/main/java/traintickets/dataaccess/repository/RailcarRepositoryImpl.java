@@ -18,8 +18,8 @@ public final class RailcarRepositoryImpl implements RailcarRepository {
     }
 
     @Override
-    public void addRailcar(String role, Railcar railcar) {
-        jdbcTemplate.executeCons(role, Connection.TRANSACTION_SERIALIZABLE, connection -> {
+    public void addRailcar(Railcar railcar) {
+        jdbcTemplate.executeCons(Connection.TRANSACTION_SERIALIZABLE, connection -> {
             checkIfExists(railcar, connection);
             var railcarId = saveRailcar(railcar, connection);
             savePlaces(railcar, connection, railcarId);
@@ -72,8 +72,8 @@ public final class RailcarRepositoryImpl implements RailcarRepository {
     }
 
     @Override
-    public Iterable<Railcar> getRailcarsByType(String role, String type) {
-        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+    public Iterable<Railcar> getRailcarsByType(String type) {
+        return jdbcTemplate.executeFunc(Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM railcars where railcar_type = (?);"
             )) {
@@ -84,8 +84,8 @@ public final class RailcarRepositoryImpl implements RailcarRepository {
     }
 
     @Override
-    public Iterable<Railcar> getRailcarsByTrain(String role, TrainId trainId) {
-        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+    public Iterable<Railcar> getRailcarsByTrain(TrainId trainId) {
+        return jdbcTemplate.executeFunc(Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
                     "WITH railcars_ids AS (SELECT DISTINCT railcar_id FROM railcars_in_trains WHERE train_id = (?)) " +
                             "SELECT * FROM railcars WHERE id IN (SELECT * FROM railcars_ids);"

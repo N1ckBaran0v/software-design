@@ -20,8 +20,8 @@ public final class FilterRepositoryImpl implements FilterRepository {
     }
 
     @Override
-    public void addFilter(String role, Filter filter) {
-        jdbcTemplate.executeCons(role, Connection.TRANSACTION_SERIALIZABLE, connection -> {
+    public void addFilter(Filter filter) {
+        jdbcTemplate.executeCons(Connection.TRANSACTION_SERIALIZABLE, connection -> {
             checkIfExists(filter, connection);
             var filterId = saveFilter(filter, connection);
             savePassengers(filter, connection, filterId);
@@ -77,8 +77,8 @@ public final class FilterRepositoryImpl implements FilterRepository {
     }
 
     @Override
-    public Optional<Filter> getFilter(String role, UserId userId, String name) {
-        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+    public Optional<Filter> getFilter(UserId userId, String name) {
+        return jdbcTemplate.executeFunc(Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM filters WHERE user_id = (?) AND filter_name = (?);"
             )) {
@@ -92,8 +92,8 @@ public final class FilterRepositoryImpl implements FilterRepository {
     }
 
     @Override
-    public Iterable<Filter> getFilters(String role, UserId userId) {
-        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+    public Iterable<Filter> getFilters(UserId userId) {
+        return jdbcTemplate.executeFunc(Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM filters WHERE user_id = (?);"
             )) {
@@ -112,8 +112,8 @@ public final class FilterRepositoryImpl implements FilterRepository {
     }
 
     @Override
-    public void deleteFilter(String role, UserId userId, String name) {
-        jdbcTemplate.executeCons(role, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+    public void deleteFilter(UserId userId, String name) {
+        jdbcTemplate.executeCons(Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
                     "DELETE FROM filters WHERE user_id = (?) AND filter_name = (?);"
             )) {

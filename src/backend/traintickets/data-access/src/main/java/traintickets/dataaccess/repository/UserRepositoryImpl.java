@@ -24,8 +24,8 @@ public final class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public User addUser(String role, User user) {
-        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_SERIALIZABLE, connection -> {
+    public User addUser(User user) {
+        return jdbcTemplate.executeFunc(Connection.TRANSACTION_SERIALIZABLE, connection -> {
             checkIfExists(user.id(), user.username(), connection);
             try (var statement = connection.prepareStatement(
                     "INSERT INTO users_view (user_name, pass_word, real_name, user_role, is_active)\n" +
@@ -47,8 +47,8 @@ public final class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public Optional<User> getUserById(String role, UserId userId) {
-        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_READ_COMMITTED, connection -> {
+    public Optional<User> getUserById(UserId userId) {
+        return jdbcTemplate.executeFunc(Connection.TRANSACTION_READ_COMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM users_view WHERE id = (?);"
             )) {
@@ -61,8 +61,8 @@ public final class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public Optional<User> getUserByUsername(String role, String username) {
-        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_READ_COMMITTED, connection -> {
+    public Optional<User> getUserByUsername(String username) {
+        return jdbcTemplate.executeFunc(Connection.TRANSACTION_READ_COMMITTED, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM users_view WHERE user_name = (?);"
             )) {
@@ -75,8 +75,8 @@ public final class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public Iterable<User> getUsers(String role, Iterable<UserId> userIds) {
-        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_READ_COMMITTED, connection -> {
+    public Iterable<User> getUsers(Iterable<UserId> userIds) {
+        return jdbcTemplate.executeFunc(Connection.TRANSACTION_READ_COMMITTED, connection -> {
             var ids = StreamSupport.stream(userIds.spliterator(), false).map(id -> String.valueOf(id.id())).toList();
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM users_view WHERE id IN ('" + String.join("', '", ids) + "');"
@@ -95,8 +95,8 @@ public final class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public void updateUserCompletely(String role, User user) {
-        jdbcTemplate.executeCons(role, Connection.TRANSACTION_SERIALIZABLE, connection -> {
+    public void updateUserCompletely(User user) {
+        jdbcTemplate.executeCons(Connection.TRANSACTION_SERIALIZABLE, connection -> {
             checkIfExists(user.id(), user.username(), connection);
             try (var statement = connection.prepareStatement(
                     "UPDATE users_view SET " +
@@ -119,8 +119,8 @@ public final class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public void updateUserPartially(String role, TransportUser user) {
-        jdbcTemplate.executeCons(role, Connection.TRANSACTION_SERIALIZABLE, connection -> {
+    public void updateUserPartially(TransportUser user) {
+        jdbcTemplate.executeCons(Connection.TRANSACTION_SERIALIZABLE, connection -> {
             checkIfExists(user.id(), user.username(), connection);
             try (var statement = connection.prepareStatement(
                     "UPDATE users_view SET " +
@@ -139,8 +139,8 @@ public final class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public void deleteUser(String role, UserId userId) {
-        jdbcTemplate.executeCons(role, Connection.TRANSACTION_READ_COMMITTED, conn -> {
+    public void deleteUser(UserId userId) {
+        jdbcTemplate.executeCons(Connection.TRANSACTION_READ_COMMITTED, conn -> {
             try (var statement = conn.prepareStatement(
                     "DELETE FROM users_view WHERE id = (?);"
             )) {

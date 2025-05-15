@@ -7,7 +7,6 @@ import traintickets.businesslogic.logger.UniLogger;
 import traintickets.businesslogic.logger.UniLoggerFactory;
 import traintickets.businesslogic.model.Ticket;
 import traintickets.businesslogic.model.UserId;
-import traintickets.businesslogic.transport.UserInfo;
 import traintickets.payment.data.NoOpPaymentData;
 import traintickets.ui.exception.QueryParameterNotFoundException;
 
@@ -23,21 +22,21 @@ public final class TicketController {
         this.logger = Objects.requireNonNull(loggerFactory).getLogger(TicketController.class);
     }
 
-    public void addTickets(Context ctx, UserInfo userInfo) {
+    public void addTickets(Context ctx) {
         var tickets = Arrays.asList(ctx.bodyAsClass(Ticket[].class));
         logger.debug("tickets: %s", tickets);
-        ticketService.buyTickets(userInfo, tickets, new NoOpPaymentData());
+        ticketService.buyTickets(tickets, new NoOpPaymentData());
         ctx.status(HttpStatus.CREATED);
         logger.debug("tickets added");
     }
 
-    public void getTickets(Context ctx, UserInfo userInfo) {
+    public void getTickets(Context ctx) {
         var userId = ctx.queryParam("userId");
         logger.debug("userId: %s", userId);
         if (userId == null) {
             throw new QueryParameterNotFoundException("userId");
         }
-        ctx.json(ticketService.getTickets(userInfo, new UserId(userId)));
+        ctx.json(ticketService.getTickets(new UserId(userId)));
         logger.debug("tickets got");
     }
 }

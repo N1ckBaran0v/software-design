@@ -6,27 +6,20 @@ import traintickets.jdbc.api.TransactionFunction;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Map;
 import java.util.Objects;
 
 public abstract class AbstractJdbcTemplate implements JdbcTemplate {
-    private final Map<String, String> roles;
-
-    protected AbstractJdbcTemplate(Map<String, String> roles) {
-        this.roles = roles;
-    }
-
-    protected abstract Connection getConnection(String user) throws SQLException;
-    protected abstract void releaseConnection(String user, Connection connection) throws SQLException;
+    protected abstract Connection getConnection() throws SQLException;
+    protected abstract void releaseConnection(Connection connection) throws SQLException;
 
     @Override
-    public <T> T executeFunc(String role, int isolation, TransactionFunction<T> function) {
-        Objects.requireNonNull(role);
+    @SuppressWarnings("all")
+    public <T> T executeFunc(int isolation, TransactionFunction<T> function) {
         Objects.requireNonNull(function);
         try {
-            var connection = getConnection(role);
+            var connection = getConnection();
             try {
-                configureTransaction(connection, role, isolation);
+                connection.setTransactionIsolation(isolation);
                 var result = function.apply(connection);
                 connection.commit();
                 return result;
@@ -34,7 +27,7 @@ public abstract class AbstractJdbcTemplate implements JdbcTemplate {
                 connection.rollback();
                 throw e;
             } finally {
-                releaseConnection(role, connection);
+                releaseConnection(connection);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -42,31 +35,23 @@ public abstract class AbstractJdbcTemplate implements JdbcTemplate {
     }
 
     @Override
-    public void executeCons(String role, int isolation, TransactionConsumer consumer) {
-        Objects.requireNonNull(role);
+    @SuppressWarnings("all")
+    public void executeCons(int isolation, TransactionConsumer consumer) {
         Objects.requireNonNull(consumer);
         try {
-            var connection = getConnection(role);
+            var connection = getConnection();
             try {
-                configureTransaction(connection, role, isolation);
+                connection.setTransactionIsolation(isolation);
                 consumer.accept(connection);
                 connection.commit();
             } catch (Error | Exception e) {
                 connection.rollback();
                 throw e;
             } finally {
-                releaseConnection(role, connection);
+                releaseConnection(connection);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    @SuppressWarnings("all")
-    private void configureTransaction(Connection connection, String role, int isolation) throws SQLException {
-        connection.setTransactionIsolation(isolation);
-        try (var statement = connection.prepareStatement("SET ROLE \"" + roles.get(role) + "\";" )) {
-            statement.execute();
         }
     }
 }

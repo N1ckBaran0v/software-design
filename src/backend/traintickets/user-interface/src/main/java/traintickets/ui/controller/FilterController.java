@@ -23,7 +23,7 @@ public final class FilterController {
     public void addFilter(Context ctx, UserInfo userInfo) {
         var filter = ctx.bodyAsClass(Filter.class);
         logger.debug("filter: %s", filter);
-        filterService.addFilter(userInfo, filter);
+        filterService.addFilter(userInfo.userId(), filter);
         ctx.status(HttpStatus.CREATED);
         logger.debug("filter added");
     }
@@ -32,10 +32,10 @@ public final class FilterController {
         var filterName = ctx.queryParam("filterName");
         logger.debug("filterName: %s", filterName);
         if (filterName == null) {
-            ctx.json(filterService.getFilters(userInfo));
+            ctx.json(filterService.getFilters(userInfo.userId()));
             logger.debug("filters got");
         } else {
-            ctx.json(List.of(filterService.getFilter(userInfo, filterName)));
+            ctx.json(List.of(filterService.getFilter(userInfo.userId(), filterName)));
             logger.debug("filter got");
         }
     }
@@ -43,7 +43,7 @@ public final class FilterController {
     public void deleteFilter(Context ctx, UserInfo userInfo) {
         var filterId = ctx.queryParam("filterId");
         logger.debug("filterId: %s", filterId);
-        filterService.deleteFilter(userInfo, filterId);
+        filterService.deleteFilter(userInfo.userId(), filterId);
         ctx.status(HttpStatus.NO_CONTENT);
         logger.debug("filter deleted");
     }

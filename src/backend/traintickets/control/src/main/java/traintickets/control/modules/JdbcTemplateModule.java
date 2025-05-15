@@ -12,11 +12,9 @@ import java.util.Map;
 
 public final class JdbcTemplateModule implements ContextModule {
     private final DatabaseConfig databaseConfig;
-    private final SecurityConfig securityConfig;
 
-    public JdbcTemplateModule(DatabaseConfig databaseConfig, SecurityConfig securityConfig) {
+    public JdbcTemplateModule(DatabaseConfig databaseConfig) {
         this.databaseConfig = databaseConfig;
-        this.securityConfig = securityConfig;
     }
 
     @Override
@@ -27,12 +25,6 @@ public final class JdbcTemplateModule implements ContextModule {
                     databaseConfig.getUrl(),
                     databaseConfig.getUsername(),
                     databaseConfig.getPassword(),
-                    Map.of(
-                            securityConfig.getUserRole().getAppName(), securityConfig.getUserRole().getDbName(),
-                            securityConfig.getCarrierRole().getAppName(), securityConfig.getCarrierRole().getDbName(),
-                            securityConfig.getAdminRole().getAppName(), securityConfig.getAdminRole().getDbName(),
-                            securityConfig.getSystemRole().getAppName(), securityConfig.getSystemRole().getDbName()
-                    ),
                     databaseConfig.getPoolSize()
             );
             return factory.create(params);

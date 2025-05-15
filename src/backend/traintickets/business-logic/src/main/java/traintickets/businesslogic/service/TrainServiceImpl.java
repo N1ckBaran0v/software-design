@@ -5,7 +5,6 @@ import traintickets.businesslogic.exception.EntityNotFoundException;
 import traintickets.businesslogic.model.Train;
 import traintickets.businesslogic.model.TrainId;
 import traintickets.businesslogic.repository.TrainRepository;
-import traintickets.businesslogic.transport.UserInfo;
 
 import java.util.Date;
 import java.util.List;
@@ -20,20 +19,19 @@ public final class TrainServiceImpl implements TrainService {
     }
 
     @Override
-    public void addTrain(UserInfo userInfo, Train train) {
+    public void addTrain(Train train) {
         train.validate();
-        trainRepository.addTrain(userInfo.role(), train);
+        trainRepository.addTrain(train);
     }
 
     @Override
-    public Train getTrain(UserInfo userInfo, TrainId trainId) {
-        return trainRepository.getTrain(userInfo.role(), trainId).orElseThrow(
+    public Train getTrain(TrainId trainId) {
+        return trainRepository.getTrain(trainId).orElseThrow(
                 () -> new EntityNotFoundException(String.format("Train %s not found", trainId.id())));
     }
 
     @Override
-    public List<Train> getTrains(UserInfo userInfo, Date start, Date end) {
-        var role = userInfo.role();
-        return StreamSupport.stream(trainRepository.getTrains(role, start, end).spliterator(), false).toList();
+    public List<Train> getTrains(Date start, Date end) {
+        return StreamSupport.stream(trainRepository.getTrains(start, end).spliterator(), false).toList();
     }
 }

@@ -1,6 +1,5 @@
 package traintickets.ui.group;
 
-import io.javalin.http.HandlerType;
 import traintickets.ui.controller.UserController;
 import traintickets.ui.exception.QueryParameterNotFoundException;
 import traintickets.ui.security.SecurityConfiguration;
@@ -20,16 +19,24 @@ public final class UserGroup extends AbstractEndpointGroup {
     }
 
     @Override
-    public void addEndpoints() {
-        post(ctx -> userController.createUser(ctx, securityConfiguration.forAdmin(ctx)));
-        delete("/{userId}", ctx -> userController.deleteUser(ctx, securityConfiguration.forAdmin(ctx)));
+    public void addEndpoints() {;
+        post(ctx -> {
+            securityConfiguration.forAdmin(ctx);
+            userController.createUser(ctx);
+        });
+        delete("/{userId}", ctx -> {
+            securityConfiguration.forAdmin(ctx);
+            userController.deleteUser(ctx);
+        });
         get(ctx -> {
             var username = ctx.queryParam("username");
             var raceId = ctx.queryParam("raceId");
             if (username == null && raceId != null) {
-                userController.getUsers(ctx, securityConfiguration.forCarrier(ctx));
+                securityConfiguration.forCarrier(ctx);
+                userController.getUsers(ctx);
             } else if (username != null && raceId == null) {
-                userController.getUsers(ctx, securityConfiguration.forAdmin(ctx));
+                securityConfiguration.forAdmin(ctx);
+                userController.getUsers(ctx);
             } else {
                 throw new QueryParameterNotFoundException("login && raceId");
             }

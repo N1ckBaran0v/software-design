@@ -31,18 +31,18 @@ public final class UserController {
         this.adminRole = Objects.requireNonNull(adminRole);
     }
 
-    public void createUser(Context ctx, UserInfo userInfo) {
+    public void createUser(Context ctx) {
         var user = ctx.bodyAsClass(User.class);
         logger.debug("user: %s", user);
-        userService.createUser(userInfo, user);
+        userService.createUser(user);
         ctx.status(HttpStatus.CREATED);
         logger.debug("user created");
     }
 
-    public void deleteUser(Context ctx, UserInfo userInfo) {
+    public void deleteUser(Context ctx) {
         var userId = ctx.pathParam("userId");
         logger.debug("user: %s", userId);
-        userService.deleteUser(userInfo, new UserId(userId));
+        userService.deleteUser(new UserId(userId));
         ctx.status(HttpStatus.NO_CONTENT);
         logger.debug("user deleted");
     }
@@ -58,16 +58,16 @@ public final class UserController {
         logger.debug("user got");
     }
 
-    public void getUsers(Context ctx, UserInfo userInfo) {
+    public void getUsers(Context ctx) {
         var username = ctx.queryParam("username");
         if (username == null) {
             var raceId = ctx.queryParam("raceId");
             logger.debug("raceId: %s", raceId);
-            ctx.json(raceService.getPassengers(userInfo, new RaceId(raceId)));
+            ctx.json(raceService.getPassengers(new RaceId(raceId)));
             logger.debug("users got");
         } else {
             logger.debug("username: %s", username);
-            ctx.json(userService.getUserByAdmin(userInfo, username));
+            ctx.json(userService.getUserByAdmin(username));
             logger.debug("user got");
         }
     }
@@ -82,7 +82,7 @@ public final class UserController {
                 throw new ForbiddenException();
             }
             var user = ctx.bodyAsClass(User.class);
-            userService.updateUserByAdmin(userInfo, user);
+            userService.updateUserByAdmin(user);
         } else {
             var user = ctx.bodyAsClass(TransportUser.class);
             if (!userId.equals(user.id())) {

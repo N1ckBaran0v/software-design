@@ -5,8 +5,8 @@ import traintickets.businesslogic.exception.InvalidEntityException;
 import traintickets.businesslogic.model.CommentId;
 import traintickets.businesslogic.model.Comment;
 import traintickets.businesslogic.model.TrainId;
+import traintickets.businesslogic.model.UserId;
 import traintickets.businesslogic.repository.CommentRepository;
-import traintickets.businesslogic.transport.UserInfo;
 
 import java.util.List;
 import java.util.Objects;
@@ -20,22 +20,21 @@ public final class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public void addComment(UserInfo userInfo, Comment comment) {
+    public void addComment(UserId userId, Comment comment) {
         comment.validate();
-        if (!userInfo.userId().equals(comment.author())) {
-            throw new InvalidEntityException("Invalid userId");
+        if (!userId.equals(comment.author())) {
+            throw new InvalidEntityException("Invalid author");
         }
-        commentRepository.addComment(userInfo.role(), comment);
+        commentRepository.addComment(comment);
     }
 
     @Override
-    public List<Comment> getComments(UserInfo userInfo, TrainId trainId) {
-        var role = userInfo.role();
-        return StreamSupport.stream(commentRepository.getComments(role, trainId).spliterator(), false).toList();
+    public List<Comment> getComments(TrainId trainId) {
+        return StreamSupport.stream(commentRepository.getComments(trainId).spliterator(), false).toList();
     }
 
     @Override
-    public void deleteComment(UserInfo userInfo, CommentId commentId) {
-        commentRepository.deleteComment(userInfo.role(), commentId);
+    public void deleteComment(CommentId commentId) {
+        commentRepository.deleteComment(commentId);
     }
 }

@@ -25,8 +25,8 @@ public final class TicketRepositoryImpl implements TicketRepository {
     }
 
     @Override
-    public void addTickets(String role, List<Ticket> tickets, PaymentData paymentData) {
-        jdbcTemplate.executeCons(role, Connection.TRANSACTION_SERIALIZABLE, connection -> {
+    public void addTickets(List<Ticket> tickets, PaymentData paymentData) {
+        jdbcTemplate.executeCons(Connection.TRANSACTION_SERIALIZABLE, connection -> {
             try (var statement = connection.prepareStatement(
                     "INSERT INTO tickets (user_id, passenger, race_id, railcar, place_id, departure, destination, ticket_cost) " +
                             "VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
@@ -165,8 +165,8 @@ public final class TicketRepositoryImpl implements TicketRepository {
     }
 
     @Override
-    public Iterable<Ticket> getTicketsByUser(String role, UserId userId) {
-        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+    public Iterable<Ticket> getTicketsByUser(UserId userId) {
+        return jdbcTemplate.executeFunc(Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM tickets WHERE user_id = (?);"
             )) {
@@ -177,8 +177,8 @@ public final class TicketRepositoryImpl implements TicketRepository {
     }
 
     @Override
-    public Iterable<Ticket> getTicketsByRace(String role, RaceId raceId) {
-        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+    public Iterable<Ticket> getTicketsByRace(RaceId raceId) {
+        return jdbcTemplate.executeFunc(Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM tickets WHERE race_id = (?);"
             )) {

@@ -16,8 +16,8 @@ public final class TrainRepositoryImpl implements TrainRepository {
     }
 
     @Override
-    public void addTrain(String role, Train train) {
-        jdbcTemplate.executeCons(role, Connection.TRANSACTION_SERIALIZABLE, connection -> {
+    public void addTrain(Train train) {
+        jdbcTemplate.executeCons(Connection.TRANSACTION_SERIALIZABLE, connection -> {
             var trainId = saveTrain(train, connection);
             saveRailcars(train, connection, trainId);
         });
@@ -50,8 +50,8 @@ public final class TrainRepositoryImpl implements TrainRepository {
     }
 
     @Override
-    public Optional<Train> getTrain(String role, TrainId trainId) {
-        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+    public Optional<Train> getTrain(TrainId trainId) {
+        return jdbcTemplate.executeFunc(Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT * FROM trains WHERE id = (?);"
             )) {
@@ -64,8 +64,8 @@ public final class TrainRepositoryImpl implements TrainRepository {
     }
 
     @Override
-    public Iterable<Train> getTrains(String role, Date start, Date end) {
-        return jdbcTemplate.executeFunc(role, Connection.TRANSACTION_REPEATABLE_READ, connection -> {
+    public Iterable<Train> getTrains(Date start, Date end) {
+        return jdbcTemplate.executeFunc(Connection.TRANSACTION_REPEATABLE_READ, connection -> {
             try (var statement = connection.prepareStatement(
                     "WITH bad_races AS (SELECT DISTINCT race_id FROM schedule " +
                             "WHERE departure > (?) AND departure < (?) " +

@@ -24,22 +24,22 @@ public final class CommentController {
     public void addComment(Context ctx, UserInfo userInfo) {
         var comment = ctx.bodyAsClass(Comment.class);
         logger.debug("comment: %s", comment);
-        commentService.addComment(userInfo, comment);
+        commentService.addComment(userInfo.userId(), comment);
         ctx.status(HttpStatus.CREATED);
         logger.debug("comment added");
     }
 
-    public void getComments(Context ctx, UserInfo userInfo) {
+    public void getComments(Context ctx) {
         var trainId = ctx.pathParam("trainId");
         logger.debug("trainId: %s", trainId);
-        ctx.json(commentService.getComments(userInfo, new TrainId(trainId)));
+        ctx.json(commentService.getComments(new TrainId(trainId)));
         logger.debug("comments got");
     }
 
-    public void deleteComment(Context ctx, UserInfo userInfo) {
+    public void deleteComment(Context ctx) {
         var commentId = ctx.pathParam("commentId");
         logger.debug("commentId: %s", commentId);
-        commentService.deleteComment(userInfo, new CommentId(ctx.pathParam("commentId")));
+        commentService.deleteComment(new CommentId(ctx.pathParam("commentId")));
         ctx.status(HttpStatus.NO_CONTENT);
         logger.debug("comment deleted");
     }

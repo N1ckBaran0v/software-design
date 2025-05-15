@@ -3,10 +3,9 @@ package traintickets.control.configuration;
 public final class SecurityConfig {
     private String secret;
     private int expiration;
-    private RoleConfig userRole;
-    private RoleConfig carrierRole;
-    private RoleConfig adminRole;
-    private RoleConfig systemRole;
+    private String userRole;
+    private String carrierRole;
+    private String adminRole;
 
     public int getExpiration() {
         return expiration;
@@ -24,35 +23,27 @@ public final class SecurityConfig {
         this.secret = secret;
     }
 
-    public RoleConfig getUserRole() {
+    public String getUserRole() {
         return userRole;
     }
 
-    public void setUserRole(RoleConfig userRole) {
+    public void setUserRole(String userRole) {
         this.userRole = userRole;
     }
 
-    public RoleConfig getCarrierRole() {
+    public String getCarrierRole() {
         return carrierRole;
     }
 
-    public void setCarrierRole(RoleConfig carrierRole) {
+    public void setCarrierRole(String carrierRole) {
         this.carrierRole = carrierRole;
     }
 
-    public RoleConfig getAdminRole() {
+    public String getAdminRole() {
         return adminRole;
     }
 
-    public void setAdminRole(RoleConfig adminRole) {
+    public void setAdminRole(String adminRole) {
         this.adminRole = adminRole;
-    }
-
-    public RoleConfig getSystemRole() {
-        return systemRole;
-    }
-
-    public void setSystemRole(RoleConfig systemRole) {
-        this.systemRole = systemRole;
     }
 }

@@ -21,30 +21,16 @@ public final class BusinessLogicModule implements ContextModule {
                 .addSingleton(AuthService.class, beanProvider -> {
                     var userRepository = beanProvider.getInstance(UserRepository.class);
                     var jwtManager = beanProvider.getInstance(JwtManager.class);
-                    var defaultRole = securityConfig.getUserRole().getAppName();
-                    var systemRole = securityConfig.getSystemRole().getAppName();
-                    return new AuthServiceImpl(userRepository, jwtManager, defaultRole, systemRole);
+                    var defaultRole = securityConfig.getUserRole();
+                    return new AuthServiceImpl(userRepository, jwtManager, defaultRole);
                 })
                 .addSingleton(CommentService.class, CommentServiceImpl.class)
                 .addSingleton(FilterService.class, FilterServiceImpl.class)
                 .addSingleton(RaceService.class, RaceServiceImpl.class)
                 .addSingleton(RailcarService.class, RailcarServiceImpl.class)
-                .addSingleton(RouteService.class, beanProvider -> {
-                    var railcarRepository = beanProvider.getInstance(RailcarRepository.class);
-                    var trainRepository = beanProvider.getInstance(TrainRepository.class);
-                    var raceRepository = beanProvider.getInstance(RaceRepository.class);
-                    var ticketRepository = beanProvider.getInstance(TicketRepository.class);
-                    var systemRole = securityConfig.getSystemRole().getAppName();
-                    return new RouteServiceImpl(railcarRepository, trainRepository,
-                            raceRepository, ticketRepository, systemRole);
-                })
+                .addSingleton(RouteService.class, RouteServiceImpl.class)
                 .addSingleton(TicketService.class, TicketServiceImpl.class)
                 .addSingleton(TrainService.class, TrainServiceImpl.class)
-                .addSingleton(UserService.class, beanProvider -> {
-                    var userRepository = beanProvider.getInstance(UserRepository.class);
-                    var jwtManager = beanProvider.getInstance(JwtManager.class);
-                    var systemRole = securityConfig.getSystemRole().getAppName();
-                    return new UserServiceImpl(userRepository, jwtManager, systemRole);
-                });
+                .addSingleton(UserService.class, UserServiceImpl.class);
     }
 }
