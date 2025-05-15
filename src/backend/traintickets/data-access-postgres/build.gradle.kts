@@ -3,13 +3,13 @@ plugins {
 }
 
 description = "data-access-postgres"
-group = "traintickets.dataaccess"
+group = "traintickets.dataaccess.postgres"
 
 dependencies {
     api(project(":business-logic"))
     api(project(":jdbc"))
     implementation("org.postgresql:postgresql:42.7.5")
-    testImplementation("org.testcontainers:postgresql:1.20.6")
+    testImplementation("org.testcontainers:postgresql:1.21.0")
 }
 
 tasks.jar {
