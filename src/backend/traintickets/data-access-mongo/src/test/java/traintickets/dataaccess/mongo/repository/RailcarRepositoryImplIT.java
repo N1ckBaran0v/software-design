@@ -2,6 +2,7 @@ package traintickets.dataaccess.mongo.repository;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
+import org.bson.types.ObjectId;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,6 +11,7 @@ import traintickets.businesslogic.model.*;
 import traintickets.businesslogic.repository.RailcarRepository;
 import traintickets.dataaccess.mongo.model.PlaceDocument;
 import traintickets.dataaccess.mongo.model.RailcarDocument;
+import traintickets.dataaccess.mongo.model.TrainDocument;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -22,6 +24,9 @@ class RailcarRepositoryImplIT extends MongoIT {
     private RailcarRepository railcarRepository;
     private MongoCollection<RailcarDocument> railcarCollection;
     private MongoCollection<PlaceDocument> placeCollection;
+    private MongoCollection<TrainDocument> trainCollection;
+    private List<ObjectId> placeIds;
+    private ObjectId first, second, train;
 
     @BeforeEach
     @Override
@@ -40,40 +45,28 @@ class RailcarRepositoryImplIT extends MongoIT {
     protected void insertData() {
         railcarCollection = mongoExecutor.getDatabase().getCollection("railcars", RailcarDocument.class);
         placeCollection = mongoExecutor.getDatabase().getCollection("places", PlaceDocument.class);
+        trainCollection = mongoExecutor.getDatabase().getCollection("trains", TrainDocument.class);
         mongoExecutor.executeConsumer(session -> {
             var map = placeCollection.insertMany(session, List.of(
                     new PlaceDocument(null, 1, "", "universal", BigDecimal.valueOf(100)),
                     new PlaceDocument(null, 2, "", "child", BigDecimal.valueOf(50)),
                     new PlaceDocument(null, 1, "", "universal", BigDecimal.valueOf(100))
             )).getInsertedIds();
-            var ids = List.of(
+            placeIds = List.of(
                     map.get(0).asObjectId().getValue(),
                     map.get(1).asObjectId().getValue(),
                     map.get(2).asObjectId().getValue()
             );
-            railcarCollection.insertMany(session, List.of(
-                    new RailcarDocument(null, "1", "сидячий", List.of(ids.get(0), ids.get(1))),
-                    new RailcarDocument(null, "2", "купе", List.of(ids.get(2)))
-            ));
+            var railcarMap = railcarCollection.insertMany(session, List.of(
+                    new RailcarDocument(null, "1", "сидячий", List.of(placeIds.get(0), placeIds.get(1))),
+                    new RailcarDocument(null, "2", "купе", List.of(placeIds.get(2)))
+            )).getInsertedIds();
+            first = railcarMap.get(0).asObjectId().getValue();
+            second = railcarMap.get(1).asObjectId().getValue();
+            train = Objects.requireNonNull(trainCollection.insertOne(session, new TrainDocument(null, "Скорый",
+                    List.of(first, first, first, second))).getInsertedId()).asObjectId().getValue();
         });
     }
-
-//    @Override
-//    protected void insertData() {
-//        jdbcTemplate.executeCons(Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
-//            try (var statement = connection.prepareStatement(
-//                    "insert into trains (train_class) values ('Скорый'); " +
-//                            "insert into railcars (railcar_model, railcar_type) values " +
-//                            "('1', 'сидячий'), ('2', 'купе'); " +
-//                            "insert into railcars_in_trains (train_id, railcar_id) values " +
-//                            "(1, 1), (1, 1), (1, 1), (1, 2); " +
-//                            "insert into places (railcar_id, place_number, description, purpose, place_cost) values " +
-//                            "(1, 1, '', 'universal', 100), (1, 2, '', 'child', 50), (2, 1, '', 'universal', 100);"
-//            )) {
-//                statement.execute();
-//            }
-//        });
-//    }
 
     @Test
     void addRailcar_positive_added() {
@@ -108,8 +101,7 @@ class RailcarRepositoryImplIT extends MongoIT {
 
     @Test
     void getRailcarsByType_positive_got() {
-        var id = mongoExecutor.executeFunction(session -> Objects.requireNonNull(railcarCollection.find(session,
-                Filters.eq("model", "2")).first()).id().toHexString());
+        var id = second.toHexString();
         var result = railcarRepository.getRailcarsByType("купе");
         assertNotNull(result);
         var iterator = result.iterator();
@@ -121,6 +113,34 @@ class RailcarRepositoryImplIT extends MongoIT {
     @Test
     void getRailcarsByType_positive_empty() {
         var result = railcarRepository.getRailcarsByType("unexpexted");
+        assertNotNull(result);
+        assertFalse(result.iterator().hasNext());
+    }
+
+    @Test
+    void getRailcarsByTrain_positive_got() {
+        var placeId1 = new PlaceId(placeIds.get(0).toHexString());
+        var placeId2 = new PlaceId(placeIds.get(1).toHexString());
+        var placeId3 = new PlaceId(placeIds.get(2).toHexString());
+        var place1 = new Place(placeId1, 1, "", "universal", BigDecimal.valueOf(100));
+        var place2 = new Place(placeId2, 2, "", "child", BigDecimal.valueOf(50));
+        var place3 = new Place(placeId3, 1, "", "universal", BigDecimal.valueOf(100));
+        var railcarId1 = new RailcarId(first.toHexString());
+        var railcarId2 = new RailcarId(second.toHexString());
+        var railcar1 = new Railcar(railcarId1, "1", "сидячий", List.of(place1, place2));
+        var railcar2 = new Railcar(railcarId2, "2", "купе", List.of(place3));
+        var trainId = new TrainId(train.toHexString());
+        var result = railcarRepository.getRailcarsByTrain(trainId);
+        assertNotNull(result);
+        var list = StreamSupport.stream(result.spliterator(), false).toList();
+        assertEquals(2, list.size());
+        assertTrue(railcar1.equals(list.get(0)) || railcar1.equals(list.get(1)));
+        assertTrue(railcar2.equals(list.get(0)) || railcar2.equals(list.get(1)));
+    }
+
+    @Test
+    void getRailcarsByTrain_positive_empty() {
+        var result = railcarRepository.getRailcarsByTrain(new TrainId("123456789012345678901234"));
         assertNotNull(result);
         assertFalse(result.iterator().hasNext());
     }
@@ -147,9 +167,5 @@ class RailcarRepositoryImplIT extends MongoIT {
 //        var result = railcarRepository.getRailcarsByTrain(new TrainId("2"));
 //        assertNotNull(result);
 //        assertFalse(result.iterator().hasNext());
-//    }
-//
-//    @Test
-//    void getRailcarsByTrain() {
 //    }
 }

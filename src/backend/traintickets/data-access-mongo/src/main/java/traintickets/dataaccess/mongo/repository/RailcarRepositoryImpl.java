@@ -10,19 +10,22 @@ import traintickets.businesslogic.repository.RailcarRepository;
 import traintickets.dataaccess.mongo.connection.MongoExecutor;
 import traintickets.dataaccess.mongo.model.PlaceDocument;
 import traintickets.dataaccess.mongo.model.RailcarDocument;
+import traintickets.dataaccess.mongo.model.TrainDocument;
 
-import java.util.ArrayList;
+import java.util.*;
 import java.util.stream.StreamSupport;
 
 public final class RailcarRepositoryImpl implements RailcarRepository {
     private final MongoExecutor mongoExecutor;
     private final MongoCollection<RailcarDocument> railcarCollection;
     private final MongoCollection<PlaceDocument> placeCollection;
+    private final MongoCollection<TrainDocument> trainCollection;
 
     public RailcarRepositoryImpl(MongoExecutor mongoExecutor) {
         this.mongoExecutor = mongoExecutor;
         railcarCollection = mongoExecutor.getDatabase().getCollection("railcars", RailcarDocument.class);
         placeCollection = mongoExecutor.getDatabase().getCollection("places", PlaceDocument.class);
+        trainCollection = mongoExecutor.getDatabase().getCollection("trains", TrainDocument.class);
     }
 
     @Override
@@ -52,6 +55,13 @@ public final class RailcarRepositoryImpl implements RailcarRepository {
 
     @Override
     public Iterable<Railcar> getRailcarsByTrain(TrainId trainId) {
-        return null;
+        return mongoExecutor.transactionFunction(session -> {
+            var train = trainCollection.find(session, Filters.eq("_id", new ObjectId(trainId.id()))).first();
+            var ids = train == null ? Set.of() : new HashSet<>(train.railcars());
+            return StreamSupport.stream(railcarCollection.find(session, Filters.in("_id", ids)).spliterator(), false)
+                    .map(railcarDocument -> railcarDocument.toRailcar(StreamSupport.stream(placeCollection.find(session,
+                                    Filters.in("_id", railcarDocument.places())).spliterator(), false)
+                            .map(PlaceDocument::toPlace).toList())).toList();
+        });
     }
 }
