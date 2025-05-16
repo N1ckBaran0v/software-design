@@ -10,7 +10,7 @@ public final class MongoExecutor {
     }
 
     public <T> T executeFunction(TransactionFunction<T> function) {
-        var session = mongoPool.getsession();
+        var session = mongoPool.getSession();
         try {
             return function.apply(session);
         } finally {
@@ -19,7 +19,7 @@ public final class MongoExecutor {
     }
 
     public void executeConsumer(TransactionConsumer consumer) {
-        var session = mongoPool.getsession();
+        var session = mongoPool.getSession();
         try {
             consumer.accept(session);
         } finally {
@@ -28,7 +28,7 @@ public final class MongoExecutor {
     }
 
     public <T> T transactionFunction(TransactionFunction<T> function) {
-        var session = mongoPool.getsession();
+        var session = mongoPool.getSession();
         session.startTransaction();
         try {
             var result = function.apply(session);
@@ -43,7 +43,7 @@ public final class MongoExecutor {
     }
 
     public void transactionConsumer(TransactionConsumer consumer) {
-        var session = mongoPool.getsession();
+        var session = mongoPool.getSession();
         session.startTransaction();
         try {
             consumer.accept(session);

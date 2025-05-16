@@ -16,15 +16,7 @@ final class MongoPool implements AutoCloseable {
     private final MongoDatabase database;
 
     public MongoPool(MongoConfig config) {
-        var connectionString = "";
-        if (config.username() == null) {
-            connectionString = String.format("mongodb://%s:%d/%s?maxPoolStze=%d",
-                    config.host(), config.port(), config.database(), config.poolSize());
-        } else {
-            connectionString = String.format("mongodb://%s:%s@%s:%d/%s?maxPoolStze=%d",
-                    config.username(), config.password(),
-                    config.host(), config.port(), config.database(), config.poolSize());
-        }
+        var connectionString = getConnectionString(config);
         mongoClient = MongoClients.create(connectionString);
         database = mongoClient.getDatabase(config.database());
         pool = new ArrayList<>();
@@ -36,7 +28,20 @@ final class MongoPool implements AutoCloseable {
         semaphore = new Semaphore(config.poolSize());
     }
 
-    ClientSession getsession() {
+    private static String getConnectionString(MongoConfig config) {
+        var connectionString = "";
+        if (config.username() == null) {
+            connectionString = String.format("mongodb://%s:%d/%s?maxPoolStze=%d",
+                    config.host(), config.port(), config.database(), config.poolSize());
+        } else {
+            connectionString = String.format("mongodb://%s:%s@%s:%d/%s?maxPoolStze=%d",
+                    config.username(), config.password(),
+                    config.host(), config.port(), config.database(), config.poolSize());
+        }
+        return connectionString;
+    }
+
+    ClientSession getSession() {
         try {
             semaphore.acquire();
             synchronized (pool) {
