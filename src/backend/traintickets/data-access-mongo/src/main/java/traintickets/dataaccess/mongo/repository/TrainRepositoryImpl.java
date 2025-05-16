@@ -48,9 +48,9 @@ public final class TrainRepositoryImpl implements TrainRepository {
             var badRaces = StreamSupport.stream(scheduleCollection.find(session).spliterator(), false)
                     .filter(schedule -> {
                         var departure = schedule.departure();
-                        var first = departure != null && departure.after(start) && departure.before(end);
+                        var first = departure != null && !(departure.before(start) || departure.after(end));
                         var arrival = schedule.arrival();
-                        var second = arrival != null && arrival.after(start) && arrival.before(end);
+                        var second = arrival != null && !(arrival.before(start) || arrival.after(end));
                         return first || second;
                     }).map(ScheduleDocument::raceId).collect(Collectors.toSet());
             var badTrains = StreamSupport.stream(raceCollection.find(session, Filters.in("_id", badRaces))

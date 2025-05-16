@@ -33,7 +33,7 @@ public final class RaceRepositoryImpl implements RaceRepository {
         mongoExecutor.transactionConsumer(session -> {
             var badIds = findBetween(session, race.schedule().getFirst().departure(),
                     race.schedule().getLast().arrival()).map(ScheduleDocument::raceId).collect(Collectors.toSet());
-            if (StreamSupport.stream(raceCollection.find(session, Filters.not(Filters.in("_id", badIds)))
+            if (StreamSupport.stream(raceCollection.find(session, Filters.in("_id", badIds))
                     .spliterator(), false).map(RaceDocument::trainId).map(ObjectId::toHexString)
                     .collect(Collectors.toSet()).contains(race.trainId().id())) {
                 throw new TrainAlreadyReservedException(race.trainId());
@@ -48,9 +48,9 @@ public final class RaceRepositoryImpl implements RaceRepository {
     private Stream<ScheduleDocument> findBetween(ClientSession session, Date start, Date end) {
         return StreamSupport.stream(scheduleCollection.find(session).spliterator(), false).filter(schedule -> {
             var departure = schedule.departure();
-            var first = departure != null && departure.after(start) && departure.before(end);
+            var first = departure != null && !(departure.before(start) || departure.after(end));
             var arrival = schedule.arrival();
-            var second = arrival != null && arrival.after(start) && arrival.before(end);
+            var second = arrival != null && !(arrival.before(start) || arrival.after(end));
             return first || second;
         });
     }
@@ -120,7 +120,8 @@ public final class RaceRepositoryImpl implements RaceRepository {
     }
 
     private void addRace(ClientSession session, List<Race> races, Map.Entry<ObjectId, List<Schedule>> entry) {
-        var raceDocument = raceCollection.find(session, Filters.eq("_id", entry.getKey())).first();
+        var raceDocument = raceCollection.find(session, Filters.and(
+                Filters.eq("_id", entry.getKey()), Filters.eq("finished", false))).first();
         if (raceDocument != null) {
             races.add(raceDocument.toRace(entry.getValue()));
         }

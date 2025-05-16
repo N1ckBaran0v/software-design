@@ -1,6 +1,7 @@
 package traintickets.dataaccess.mongo.repository;
 
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.Filters;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,8 +14,8 @@ import traintickets.dataaccess.mongo.model.ScheduleDocument;
 import traintickets.dataaccess.mongo.model.TrainDocument;
 
 import java.sql.Timestamp;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -66,170 +67,118 @@ class RaceRepositoryImplIT extends MongoIT {
         });
     }
 
-//    @Test
-//    void addRace_positive_added() {
-//        var sched1 = new Schedule(null, "first", null, Timestamp.valueOf("2025-04-01 11:50:00"), 0);
-//        var sched2 = new Schedule(null, "second", Timestamp.valueOf("2025-04-01 13:20:00"), null, 5);
-//        var race = new Race(null, new TrainId("1"), List.of(sched1, sched2), false);
-//        raceRepository.addRace(race);
-//        jdbcTemplate.executeCons(Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
-//            try (var statement = connection.prepareStatement(
-//                    "SELECT * FROM races WHERE id = 3;"
-//            )) {
-//                try (var resultSet = statement.executeQuery()) {
-//                    assertTrue(resultSet.next());
-//                    assertEquals(race.trainId().id(), String.valueOf(resultSet.getLong("train_id")));
-//                    assertFalse(resultSet.getBoolean("finished"));
-//                    assertFalse(resultSet.next());
-//                }
-//            }
-//            try (var statement = connection.prepareStatement(
-//                    "SELECT * FROM schedule WHERE race_id = 3;"
-//            )) {
-//                try (var resultSet = statement.executeQuery()) {
-//                    assertTrue(resultSet.next());
-//                    assertEquals(sched1.name(), resultSet.getString("station_name"));
-//                    assertEquals(sched1.arrival(), resultSet.getTimestamp("arrival"));
-//                    assertEquals(sched1.departure(), resultSet.getTimestamp("departure"));
-//                    assertEquals(sched1.multiplier(), resultSet.getDouble("multiplier"));
-//                    assertTrue(resultSet.next());
-//                    assertEquals(sched2.name(), resultSet.getString("station_name"));
-//                    assertEquals(sched2.arrival(), resultSet.getTimestamp("arrival"));
-//                    assertEquals(sched2.departure(), resultSet.getTimestamp("departure"));
-//                    assertEquals(sched2.multiplier(), resultSet.getDouble("multiplier"));
-//                    assertFalse(resultSet.next());
-//                }
-//            }
-//        });
-//    }
-//
-//    @Test
-//    void addRace_negative_reserved() {
-//        var sched1 = new Schedule(new ScheduleId("1"), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0);
-//        var sched2 = new Schedule(new ScheduleId("2"), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5);
-//        var race = new Race(null, new TrainId("1"), List.of(sched1, sched2), false);
-//        assertThrows(TrainAlreadyReservedException.class, () -> raceRepository.addRace(race));
-//        jdbcTemplate.executeCons(Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
-//            try (var statement = connection.prepareStatement(
-//                    "SELECT * FROM races WHERE id = 3;"
-//            )) {
-//                try (var resultSet = statement.executeQuery()) {
-//                    assertFalse(resultSet.next());
-//                }
-//            }
-//            try (var statement = connection.prepareStatement(
-//                    "SELECT * FROM schedule WHERE race_id = 3;"
-//            )) {
-//                try (var resultSet = statement.executeQuery()) {
-//                    assertFalse(resultSet.next());
-//                }
-//            }
-//        });
-//    }
-//
-//    @Test
-//    void getRace_positive_found() {
-//        var id = new RaceId("1");
-//        var sched1 = new Schedule(new ScheduleId("1"), "first", null, Timestamp.valueOf("2025-04-01 10:10:00"), 0);
-//        var sched2 = new Schedule(new ScheduleId("2"), "second", Timestamp.valueOf("2025-04-01 11:40:00"), null, 5);
-//        var race = new Race(id, new TrainId("1"), List.of(sched1, sched2), true);
-//        var result = raceRepository.getRace(id).orElse(null);
-//        assertEquals(race, result);
-//    }
-//
-//    @Test
-//    void getRace_positive_notFound() {
-//        assertNull(raceRepository.getRace(new RaceId("3")).orElse(null));
-//    }
-//
-//    @Test
-//    void getRaces_positive_got0() {
-//        var filter = new Filter(null, null, "first", "second", 0, null, Timestamp.valueOf("2025-04-01 10:00:00"),
-//                Timestamp.valueOf("2025-04-01 12:00:00"));
-//        var sched1 = new Schedule(new ScheduleId("3"), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0);
-//        var sched2 = new Schedule(new ScheduleId("4"), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5);
-//        var race = new Race(new RaceId("2"), new TrainId("2"), List.of(sched1, sched2), false);
-//        var result = raceRepository.getRaces(filter);
-//        assertNotNull(result);
-//        var iterator = result.iterator();
-//        assertTrue(iterator.hasNext());
-//        assertEquals(race, iterator.next());
-//        assertFalse(iterator.hasNext());
-//    }
-//
-//    @Test
-//    void getRaces_positive_got1() {
-//        var filter = new Filter(null, null, "first", "second", 1, null, Timestamp.valueOf("2025-04-01 10:00:00"),
-//                Timestamp.valueOf("2025-04-01 12:00:00"));
-//        var sched1 = new Schedule(new ScheduleId("3"), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0);
-//        var sched2 = new Schedule(new ScheduleId("4"), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5);
-//        var race = new Race(new RaceId("2"), new TrainId("2"), List.of(sched1, sched2), false);
-//        var result = raceRepository.getRaces(filter);
-//        assertNotNull(result);
-//        var iterator = result.iterator();
-//        assertTrue(iterator.hasNext());
-//        assertEquals(race, iterator.next());
-//        assertFalse(iterator.hasNext());
-//    }
-//
-//    @Test
-//    void getRaces_positive_got2() {
-//        var filter = new Filter(null, null, "first", "second", 2, null, Timestamp.valueOf("2025-04-01 10:00:00"),
-//                Timestamp.valueOf("2025-04-01 12:00:00"));
-//        var sched1 = new Schedule(new ScheduleId("3"), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0);
-//        var sched2 = new Schedule(new ScheduleId("4"), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5);
-//        var race = new Race(new RaceId("2"), new TrainId("2"), List.of(sched1, sched2), false);
-//        var result = raceRepository.getRaces(filter);
-//        assertNotNull(result);
-//        var iterator = result.iterator();
-//        assertTrue(iterator.hasNext());
-//        assertEquals(race, iterator.next());
-//        assertFalse(iterator.hasNext());
-//    }
-//
-//    @Test
-//    void getRaces_positive_empty() {
-//        var filter = new Filter(null, null, "first", "second", 1, null, Timestamp.valueOf("2025-04-01 00:00:00"),
-//                Timestamp.valueOf("2025-04-01 11:11:11"));
-//        var result = raceRepository.getRaces(filter);
-//        assertNotNull(result);
-//        assertFalse(result.iterator().hasNext());
-//    }
-//
-//    @Test
-//    void updateRace_positive_updates() {
-//        var sched1 = new Schedule(new ScheduleId("3"), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0);
-//        var sched2 = new Schedule(new ScheduleId("4"), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5);
-//        var race = new Race(new RaceId("2"), new TrainId("2"), List.of(sched1, sched2), true);
-//        raceRepository.updateRace(race.id(), race.finished());
-//        jdbcTemplate.executeCons(Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
-//            try (var statement = connection.prepareStatement(
-//                    "SELECT * FROM races WHERE id = 2;"
-//            )) {
-//                try (var resultSet = statement.executeQuery()) {
-//                    assertTrue(resultSet.next());
-//                    assertEquals(race.trainId().id(), String.valueOf(resultSet.getLong("train_id")));
-//                    assertTrue(resultSet.getBoolean("finished"));
-//                    assertFalse(resultSet.next());
-//                }
-//            }
-//            try (var statement = connection.prepareStatement(
-//                    "SELECT * FROM schedule WHERE race_id = 2;"
-//            )) {
-//                try (var resultSet = statement.executeQuery()) {
-//                    assertTrue(resultSet.next());
-//                    assertEquals(sched1.name(), resultSet.getString("station_name"));
-//                    assertEquals(sched1.arrival(), resultSet.getTimestamp("arrival"));
-//                    assertEquals(sched1.departure(), resultSet.getTimestamp("departure"));
-//                    assertEquals(sched1.multiplier(), resultSet.getDouble("multiplier"));
-//                    assertTrue(resultSet.next());
-//                    assertEquals(sched2.name(), resultSet.getString("station_name"));
-//                    assertEquals(sched2.arrival(), resultSet.getTimestamp("arrival"));
-//                    assertEquals(sched2.departure(), resultSet.getTimestamp("departure"));
-//                    assertEquals(sched2.multiplier(), resultSet.getDouble("multiplier"));
-//                    assertFalse(resultSet.next());
-//                }
-//            }
-//        });
-//    }
+    @Test
+    void addRace_positive_added() {
+        var sched1 = new Schedule(null, "first", null, Timestamp.valueOf("2025-04-01 11:50:00"), 0);
+        var sched2 = new Schedule(null, "second", Timestamp.valueOf("2025-04-01 13:20:00"), null, 5);
+        var race = new Race(null, new TrainId(trainIds.getFirst().toHexString()), List.of(sched1, sched2), false);
+        raceRepository.addRace(race);
+        mongoExecutor.executeConsumer(session -> {
+            assertEquals(3, raceCollection.countDocuments(session));
+            assertEquals(6, scheduleCollection.countDocuments(session));
+        });
+    }
+
+    @Test
+    void addRace_negative_reserved() {
+        var sched1 = new Schedule(null, "first", null, Timestamp.valueOf("2025-04-01 11:50:00"), 0);
+        var sched2 = new Schedule(null, "second", Timestamp.valueOf("2025-04-01 13:20:00"), null, 5);
+        var race = new Race(null, new TrainId(trainIds.getLast().toHexString()), List.of(sched1, sched2), false);
+        assertThrows(TrainAlreadyReservedException.class, () -> raceRepository.addRace(race));
+        mongoExecutor.executeConsumer(session -> {
+            assertEquals(2, raceCollection.countDocuments(session));
+            assertEquals(4, scheduleCollection.countDocuments(session));
+        });
+    }
+
+    @Test
+    void getRace_positive_found() {
+        var raceId = new RaceId(raceIds.getFirst().toHexString());
+        var schedId1 = new ScheduleId(scheduleIds.get(0).toHexString());
+        var schedId2 = new ScheduleId(scheduleIds.get(1).toHexString());
+        var sched1 = new Schedule(schedId1, "first", null, Timestamp.valueOf("2025-04-01 10:10:00"), 0);
+        var sched2 = new Schedule(schedId2, "second", Timestamp.valueOf("2025-04-01 11:40:00"), null, 5);
+        var trainId = new TrainId(trainIds.getFirst().toHexString());
+        var race = new Race(raceId, trainId, List.of(sched1, sched2), true);
+        var result = raceRepository.getRace(raceId).orElse(null);
+        assertNotNull(result);
+        assertEquals(race.trainId(), result.trainId());
+        assertEquals(race.finished(), result.finished());
+        assertEquals(race.schedule().size(), result.schedule().size());
+        assertEquals(race.schedule().get(0).id(), result.schedule().get(0).id());
+        assertEquals(race.schedule().get(1).id(), result.schedule().get(1).id());
+    }
+
+    @Test
+    void getRace_positive_notFound() {
+        assertNull(raceRepository.getRace(new RaceId("123456789012345678901234")).orElse(null));
+    }
+
+    @Test
+    void getRaces_positive_got0() {
+        var filter = new Filter(null, null, "first", "second", 0, null, Timestamp.valueOf("2025-04-01 10:00:00"),
+                Timestamp.valueOf("2025-04-01 12:00:00"));
+        var raceId = new RaceId(raceIds.getLast().toHexString());
+        var result = raceRepository.getRaces(filter);
+        assertNotNull(result);
+        var iterator = result.iterator();
+        assertTrue(iterator.hasNext());
+        assertEquals(raceId, iterator.next().id());
+        assertFalse(iterator.hasNext());
+    }
+
+    @Test
+    void getRaces_positive_got1() {
+        var filter = new Filter(null, null, "first", "second", 1, null, Timestamp.valueOf("2025-04-01 10:00:00"),
+                Timestamp.valueOf("2025-04-01 12:00:00"));
+        var raceId = new RaceId(raceIds.getLast().toHexString());
+        var result = raceRepository.getRaces(filter);
+        assertNotNull(result);
+        var iterator = result.iterator();
+        assertTrue(iterator.hasNext());
+        assertEquals(raceId, iterator.next().id());
+        assertFalse(iterator.hasNext());
+    }
+
+    @Test
+    void getRaces_positive_got2() {
+        var filter = new Filter(null, null, "first", "second", 2, null, Timestamp.valueOf("2025-04-01 10:00:00"),
+                Timestamp.valueOf("2025-04-01 12:00:00"));
+        var raceId = new RaceId(raceIds.getLast().toHexString());
+        var result = raceRepository.getRaces(filter);
+        assertNotNull(result);
+        var iterator = result.iterator();
+        assertTrue(iterator.hasNext());
+        assertEquals(raceId, iterator.next().id());
+        assertFalse(iterator.hasNext());
+    }
+
+    @Test
+    void getRaces_positive_empty() {
+        var filter = new Filter(null, null, "first", "second", 1, null, Timestamp.valueOf("2025-04-01 00:00:00"),
+                Timestamp.valueOf("2025-04-01 11:11:11"));
+        var result = raceRepository.getRaces(filter);
+        assertNotNull(result);
+        assertFalse(result.iterator().hasNext());
+    }
+
+    @Test
+    void updateRace_positive_updates() {
+        raceRepository.updateRace(new RaceId(raceIds.getFirst().toHexString()), false);
+        mongoExecutor.executeConsumer(session -> {
+            assertEquals(2, raceCollection.countDocuments(session));
+            assertEquals(4, scheduleCollection.countDocuments(session));
+            assertFalse(Objects.requireNonNull(raceCollection
+                    .find(session, Filters.eq("_id", raceIds.getFirst())).first()).finished());
+        });
+    }
+
+    @Test
+    void updateRace_positive_notFound() {
+        raceRepository.updateRace(new RaceId("123456789012345678901234"), false);
+        mongoExecutor.executeConsumer(session -> {
+            assertEquals(2, raceCollection.countDocuments(session));
+            assertEquals(4, scheduleCollection.countDocuments(session));
+        });
+    }
 }
