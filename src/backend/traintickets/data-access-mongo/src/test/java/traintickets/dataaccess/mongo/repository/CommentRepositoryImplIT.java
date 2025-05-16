@@ -59,7 +59,7 @@ class CommentRepositoryImplIT extends MongoIT {
                 commentCollection.find(session, Filters.eq("score", 5)).first()).id().toHexString()));
         var commentId2 = mongoExecutor.executeFunction(session -> new CommentId(Objects.requireNonNull(
                 commentCollection.find(session, Filters.eq("score", 1)).first()).id().toHexString()));
-        var trainId = new TrainId("123456789012345678901234");;
+        var trainId = new TrainId("123456789012345678901234");
         var comment1 = new Comment(commentId1, new UserId("111122223333444455556666"), trainId, 5, "Лучший поезд");
         var comment2 = new Comment(commentId2, new UserId("999988887777666655554444"), trainId, 1, "Грубые проводники");
         var result = commentRepository.getComments(trainId);
