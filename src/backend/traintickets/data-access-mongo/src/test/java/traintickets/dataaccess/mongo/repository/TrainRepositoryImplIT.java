@@ -27,14 +27,15 @@ class TrainRepositoryImplIT extends MongoIT {
     private ObjectId railcarId;
     private List<ObjectId> trainIds, raceIds;
 
-
     @BeforeEach
+    @Override
     void setUp() {
         super.setUp();
         trainRepository = new TrainRepositoryImpl(mongoExecutor);
     }
 
     @AfterEach
+    @Override
     void tearDown() {
         super.tearDown();
     }

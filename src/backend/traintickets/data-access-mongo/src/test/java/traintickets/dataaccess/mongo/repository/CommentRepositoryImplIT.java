@@ -24,12 +24,14 @@ class CommentRepositoryImplIT extends MongoIT {
     private MongoCollection<CommentDocument> commentCollection;
 
     @BeforeEach
+    @Override
     void setUp() {
         super.setUp();
         commentRepository = new CommentRepositoryImpl(mongoExecutor);
     }
 
     @AfterEach
+    @Override
     void tearDown() {
         super.tearDown();
     }

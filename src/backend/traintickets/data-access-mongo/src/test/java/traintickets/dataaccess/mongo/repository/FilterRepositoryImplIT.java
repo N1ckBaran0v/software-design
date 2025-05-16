@@ -23,12 +23,14 @@ class FilterRepositoryImplIT extends MongoIT {
     private MongoCollection<FilterDocument> filterCollection;
 
     @BeforeEach
+    @Override
     void setUp() {
         super.setUp();
         filterRepository = new FilterRepositoryImpl(mongoExecutor);
     }
 
     @AfterEach
+    @Override
     void tearDown() {
         super.tearDown();
     }

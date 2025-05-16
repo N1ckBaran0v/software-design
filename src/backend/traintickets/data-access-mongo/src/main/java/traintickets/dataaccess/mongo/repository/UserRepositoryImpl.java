@@ -70,7 +70,7 @@ public final class UserRepositoryImpl implements UserRepository {
                 throw new EntityAlreadyExistsException(
                         String.format("User with username '%s' already exists", user.username()));
             }
-            userCollection.updateOne(Filters.eq("_id", new ObjectId(user.id().id())), Updates.combine(
+            userCollection.updateOne(session, Filters.eq("_id", new ObjectId(user.id().id())), Updates.combine(
                     Updates.set("username", user.username()),
                     Updates.set("password", user.password()),
                     Updates.set("name", user.name()),
@@ -88,7 +88,7 @@ public final class UserRepositoryImpl implements UserRepository {
                 throw new EntityAlreadyExistsException(
                         String.format("User with username '%s' already exists", user.username()));
             }
-            userCollection.updateOne(Filters.eq("_id", new ObjectId(user.id().id())), Updates.combine(
+            userCollection.updateOne(session, Filters.eq("_id", new ObjectId(user.id().id())), Updates.combine(
                     Updates.set("username", user.username()),
                     Updates.set("password", user.password()),
                     Updates.set("name", user.name())
