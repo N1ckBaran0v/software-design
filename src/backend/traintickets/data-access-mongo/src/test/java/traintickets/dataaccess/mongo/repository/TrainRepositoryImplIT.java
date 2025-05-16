@@ -1,7 +1,7 @@
 package traintickets.dataaccess.mongo.repository;
 
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.model.Filters;
+import org.bson.types.ObjectId;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,13 +9,9 @@ import traintickets.businesslogic.model.RailcarId;
 import traintickets.businesslogic.model.Train;
 import traintickets.businesslogic.model.TrainId;
 import traintickets.businesslogic.repository.TrainRepository;
-import traintickets.dataaccess.mongo.model.PlaceDocument;
-import traintickets.dataaccess.mongo.model.RailcarDocument;
-import traintickets.dataaccess.mongo.model.TrainDocument;
+import traintickets.dataaccess.mongo.model.*;
 
-import java.sql.Connection;
 import java.sql.Timestamp;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -25,6 +21,12 @@ class TrainRepositoryImplIT extends MongoIT {
     private TrainRepository trainRepository;
     private MongoCollection<TrainDocument> trainCollection;
     private MongoCollection<RailcarDocument> railcarCollection;
+    private MongoCollection<RaceDocument> raceCollection;
+    private MongoCollection<ScheduleDocument> scheduleCollection;
+
+    private ObjectId railcarId;
+    private List<ObjectId> trainIds, raceIds;
+
 
     @BeforeEach
     void setUp() {
@@ -41,41 +43,33 @@ class TrainRepositoryImplIT extends MongoIT {
     protected void insertData() {
         trainCollection = mongoExecutor.getDatabase().getCollection("trains", TrainDocument.class);
         railcarCollection = mongoExecutor.getDatabase().getCollection("railcars", RailcarDocument.class);
+        raceCollection = mongoExecutor.getDatabase().getCollection("races", RaceDocument.class);
+        scheduleCollection = mongoExecutor.getDatabase().getCollection("schedules", ScheduleDocument.class);
         mongoExecutor.executeConsumer(session -> {
-            var railcarId = Objects.requireNonNull(railcarCollection.insertOne(session,
+            railcarId = Objects.requireNonNull(railcarCollection.insertOne(session,
                     new RailcarDocument(null, "1", "сидячий", List.of())).getInsertedId()).asObjectId().getValue();
-            trainCollection.insertMany(session, List.of(
+            var trainMap = trainCollection.insertMany(session, List.of(
                     new TrainDocument(null, "фирменный", List.of(railcarId)),
                     new TrainDocument(null, "скорый", List.of())
+            )).getInsertedIds();
+            trainIds = List.of(trainMap.get(0).asObjectId().getValue(), trainMap.get(1).asObjectId().getValue());
+            var raceMap = raceCollection.insertMany(session, List.of(
+                    new RaceDocument(null, trainIds.get(0), true),
+                    new RaceDocument(null, trainIds.get(1), false)
+            )).getInsertedIds();
+            raceIds = List.of(raceMap.get(0).asObjectId().getValue(), raceMap.get(1).asObjectId().getValue());
+            scheduleCollection.insertMany(session, List.of(
+                    new ScheduleDocument(null, raceIds.get(0), "first", null, Timestamp.valueOf("2025-04-01 10:10:00"), 0),
+                    new ScheduleDocument(null, raceIds.get(0), "second", Timestamp.valueOf("2025-04-01 11:40:00"), null, 5),
+                    new ScheduleDocument(null, raceIds.get(1), "first", null, Timestamp.valueOf("2025-04-01 11:00:00"), 0),
+                    new ScheduleDocument(null, raceIds.get(1), "second", Timestamp.valueOf("2025-04-01 12:00:00"), null, 5)
             ));
         });
     }
 
-//    @Override
-//    protected void insertData() {
-//        jdbcTemplate.executeCons(Connection.TRANSACTION_READ_UNCOMMITTED, connection -> {
-//            try (var statement = connection.prepareStatement(
-//                    "insert into trains (train_class) values ('фирменный'), ('Скорый'); " +
-//                            "insert into races (train_id, finished) values " +
-//                            "(1, true), (2, false); " +
-//                            "insert into schedule (race_id, station_name, arrival, departure, multiplier) values " +
-//                            "(1, 'first', null, '2025-04-01 10:10:00+03', 0), " +
-//                            "(1, 'second', '2025-04-01 11:40:00+03', null, 5), " +
-//                            "(2, 'first', null, '2025-04-01 11:00:00+03', 0), " +
-//                            "(2, 'second', '2025-04-01 12:00:00+03', null, 5); " +
-//                            "insert into railcars (railcar_model, railcar_type) values (1, 'сидячий'); " +
-//                            "insert into railcars_in_trains (train_id, railcar_id) values (1, 1); "
-//            )) {
-//                statement.execute();
-//            }
-//        });
-//    }
-
     @Test
     void addTrain_positive_added() {
-        var railcarId = mongoExecutor.executeFunction(session ->
-                Objects.requireNonNull(railcarCollection.find(session).first()).id().toHexString());
-        var train = new Train(null, "скорый", List.of(new RailcarId(railcarId)));
+        var train = new Train(null, "скорый", List.of(new RailcarId(railcarId.toHexString())));
         trainRepository.addTrain(train);
         mongoExecutor.executeConsumer(session -> {
             assertEquals(3, trainCollection.countDocuments());
@@ -85,8 +79,7 @@ class TrainRepositoryImplIT extends MongoIT {
 
     @Test
     void getTrain_positive_found() {
-        var id = mongoExecutor.executeFunction(session -> Objects.requireNonNull(
-                trainCollection.find(session, Filters.eq("trainClass", "фирменный")).first()).id().toHexString());
+        var id = trainIds.getFirst().toHexString();
         var result = trainRepository.getTrain(new TrainId(id)).orElse(null);
         assertNotNull(result);
         assertEquals("фирменный", result.trainClass());
@@ -99,23 +92,24 @@ class TrainRepositoryImplIT extends MongoIT {
         assertNull(result);
     }
 
-//    @Test
-//    void getTrains_positive_got() {
-//        var train = new Train(new TrainId("1"), "фирменный", List.of());
-//        var result = trainRepository.getTrains(Timestamp.valueOf("2025-04-01 11:50:00"),
-//                Timestamp.valueOf("2025-04-01 13:20:00"));
-//        assertNotNull(result);
-//        var iterator = result.iterator();
-//        assertTrue(iterator.hasNext());
-//        assertEquals(train, iterator.next());
-//        assertFalse(iterator.hasNext());
-//    }
-//
-//    @Test
-//    void getTrains_positive_empty() {
-//        var result = trainRepository.getTrains(Timestamp.valueOf("2025-04-01 11:30:00"),
-//                Timestamp.valueOf("2025-04-01 12:30:00"));
-//        assertNotNull(result);
-//        assertFalse(result.iterator().hasNext());
-//    }
+    @Test
+    void getTrains_positive_got() {
+        var train = new Train(new TrainId(trainIds.getFirst().toHexString()), "фирменный",
+                List.of(new RailcarId(railcarId.toHexString())));
+        var result = trainRepository.getTrains(Timestamp.valueOf("2025-04-01 11:50:00"),
+                Timestamp.valueOf("2025-04-01 13:20:00"));
+        assertNotNull(result);
+        var iterator = result.iterator();
+        assertTrue(iterator.hasNext());
+        assertEquals(train, iterator.next());
+        assertFalse(iterator.hasNext());
+    }
+
+    @Test
+    void getTrains_positive_empty() {
+        var result = trainRepository.getTrains(Timestamp.valueOf("2025-04-01 11:30:00"),
+                Timestamp.valueOf("2025-04-01 12:30:00"));
+        assertNotNull(result);
+        assertFalse(result.iterator().hasNext());
+    }
 }
