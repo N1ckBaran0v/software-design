@@ -12,9 +12,11 @@ import java.util.Map;
 
 public final class JdbcTemplateModule implements ContextModule {
     private final DatabaseConfig databaseConfig;
+    private final String url;
 
-    public JdbcTemplateModule(DatabaseConfig databaseConfig) {
+    public JdbcTemplateModule(DatabaseConfig databaseConfig, String url) {
         this.databaseConfig = databaseConfig;
+        this.url = url;
     }
 
     @Override
@@ -22,7 +24,7 @@ public final class JdbcTemplateModule implements ContextModule {
         builder.addSingleton(JdbcTemplate.class, beanProvider -> {
             var factory = beanProvider.getInstance(JdbcTemplateFactory.class);
             var params = new DatabaseParams(
-                    databaseConfig.getUrl(),
+                    url,
                     databaseConfig.getUsername(),
                     databaseConfig.getPassword(),
                     databaseConfig.getPoolSize()

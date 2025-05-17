@@ -5,7 +5,7 @@
 Перед запуском сгенерировать данные и поместить в **csv_data/**.
 
 ```bash
-docker build -t traintickets-postgres -f Dockerfile-postgres .
+docker build -t traintickets-postgres -f Dockerfile-mongo-postgres .
 docker run --name traintickets-postgres -p 5432:5432 -d traintickets-postgres
 ```
 
@@ -14,7 +14,7 @@ docker run --name traintickets-postgres -p 5432:5432 -d traintickets-postgres
 Можно вообще не запускать. Правда, в таком случае авторизация попросту не будет работать.
 
 ```bash
-docker build -t traintickets-redis -f Dockerfile-redis .
+docker build -t traintickets-redis -f Dockerfile-mongo-redis .
 docker run --name traintickets-redis -p 6379:6379 -d traintickets-redis
 ```
 

@@ -9,21 +9,13 @@ public final class ApplicationContextCreator {
 
     public static ApplicationContext create() {
         var appParams = ConfigParser.parseFile("app-settings.yaml");
-        var builder = ApplicationContext.builder();
-        builder.addModule(new BusinessLogicModule(appParams.getSecurity()));
-        var databaseParams = appParams.getDatabase();
-        switch (databaseParams.getType()) {
-            case "postgresql":
-                builder.addModule(new JdbcTemplateModule(databaseParams));
-                builder.addModule(new DataAccessPostgresModule());
-                break;
-            default:
-                throw new IllegalArgumentException("Database type not supported: " + databaseParams.getType());
-        }
-        builder.addModule(new LoggerModule(appParams.getLog()));
-        builder.addModule(new PaymentModule());
-        builder.addModule(new SecurityModule(appParams.getSecurity(), appParams.getRedis()));
-        builder.addModule(new UserInterfaceModule(appParams.getServer(), appParams.getSecurity()));
-        return builder.build();
+        return ApplicationContext.builder()
+                .addModule(new BusinessLogicModule(appParams.getSecurity()))
+                .addModule(new DatabaseModule(appParams.getDatabase()))
+                .addModule(new LoggerModule(appParams.getLog()))
+                .addModule(new PaymentModule())
+                .addModule(new SecurityModule(appParams.getSecurity(), appParams.getRedis()))
+                .addModule(new UserInterfaceModule(appParams.getServer(), appParams.getSecurity()))
+                .build();
     }
 }

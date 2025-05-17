@@ -2,7 +2,9 @@ package traintickets.control.configuration;
 
 public final class DatabaseConfig {
     private String type;
-    private String url;
+    private String host;
+    private int port;
+    private String name;
     private String username;
     private String password;
     private int poolSize;
@@ -15,12 +17,28 @@ public final class DatabaseConfig {
         this.type = type;
     }
 
-    public String getUrl() {
-        return url;
+    public String getHost() {
+        return host;
     }
 
-    public void setUrl(String url) {
-        this.url = url;
+    public void setHost(String host) {
+        this.host = host;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getUsername() {
