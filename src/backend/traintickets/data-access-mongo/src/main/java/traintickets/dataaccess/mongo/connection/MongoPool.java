@@ -26,15 +26,16 @@ final class MongoPool implements AutoCloseable {
         }
         sessions = List.copyOf(pool);
         semaphore = new Semaphore(config.poolSize());
+        Runtime.getRuntime().addShutdownHook(new Thread(this::close));
     }
 
     private static String getConnectionString(MongoConfig config) {
         var connectionString = "";
         if (config.username() == null) {
-            connectionString = String.format("mongodb://%s:%d/%s?maxPoolStze=%d",
+            connectionString = String.format("mongodb://%s:%d/%s?maxPoolSize=%d",
                     config.host(), config.port(), config.database(), config.poolSize());
         } else {
-            connectionString = String.format("mongodb://%s:%s@%s:%d/%s?maxPoolStze=%d",
+            connectionString = String.format("mongodb://%s:%s@%s:%d/%s?maxPoolSize=%d",
                     config.username(), config.password(),
                     config.host(), config.port(), config.database(), config.poolSize());
         }
@@ -59,13 +60,13 @@ final class MongoPool implements AutoCloseable {
         }
     }
 
+    public MongoDatabase getDatabase() {
+        return database;
+    }
+
     @Override
     public void close() {
         sessions.forEach(ClientSession::close);
         mongoClient.close();
-    }
-
-    public MongoDatabase getDatabase() {
-        return database;
     }
 }
