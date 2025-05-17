@@ -8,13 +8,15 @@ import traintickets.businesslogic.model.PlaceId;
 import java.math.BigDecimal;
 
 public record PlaceDocument(@BsonId ObjectId id,
+                            ObjectId railcarId,
                             int number,
                             String description,
                             String purpose,
                             BigDecimal cost) {
-    public PlaceDocument(Place place) {
+    public PlaceDocument(ObjectId railcarId, Place place) {
         this(
                 place.id() == null ? null : new ObjectId(place.id().id()),
+                railcarId,
                 place.number(),
                 place.description(),
                 place.purpose(),

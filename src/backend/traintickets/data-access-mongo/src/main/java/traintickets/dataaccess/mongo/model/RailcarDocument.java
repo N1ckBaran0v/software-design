@@ -8,17 +8,12 @@ import traintickets.businesslogic.model.RailcarId;
 
 import java.util.List;
 
-public record RailcarDocument(@BsonId ObjectId id, String model, String type, List<ObjectId> places) {
+public record RailcarDocument(@BsonId ObjectId id, String model, String type) {
     public RailcarDocument(Railcar railcar) {
-        this(railcar, railcar.places().stream().map(place -> new ObjectId(place.id().id())).toList());
-    }
-
-    public RailcarDocument(Railcar railcar, List<ObjectId> places) {
         this(
                 railcar.id() == null ? null : new ObjectId(railcar.id().id()),
                 railcar.model(),
-                railcar.type(),
-                places
+                railcar.type()
         );
     }
 

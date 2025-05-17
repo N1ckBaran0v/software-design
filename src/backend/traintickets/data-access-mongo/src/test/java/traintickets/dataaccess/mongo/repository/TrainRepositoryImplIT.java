@@ -48,7 +48,7 @@ class TrainRepositoryImplIT extends MongoIT {
         scheduleCollection = mongoExecutor.getDatabase().getCollection("schedules", ScheduleDocument.class);
         mongoExecutor.executeConsumer(session -> {
             railcarId = Objects.requireNonNull(railcarCollection.insertOne(session,
-                    new RailcarDocument(null, "1", "сидячий", List.of())).getInsertedId()).asObjectId().getValue();
+                    new RailcarDocument(null, "1", "сидячий")).getInsertedId()).asObjectId().getValue();
             var trainMap = trainCollection.insertMany(session, List.of(
                     new TrainDocument(null, "фирменный", List.of(railcarId)),
                     new TrainDocument(null, "скорый", List.of())

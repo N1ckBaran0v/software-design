@@ -34,13 +34,10 @@ public final class RailcarRepositoryImpl implements RailcarRepository {
             if (railcarCollection.find(session, Filters.eq("model", railcar.model())).first() != null) {
                 throw new EntityAlreadyExistsException(String.format("Railcar %s already exists", railcar.model()));
             }
-            var placeDocuments = railcar.places().stream().map(PlaceDocument::new).toList();
-            var map = placeCollection.insertMany(session, placeDocuments).getInsertedIds();
-            var ids = new ArrayList<ObjectId>();
-            for (var i = 0; i < map.size(); ++i) {
-                ids.add(map.get(i).asObjectId().getValue());
-            }
-            railcarCollection.insertOne(session, new RailcarDocument(railcar, ids));
+            var railcarId = Objects.requireNonNull(railcarCollection.insertOne(session, new RailcarDocument(railcar))
+                    .getInsertedId()).asObjectId().getValue();
+            var placeDocuments = railcar.places().stream().map(place -> new PlaceDocument(railcarId, place)).toList();
+            placeCollection.insertMany(session, placeDocuments);
         });
     }
 
@@ -48,8 +45,8 @@ public final class RailcarRepositoryImpl implements RailcarRepository {
     public Iterable<Railcar> getRailcarsByType(String type) {
         return mongoExecutor.transactionFunction(session -> StreamSupport.stream(
                 railcarCollection.find(Filters.eq("type", type)).spliterator(), false).map(railcarDocument ->
-                railcarDocument.toRailcar(StreamSupport.stream(
-                        placeCollection.find(session, Filters.in("_id", railcarDocument.places())).spliterator(), false)
+                railcarDocument.toRailcar(StreamSupport.stream(placeCollection.find(session,
+                                Filters.eq("railcarId", railcarDocument.id())).spliterator(), false)
                         .map(PlaceDocument::toPlace).toList())).toList());
     }
 
@@ -60,7 +57,7 @@ public final class RailcarRepositoryImpl implements RailcarRepository {
             var ids = train == null ? Set.of() : new HashSet<>(train.railcars());
             return StreamSupport.stream(railcarCollection.find(session, Filters.in("_id", ids)).spliterator(), false)
                     .map(railcarDocument -> railcarDocument.toRailcar(StreamSupport.stream(placeCollection.find(session,
-                                    Filters.in("_id", railcarDocument.places())).spliterator(), false)
+                                    Filters.eq("railcarId", railcarDocument.id())).spliterator(), false)
                             .map(PlaceDocument::toPlace).toList())).toList();
         });
     }

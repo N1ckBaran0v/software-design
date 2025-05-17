@@ -47,22 +47,22 @@ class RailcarRepositoryImplIT extends MongoIT {
         placeCollection = mongoExecutor.getDatabase().getCollection("places", PlaceDocument.class);
         trainCollection = mongoExecutor.getDatabase().getCollection("trains", TrainDocument.class);
         mongoExecutor.executeConsumer(session -> {
+            var railcarMap = railcarCollection.insertMany(session, List.of(
+                    new RailcarDocument(null, "1", "сидячий"),
+                    new RailcarDocument(null, "2", "купе")
+            )).getInsertedIds();
+            first = railcarMap.get(0).asObjectId().getValue();
+            second = railcarMap.get(1).asObjectId().getValue();
             var map = placeCollection.insertMany(session, List.of(
-                    new PlaceDocument(null, 1, "", "universal", BigDecimal.valueOf(100)),
-                    new PlaceDocument(null, 2, "", "child", BigDecimal.valueOf(50)),
-                    new PlaceDocument(null, 1, "", "universal", BigDecimal.valueOf(100))
+                    new PlaceDocument(null, first, 1, "", "universal", BigDecimal.valueOf(100)),
+                    new PlaceDocument(null, first, 2, "", "child", BigDecimal.valueOf(50)),
+                    new PlaceDocument(null, second, 1, "", "universal", BigDecimal.valueOf(100))
             )).getInsertedIds();
             placeIds = List.of(
                     map.get(0).asObjectId().getValue(),
                     map.get(1).asObjectId().getValue(),
                     map.get(2).asObjectId().getValue()
             );
-            var railcarMap = railcarCollection.insertMany(session, List.of(
-                    new RailcarDocument(null, "1", "сидячий", List.of(placeIds.get(0), placeIds.get(1))),
-                    new RailcarDocument(null, "2", "купе", List.of(placeIds.get(2)))
-            )).getInsertedIds();
-            first = railcarMap.get(0).asObjectId().getValue();
-            second = railcarMap.get(1).asObjectId().getValue();
             train = Objects.requireNonNull(trainCollection.insertOne(session, new TrainDocument(null, "Скорый",
                     List.of(first, first, first, second))).getInsertedId()).asObjectId().getValue();
         });
@@ -78,7 +78,7 @@ class RailcarRepositoryImplIT extends MongoIT {
             assertNotNull(foundRailcar);
             assertEquals(railcar.type(), foundRailcar.type());
             var places = StreamSupport.stream(placeCollection.find(session,
-                    Filters.in("_id", foundRailcar.places())).spliterator(), false).toList();
+                    Filters.eq("railcarId", foundRailcar.id())).spliterator(), false).toList();
             assertEquals(1, places.size());
             var foundPlace = places.getFirst();
             assertEquals(place.number(), foundPlace.number());
@@ -144,28 +144,4 @@ class RailcarRepositoryImplIT extends MongoIT {
         assertNotNull(result);
         assertFalse(result.iterator().hasNext());
     }
-
-//    @Test
-//    void getRailcarsByTrain_positive_got() {
-//        var place1 = new Place(new PlaceId("1"), 1, "", "universal", BigDecimal.valueOf(100));
-//        var place2 = new Place(new PlaceId("2"), 2, "", "child", BigDecimal.valueOf(50));
-//        var place3 = new Place(new PlaceId("3"), 1, "", "universal", BigDecimal.valueOf(100));
-//        var railcar1 = new Railcar(new RailcarId("1"), "1", "сидячий", List.of(place1, place2));
-//        var railcar2 = new Railcar(new RailcarId("2"), "2", "купе", List.of(place3));
-//        var result = railcarRepository.getRailcarsByTrain(new TrainId("1"));
-//        assertNotNull(result);
-//        var iterator = result.iterator();
-//        assertTrue(iterator.hasNext());
-//        assertEquals(railcar1, iterator.next());
-//        assertTrue(iterator.hasNext());
-//        assertEquals(railcar2, iterator.next());
-//        assertFalse(iterator.hasNext());
-//    }
-//
-//    @Test
-//    void getRailcarsByTrain_positive_empty() {
-//        var result = railcarRepository.getRailcarsByTrain(new TrainId("2"));
-//        assertNotNull(result);
-//        assertFalse(result.iterator().hasNext());
-//    }
 }
