@@ -176,15 +176,23 @@ public final class RouteServiceImpl implements RouteService {
                 var intersection = new HashSet<>(startSchedule.get(start));
                 intersection.retainAll(endSchedule.get(end));
                 if (!intersection.isEmpty()) {
-                    var station = intersection.iterator().next();
-                    var schedule1 = startWrappers.get(start).schedule;
-                    var schedule2 = endWrappers.get(end).schedule;
-                    var index1 = findSchedule(schedule1, station);
-                    var index2 = findSchedule(schedule2, station);
-                    var raceIds = List.of(start, end);
-                    var departures = List.of(schedule1.get(startPositions.get(start)), schedule2.get(index2));
-                    var destinations = List.of(schedule1.get(index1), schedule2.get(endPositions.get(end)));
-                    routes.add(new Route(raceIds, departures, destinations));
+                    for (var station : intersection) {
+                        var wrapper1 = startWrappers.get(start);
+                        var wrapper2 = endWrappers.get(end);
+                        var schedule1 = wrapper1.schedule;
+                        var schedule2 = wrapper2.schedule;
+                        var index1 = findSchedule(schedule1, station);
+                        var index2 = findSchedule(schedule2, station);
+                        var flag = validateRace(filter, wrapper1, 0, index1) &&
+                                validateRace(filter, wrapper2, index2, schedule2.size() - 1);
+                        if (flag) {
+                            var raceIds = List.of(start, end);
+                            var departures = List.of(schedule1.get(startPositions.get(start)), schedule2.get(index2));
+                            var destinations = List.of(schedule1.get(index1), schedule2.get(endPositions.get(end)));
+                            routes.add(new Route(raceIds, departures, destinations));
+                            break;
+                        }
+                    }
                 }
             }
         }
