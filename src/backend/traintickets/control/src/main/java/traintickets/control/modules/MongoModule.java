@@ -1,30 +1,32 @@
 package traintickets.control.modules;
 
 import traintickets.businesslogic.repository.*;
-import traintickets.control.configuration.DatabaseConfig;
 import traintickets.dataaccess.mongo.connection.MongoConfig;
 import traintickets.dataaccess.mongo.connection.MongoExecutor;
 import traintickets.dataaccess.mongo.repository.*;
 import traintickets.di.ApplicationContextBuilder;
 import traintickets.di.ContextModule;
 
-public final class MongoModule implements ContextModule {
-    private final DatabaseConfig databaseConfig;
+import java.util.Map;
 
-    public MongoModule(DatabaseConfig databaseConfig) {
-        this.databaseConfig = databaseConfig;
+public final class MongoModule implements ContextModule {
+    private final Map<String, String> databaseParams;
+
+    public MongoModule(Map<String, String> databaseParams) {
+        this.databaseParams = databaseParams;
     }
 
     @Override
     public void accept(ApplicationContextBuilder builder) {
         builder.addSingleton(MongoExecutor.class, beanProvider -> {
                     var mongoConfig = new MongoConfig(
-                            databaseConfig.getHost(),
-                            databaseConfig.getPort(),
-                            databaseConfig.getName(),
-                            databaseConfig.getUsername(),
-                            databaseConfig.getPassword(),
-                            databaseConfig.getPort()
+                            databaseParams.get("host"),
+                            Integer.parseInt(databaseParams.get("port")),
+                            databaseParams.get("name"),
+                            databaseParams.get("username"),
+                            databaseParams.get("password"),
+                            Integer.parseInt(databaseParams.get("poolSize")),
+                            databaseParams.get("replicaSet")
                     );
                     return new MongoExecutor(mongoConfig);
                 })

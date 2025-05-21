@@ -1,3 +1,6 @@
 FROM mongo:8.0
-COPY mongo/init-mongo.js /docker-entrypoint-initdb.d/
+COPY mongo_data/*.json     /data/
+COPY mongo/init-mongo.js   /docker-entrypoint-initdb.d/02.js
+COPY mongo/init-replica.js /docker-entrypoint-initdb.d/01.js
+CMD ["mongod", "--replSet", "rs0", "--quiet"]
 EXPOSE 27017

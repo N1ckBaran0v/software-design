@@ -1,7 +1,5 @@
 package traintickets.control.modules;
 
-import traintickets.control.configuration.DatabaseConfig;
-import traintickets.control.configuration.SecurityConfig;
 import traintickets.di.ApplicationContextBuilder;
 import traintickets.di.ContextModule;
 import traintickets.jdbc.api.JdbcTemplate;
@@ -11,11 +9,11 @@ import traintickets.jdbc.model.DatabaseParams;
 import java.util.Map;
 
 public final class JdbcTemplateModule implements ContextModule {
-    private final DatabaseConfig databaseConfig;
+    private final Map<String, String> databaseParams;
     private final String url;
 
-    public JdbcTemplateModule(DatabaseConfig databaseConfig, String url) {
-        this.databaseConfig = databaseConfig;
+    public JdbcTemplateModule(Map<String, String> databaseParams, String url) {
+        this.databaseParams = databaseParams;
         this.url = url;
     }
 
@@ -25,9 +23,9 @@ public final class JdbcTemplateModule implements ContextModule {
             var factory = beanProvider.getInstance(JdbcTemplateFactory.class);
             var params = new DatabaseParams(
                     url,
-                    databaseConfig.getUsername(),
-                    databaseConfig.getPassword(),
-                    databaseConfig.getPoolSize()
+                    databaseParams.get("username"),
+                    databaseParams.get("password"),
+                    Integer.parseInt(databaseParams.get("poolSize"))
             );
             return factory.create(params);
         });

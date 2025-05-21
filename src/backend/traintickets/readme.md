@@ -5,7 +5,7 @@
 Перед запуском сгенерировать данные и поместить в **csv_data/**.
 
 ```bash
-docker build -t traintickets-postgres -f Dockerfile-mongo-postgres .
+docker build -t traintickets-postgres -f Dockerfile-postgres .
 docker run --name traintickets-postgres -p 5432:5432 -d traintickets-postgres
 ```
 

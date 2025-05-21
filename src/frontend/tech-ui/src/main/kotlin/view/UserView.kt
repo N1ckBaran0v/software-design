@@ -134,6 +134,7 @@ class UserView(override val client: Client, val io: IOUtil): ExecutableView(clie
     }
 
     private fun printUser() {
+        println("id: ${user.id?.id}")
         println("Логин: ${user.username}")
         println("Пароль: ${user.password}")
         println("ФИО: ${user.name}")

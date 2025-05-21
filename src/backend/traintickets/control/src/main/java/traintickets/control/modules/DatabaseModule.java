@@ -14,8 +14,8 @@ public final class DatabaseModule implements ContextModule {
     @Override
     public void accept(ApplicationContextBuilder builder) {
         builder.addModule(switch (databaseConfig.getType()) {
-            case "postgresql" -> new PostgresModule(databaseConfig);
-            case "mongodb" -> new MongoModule(databaseConfig);
+            case "postgresql" -> new PostgresModule(databaseConfig.getParams());
+            case "mongodb" -> new MongoModule(databaseConfig.getParams());
             default -> throw new IllegalStateException("Unsupported database type: " + databaseConfig.getType());
         });
     }

@@ -1,13 +1,10 @@
 package traintickets.control.configuration;
 
+import java.util.Map;
+
 public final class DatabaseConfig {
     private String type;
-    private String host;
-    private int port;
-    private String name;
-    private String username;
-    private String password;
-    private int poolSize;
+    private Map<String, String> params;
 
     public String getType() {
         return type;
@@ -17,51 +14,11 @@ public final class DatabaseConfig {
         this.type = type;
     }
 
-    public String getHost() {
-        return host;
+    public Map<String, String> getParams() {
+        return params;
     }
 
-    public void setHost(String host) {
-        this.host = host;
-    }
-
-    public int getPort() {
-        return port;
-    }
-
-    public void setPort(int port) {
-        this.port = port;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public int getPoolSize() {
-        return poolSize;
-    }
-
-    public void setPoolSize(int poolSize) {
-        this.poolSize = poolSize;
+    public void setParams(Map<String, String> params) {
+        this.params = params;
     }
 }

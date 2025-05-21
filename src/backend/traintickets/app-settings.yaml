@@ -4,16 +4,22 @@ server:
     timeout: 30000
 database:
     type: postgresql
-    host: localhost
-    port: 5432
-    name: train_tickets_postgres
+    params:
+       host: localhost
+       port: 5432
+       name: train_tickets_postgres
+       username: train_database_admin
+       password: s3cr3tpassw0rd
+       poolSize: 20
 #    type: mongodb
-#    host: localhost
-#    port: 27017
-#    name: train_tickets_mongo
-    username: train_database_admin
-    password: s3cr3tpassw0rd
-    poolSize: 20
+#    params:
+#        host: localhost
+#        port: 27017
+#        name: train_tickets_mongo
+#        username: train_database_admin
+#        password: s3cr3tpassw0rd
+#        poolSize: 20
+#        replicaSet: rs0
 security:
     secret: s3cr3tc0d3
     expiration: 1

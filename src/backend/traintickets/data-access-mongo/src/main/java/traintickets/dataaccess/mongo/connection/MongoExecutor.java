@@ -23,6 +23,9 @@ public final class MongoExecutor {
                     config.username(), config.password(),
                     config.host(), config.port(), config.database(), config.poolSize());
         }
+        if (config.replicaSet() != null) {
+            connectionString = String.format("%s&replicaSet=%s", connectionString, config.replicaSet());
+        }
         return connectionString;
     }
 

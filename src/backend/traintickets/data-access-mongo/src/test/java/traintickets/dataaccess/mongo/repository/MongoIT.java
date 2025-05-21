@@ -15,7 +15,7 @@ abstract class MongoIT {
     void setUp() {
         container = new MongoDBContainer(DockerImageName.parse("mongo:8.0"));
         container.start();
-        var params = new MongoConfig(container.getHost(), container.getFirstMappedPort(), "test", null, null, 1);
+        var params = new MongoConfig(container.getHost(), container.getFirstMappedPort(), "test", null, null, 1, null);
         mongoExecutor = new MongoExecutor(params);
         insertData();
     }
