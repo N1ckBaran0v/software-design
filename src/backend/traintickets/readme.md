@@ -9,12 +9,21 @@ docker build -t traintickets-postgres -f Dockerfile-postgres .
 docker run --name traintickets-postgres -p 5432:5432 -d traintickets-postgres
 ```
 
+## Mongo
+
+Перед запуском сгенерировать данные и поместить в **mongo_data/**.
+
+```bash
+docker build -t traintickets-mongo -f Dockerfile-mongo .
+docker run --name traintickets-mongo -p 27017:27017 -d traintickets-mongo
+```
+
 ## Redis
 
 Можно вообще не запускать. Правда, в таком случае авторизация попросту не будет работать.
 
 ```bash
-docker build -t traintickets-redis -f Dockerfile-redis .
+docker build -t traintickets-redis -f Dockerfile-mongo-redis .
 docker run --name traintickets-redis -p 6379:6379 -d traintickets-redis
 ```
 

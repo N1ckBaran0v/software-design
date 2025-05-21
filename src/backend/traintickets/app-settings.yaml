@@ -3,25 +3,29 @@ server:
     port: 8080
     timeout: 30000
 database:
-    url: jdbc:postgresql://localhost:5432/train_tickets_postgres
-    username: train_database_admin
-    password: s3cr3tpassw0rd
-    poolSize: 20
+    type: postgresql
+    params:
+       host: localhost
+       port: 5432
+       name: train_tickets_postgres
+       username: train_database_admin
+       password: s3cr3tpassw0rd
+       poolSize: 20
+#    type: mongodb
+#    params:
+#        host: localhost
+#        port: 27017
+#        name: train_tickets_mongo
+#        username: train_database_admin
+#        password: s3cr3tpassw0rd
+#        poolSize: 20
+#        replicaSet: rs0
 security:
     secret: s3cr3tc0d3
     expiration: 1
-    userRole:
-        appName: user_role
-        dbName: _user_role
-    carrierRole:
-        appName: carrier_role
-        dbName: _carrier_role
-    adminRole:
-        appName: admin_role
-        dbName: _admin_role
-    systemRole:
-        appName: system_role
-        dbName: _system_role
+    userRole: user_role
+    carrierRole: carrier_role
+    adminRole: admin_role
 redis:
     host: localhost
     port: 6379

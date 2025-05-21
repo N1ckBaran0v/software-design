@@ -10,8 +10,8 @@ import java.util.Map;
 import java.util.Optional;
 
 public interface RaceRepository {
-    void addRace(String role, Race race);
-    Optional<Race> getRace(String role, RaceId raceId);
-    List<Race> getRaces(String role, Filter filter);
-    void updateRace(String role, RaceId raceId, boolean isFinished);
+    void addRace(Race race);
+    Optional<Race> getRace(RaceId raceId);
+    List<Race> getRaces(Filter filter);
+    void updateRace(RaceId raceId, boolean isFinished);
 }

@@ -39,13 +39,11 @@ class RouteServiceImplTest {
     @Mock
     private TicketRepository ticketRepository;
 
-    private final String systemRole = "system_role";
     private RouteServiceImpl routeService;
 
     @BeforeEach
     void setUp() {
-        routeService = new RouteServiceImpl(railcarRepository, trainRepository,
-                raceRepository, ticketRepository, systemRole);
+        routeService = new RouteServiceImpl(railcarRepository, trainRepository, raceRepository, ticketRepository);
     }
 
     @Test
@@ -71,13 +69,13 @@ class RouteServiceImplTest {
                 new RaceId("4"), 1, place1, start4, end4, BigDecimal.valueOf(500));
         var ticket2 = new Ticket(new TicketId("2"), new UserId("2"), "adult",
                 new RaceId("4"), 2, place3, start4, end4, BigDecimal.valueOf(500));
-        given(raceRepository.getRaces(systemRole, filter)).willReturn(List.of(race1, race4));
-        given(trainRepository.getTrain(systemRole, train1.id())).willReturn(Optional.of(train1));
-        given(trainRepository.getTrain(systemRole, train4.id())).willReturn(Optional.of(train4));
-        given(railcarRepository.getRailcarsByTrain(systemRole, train1.id())).willReturn(List.of(railcar1));
-        given(railcarRepository.getRailcarsByTrain(systemRole, train4.id())).willReturn(List.of(railcar1, railcar2));
-        given(ticketRepository.getTicketsByRace(systemRole, race1.id())).willReturn(List.of());
-        given(ticketRepository.getTicketsByRace(systemRole, race4.id())).willReturn(List.of(ticket1, ticket2));
+        given(raceRepository.getRaces(filter)).willReturn(List.of(race1, race4));
+        given(trainRepository.getTrain(train1.id())).willReturn(Optional.of(train1));
+        given(trainRepository.getTrain(train4.id())).willReturn(Optional.of(train4));
+        given(railcarRepository.getRailcarsByTrain(train1.id())).willReturn(List.of(railcar1));
+        given(railcarRepository.getRailcarsByTrain(train4.id())).willReturn(List.of(railcar1, railcar2));
+        given(ticketRepository.getTicketsByRace(race1.id())).willReturn(List.of());
+        given(ticketRepository.getTicketsByRace(race4.id())).willReturn(List.of(ticket1, ticket2));
         var result = routeService.getRoutes(filter);
         assertNotNull(result);
         assertEquals(1, result.size());
@@ -114,19 +112,19 @@ class RouteServiceImplTest {
                 new RaceId("4"), 1, place1, start4, end4, BigDecimal.valueOf(500));
         var ticket2 = new Ticket(new TicketId("2"), new UserId("2"), "adult",
                 new RaceId("4"), 2, place3, start4, end4, BigDecimal.valueOf(500));
-        given(raceRepository.getRaces(systemRole, filter)).willReturn(List.of(race1, race2, race3, race4));
-        given(trainRepository.getTrain(systemRole, train1.id())).willReturn(Optional.of(train1));
-        given(trainRepository.getTrain(systemRole, train2.id())).willReturn(Optional.of(train2));
-        given(trainRepository.getTrain(systemRole, train3.id())).willReturn(Optional.of(train3));
-        given(trainRepository.getTrain(systemRole, train4.id())).willReturn(Optional.of(train4));
-        given(railcarRepository.getRailcarsByTrain(systemRole, train1.id())).willReturn(List.of(railcar1));
-        given(railcarRepository.getRailcarsByTrain(systemRole, train2.id())).willReturn(List.of(railcar1));
-        given(railcarRepository.getRailcarsByTrain(systemRole, train3.id())).willReturn(List.of(railcar1));
-        given(railcarRepository.getRailcarsByTrain(systemRole, train4.id())).willReturn(List.of(railcar1, railcar2));
-        given(ticketRepository.getTicketsByRace(systemRole, race1.id())).willReturn(List.of());
-        given(ticketRepository.getTicketsByRace(systemRole, race2.id())).willReturn(List.of());
-        given(ticketRepository.getTicketsByRace(systemRole, race3.id())).willReturn(List.of());
-        given(ticketRepository.getTicketsByRace(systemRole, race4.id())).willReturn(List.of(ticket1, ticket2));
+        given(raceRepository.getRaces(filter)).willReturn(List.of(race1, race2, race3, race4));
+        given(trainRepository.getTrain(train1.id())).willReturn(Optional.of(train1));
+        given(trainRepository.getTrain(train2.id())).willReturn(Optional.of(train2));
+        given(trainRepository.getTrain(train3.id())).willReturn(Optional.of(train3));
+        given(trainRepository.getTrain(train4.id())).willReturn(Optional.of(train4));
+        given(railcarRepository.getRailcarsByTrain(train1.id())).willReturn(List.of(railcar1));
+        given(railcarRepository.getRailcarsByTrain(train2.id())).willReturn(List.of(railcar1));
+        given(railcarRepository.getRailcarsByTrain(train3.id())).willReturn(List.of(railcar1));
+        given(railcarRepository.getRailcarsByTrain(train4.id())).willReturn(List.of(railcar1, railcar2));
+        given(ticketRepository.getTicketsByRace(race1.id())).willReturn(List.of());
+        given(ticketRepository.getTicketsByRace(race2.id())).willReturn(List.of());
+        given(ticketRepository.getTicketsByRace(race3.id())).willReturn(List.of());
+        given(ticketRepository.getTicketsByRace(race4.id())).willReturn(List.of(ticket1, ticket2));
         var result = routeService.getRoutes(filter);
         assertNotNull(result);
         assertEquals(2, result.size());
@@ -136,7 +134,7 @@ class RouteServiceImplTest {
     void getRoutes_positive_empty() {
         var filter = new Filter(new UserId("1"), "filter", "start", "end", 1, Map.of("adult", 1),
                 Timestamp.valueOf("2025-03-19 08:00:00"), Timestamp.valueOf("2025-03-19 12:00:00"));
-        given(raceRepository.getRaces(systemRole, filter)).willReturn(List.of());
+        given(raceRepository.getRaces(filter)).willReturn(List.of());
         var result = routeService.getRoutes(filter);
         assertNotNull(result);
         assertTrue(result.isEmpty());
@@ -147,7 +145,7 @@ class RouteServiceImplTest {
         var filter = new Filter(new UserId("1"), "filter", "start", "start", 1, Map.of("adult", 1),
                 Timestamp.valueOf("2025-03-19 08:00:00"), Timestamp.valueOf("2025-03-19 12:00:00"));
         assertThrows(InvalidEntityException.class, () -> routeService.getRoutes(filter));
-        verify(raceRepository, never()).getRaces(any(), any());
+        verify(raceRepository, never()).getRaces(any());
     }
 
     @Test
@@ -156,7 +154,7 @@ class RouteServiceImplTest {
         var end = new Schedule(new ScheduleId("2"), "start", null, Timestamp.valueOf("2001-09-11 09:03:02"), 100);
         var raceId = new RaceId("1");
         var race = new Race(raceId, new TrainId("1"), List.of(start, end), false);
-        given(raceRepository.getRace(systemRole, raceId)).willReturn(Optional.of(race));
+        given(raceRepository.getRace(raceId)).willReturn(Optional.of(race));
         var result = routeService.getRace(raceId);
         assertSame(race, result);
     }
@@ -164,7 +162,7 @@ class RouteServiceImplTest {
     @Test
     void getRace_negative_notFound() {
         var raceId = new RaceId("1");
-        given(raceRepository.getRace(systemRole, raceId)).willReturn(Optional.empty());
+        given(raceRepository.getRace(raceId)).willReturn(Optional.empty());
         assertThrows(EntityNotFoundException.class, () -> routeService.getRace(raceId));
     }
 
@@ -189,10 +187,10 @@ class RouteServiceImplTest {
                 raceId, 1, place1, start, middle, BigDecimal.valueOf(500));
         var ticket2 = new Ticket(new TicketId("2"), new UserId("2"), "adult",
                 raceId, 2, place3, middle, end, BigDecimal.valueOf(500));
-        given(raceRepository.getRace(systemRole, raceId)).willReturn(Optional.of(race));
-        given(trainRepository.getTrain(systemRole, trainId)).willReturn(Optional.of(train));
-        given(railcarRepository.getRailcarsByTrain(systemRole, trainId)).willReturn(List.of(railcar1, railcar2));
-        given(ticketRepository.getTicketsByRace(systemRole, raceId)).willReturn(List.of(ticket1, ticket2));
+        given(raceRepository.getRace(raceId)).willReturn(Optional.of(race));
+        given(trainRepository.getTrain(trainId)).willReturn(Optional.of(train));
+        given(railcarRepository.getRailcarsByTrain(trainId)).willReturn(List.of(railcar1, railcar2));
+        given(ticketRepository.getTicketsByRace(raceId)).willReturn(List.of(ticket1, ticket2));
         var result = routeService.getFreePlaces(raceId, start.id(), middle.id());
         assertNotNull(result);
         assertEquals(2, result.size());
@@ -225,10 +223,10 @@ class RouteServiceImplTest {
                 raceId, 1, place2, start, end, BigDecimal.valueOf(500));
         var ticket3 = new Ticket(new TicketId("3"), new UserId("3"), "adult",
                 raceId, 2, place3, start, end, BigDecimal.valueOf(500));
-        given(raceRepository.getRace(systemRole, raceId)).willReturn(Optional.of(race));
-        given(trainRepository.getTrain(systemRole, trainId)).willReturn(Optional.of(train));
-        given(railcarRepository.getRailcarsByTrain(systemRole, trainId)).willReturn(List.of(railcar1, railcar2));
-        given(ticketRepository.getTicketsByRace(systemRole, raceId)).willReturn(List.of(ticket1, ticket2, ticket3));
+        given(raceRepository.getRace(raceId)).willReturn(Optional.of(race));
+        given(trainRepository.getTrain(trainId)).willReturn(Optional.of(train));
+        given(railcarRepository.getRailcarsByTrain(trainId)).willReturn(List.of(railcar1, railcar2));
+        given(ticketRepository.getTicketsByRace(raceId)).willReturn(List.of(ticket1, ticket2, ticket3));
         var result = routeService.getFreePlaces(raceId, start.id(), middle.id());
         assertNotNull(result);
         assertEquals(2, result.size());
@@ -240,12 +238,12 @@ class RouteServiceImplTest {
     @Test
     void getFreePlaces_negative_raceNotFound() {
         var raceId = new RaceId("1");
-        given(raceRepository.getRace(systemRole, raceId)).willReturn(Optional.empty());
+        given(raceRepository.getRace(raceId)).willReturn(Optional.empty());
         assertThrows(EntityNotFoundException.class,
                 () -> routeService.getFreePlaces(raceId, new ScheduleId("1"), new ScheduleId("2")));
-        verify(trainRepository, never()).getTrain(any(), any());
-        verify(railcarRepository, never()).getRailcarsByTrain(any(), any());
-        verify(ticketRepository, never()).getTicketsByRace(any(), any());
+        verify(trainRepository, never()).getTrain(any());
+        verify(railcarRepository, never()).getRailcarsByTrain(any());
+        verify(ticketRepository, never()).getTicketsByRace(any());
     }
 
     @Test
@@ -257,11 +255,11 @@ class RouteServiceImplTest {
                 Timestamp.valueOf("2025-03-19 10:10:00"), 50);
         var end = new Schedule( new ScheduleId("3"), "end", Timestamp.valueOf("2025-03-19 11:40:00"), null, 100);
         var race = new Race(raceId, trainId, List.of(start, middle, end), false);
-        given(raceRepository.getRace(systemRole, raceId)).willReturn(Optional.of(race));
+        given(raceRepository.getRace(raceId)).willReturn(Optional.of(race));
         assertThrows(InvalidEntityException.class, () -> routeService.getFreePlaces(raceId, end.id(), start.id()));
-        verify(trainRepository, never()).getTrain(any(), any());
-        verify(railcarRepository, never()).getRailcarsByTrain(any(), any());
-        verify(ticketRepository, never()).getTicketsByRace(any(), any());
+        verify(trainRepository, never()).getTrain(any());
+        verify(railcarRepository, never()).getRailcarsByTrain(any());
+        verify(ticketRepository, never()).getTicketsByRace(any());
     }
 
     @Test
@@ -273,10 +271,10 @@ class RouteServiceImplTest {
                 Timestamp.valueOf("2025-03-19 10:10:00"), 50);
         var end = new Schedule( new ScheduleId("3"), "end", Timestamp.valueOf("2025-03-19 11:40:00"), null, 100);
         var race = new Race(raceId, trainId, List.of(start, middle, end), false);
-        given(raceRepository.getRace(systemRole, raceId)).willReturn(Optional.of(race));
-        given(trainRepository.getTrain(systemRole, trainId)).willReturn(Optional.empty());
+        given(raceRepository.getRace(raceId)).willReturn(Optional.of(race));
+        given(trainRepository.getTrain(trainId)).willReturn(Optional.empty());
         assertThrows(EntityNotFoundException.class, () -> routeService.getFreePlaces(raceId, start.id(), middle.id()));
-        verify(railcarRepository, never()).getRailcarsByTrain(any(), any());
-        verify(ticketRepository, never()).getTicketsByRace(any(), any());
+        verify(railcarRepository, never()).getRailcarsByTrain(any());
+        verify(ticketRepository, never()).getTicketsByRace(any());
     }
 }

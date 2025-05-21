@@ -19,7 +19,8 @@ public final class RailcarGroup extends AbstractEndpointGroup {
 
     @Override
     public void addEndpoints() {
-        post(ctx -> railcarController.addRailcar(ctx, securityConfiguration.forCarrier(ctx)));
-        get(ctx -> railcarController.getRailcars(ctx, securityConfiguration.forCarrier(ctx)));
+        before(securityConfiguration::forCarrier);
+        post(railcarController::addRailcar);
+        get(railcarController::getRailcars);
     }
 }

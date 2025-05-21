@@ -1,10 +1,11 @@
 rootProject.name = "traintickets"
 include(":business-logic")
 include(":di")
-include(":data-access")
+include(":data-access-postgres")
 include(":security")
 include("control")
 include(":jdbc")
 include(":payment")
 include(":user-interface")
 include(":logger")
+include(":data-access-mongo")

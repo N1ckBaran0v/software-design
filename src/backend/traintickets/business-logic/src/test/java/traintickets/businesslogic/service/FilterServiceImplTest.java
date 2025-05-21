@@ -10,7 +10,6 @@ import traintickets.businesslogic.exception.InvalidEntityException;
 import traintickets.businesslogic.model.Filter;
 import traintickets.businesslogic.model.UserId;
 import traintickets.businesslogic.repository.FilterRepository;
-import traintickets.businesslogic.transport.UserInfo;
 
 import java.sql.Date;
 import java.util.List;
@@ -35,27 +34,27 @@ class FilterServiceImplTest {
     void addFilter_positive_saved() {
         var filter = new Filter(new UserId("1"), "filter", "first", "second", 0, Map.of("adult", 2, "child", 1),
                 Date.valueOf("2025-03-19"), Date.valueOf("2025-10-11"));
-        var userInfo = new UserInfo(new UserId("1"), "user_role");
-        filterService.addFilter(userInfo, filter);
-        verify(filterRepository).addFilter(userInfo.role(), filter);
+        var userId = new UserId("1");
+        filterService.addFilter(userId, filter);
+        verify(filterRepository).addFilter(filter);
     }
 
     @Test
     void addFilter_negative_invalid() {
-        var userInfo = new UserInfo(new UserId("1"), "user_role");
+        var userId = new UserId("1");
         var filter = new Filter(new UserId("1"), "filter", "first", "second", 0, Map.of(),
                 Date.valueOf("2025-03-19"), Date.valueOf("2025-10-11"));
-        assertThrows(InvalidEntityException.class, () -> filterService.addFilter(userInfo, filter));
-        verify(filterRepository, never()).addFilter(any(), any());
+        assertThrows(InvalidEntityException.class, () -> filterService.addFilter(userId, filter));
+        verify(filterRepository, never()).addFilter(any());
     }
 
     @Test
     void addFilter_negative_userIdMismatched() {
         var filter = new Filter(new UserId("2"), "filter", "first", "second", 0, Map.of("adult", 2, "child", 1),
                 Date.valueOf("2025-03-19"), Date.valueOf("2025-10-11"));
-        var userInfo = new UserInfo(new UserId("1"), "user_role");
-        assertThrows(InvalidEntityException.class, () -> filterService.addFilter(userInfo, filter));
-        verify(filterRepository, never()).addFilter(any(), any());
+        var userId = new UserId("1");
+        assertThrows(InvalidEntityException.class, () -> filterService.addFilter(userId, filter));
+        verify(filterRepository, never()).addFilter(any());
     }
 
     @Test
@@ -64,9 +63,8 @@ class FilterServiceImplTest {
         var name = "filter";
         var filter = new Filter(userId, name, "first", "second", 0, Map.of("adult", 2, "child", 1),
                 Date.valueOf("2025-03-19"), Date.valueOf("2025-10-11"));
-        var userInfo = new UserInfo(new UserId("1"), "user_role");
-        given(filterRepository.getFilter(userInfo.role(), userId, name)).willReturn(Optional.of(filter));
-        var result = filterService.getFilter(userInfo, name);
+        given(filterRepository.getFilter(userId, name)).willReturn(Optional.of(filter));
+        var result = filterService.getFilter(userId, name);
         assertSame(filter, result);
     }
 
@@ -74,9 +72,8 @@ class FilterServiceImplTest {
     void getFilter_negative_notFound() {
         var userId = new UserId("1");
         var name = "filter";
-        var userInfo = new UserInfo(new UserId("1"), "user_role");
-        given(filterRepository.getFilter(userInfo.role(), userId, name)).willReturn(Optional.empty());
-        assertThrows(EntityNotFoundException.class, () -> filterService.getFilter(userInfo, name));
+        given(filterRepository.getFilter(userId, name)).willReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class, () -> filterService.getFilter(userId, name));
     }
 
     @Test
@@ -86,9 +83,8 @@ class FilterServiceImplTest {
                 Date.valueOf("2025-03-19"), Date.valueOf("2025-10-11"));
         var filter2 = new Filter(userId, "filter2", "first", "second", 0, Map.of("adult", 1, "child", 1),
                 Date.valueOf("2025-03-19"), Date.valueOf("2025-10-11"));
-        var userInfo = new UserInfo(new UserId("1"), "user_role");
-        given(filterRepository.getFilters(userInfo.role(), userId)).willReturn(List.of(filter1, filter2));
-        var result = filterService.getFilters(userInfo);
+        given(filterRepository.getFilters(userId)).willReturn(List.of(filter1, filter2));
+        var result = filterService.getFilters(userId);
         assertNotNull(result);
         assertEquals(2, result.size());
         assertEquals(filter1, result.get(0));
@@ -98,9 +94,8 @@ class FilterServiceImplTest {
     @Test
     void getFilters_positive_empty() {
         var userId = new UserId("1");
-        var userInfo = new UserInfo(new UserId("1"), "user_role");
-        given(filterRepository.getFilters(userInfo.role(), userId)).willReturn(List.of());
-        var result = filterService.getFilters(userInfo);
+        given(filterRepository.getFilters(userId)).willReturn(List.of());
+        var result = filterService.getFilters(userId);
         assertNotNull(result);
         assertTrue(result.isEmpty());
     }
@@ -109,8 +104,7 @@ class FilterServiceImplTest {
     void deleteFilter_positive_deleted() {
         var userId = new UserId("1");
         var name = "filter";
-        var userInfo = new UserInfo(new UserId("1"), "user_role");
-        filterService.deleteFilter(userInfo, name);
-        verify(filterRepository).deleteFilter(userInfo.role(), userId, name);
+        filterService.deleteFilter(userId, name);
+        verify(filterRepository).deleteFilter(userId, name);
     }
 }

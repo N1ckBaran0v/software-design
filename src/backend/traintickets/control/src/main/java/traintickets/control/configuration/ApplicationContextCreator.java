@@ -11,8 +11,7 @@ public final class ApplicationContextCreator {
         var appParams = ConfigParser.parseFile("app-settings.yaml");
         return ApplicationContext.builder()
                 .addModule(new BusinessLogicModule(appParams.getSecurity()))
-                .addModule(new DataAccessModule())
-                .addModule(new JdbcTemplateModule(appParams.getDatabase(), appParams.getSecurity()))
+                .addModule(new DatabaseModule(appParams.getDatabase()))
                 .addModule(new LoggerModule(appParams.getLog()))
                 .addModule(new PaymentModule())
                 .addModule(new SecurityModule(appParams.getSecurity(), appParams.getRedis()))

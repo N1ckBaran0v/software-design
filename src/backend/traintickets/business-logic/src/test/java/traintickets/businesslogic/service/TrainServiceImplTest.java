@@ -9,7 +9,6 @@ import traintickets.businesslogic.exception.EntityNotFoundException;
 import traintickets.businesslogic.exception.InvalidEntityException;
 import traintickets.businesslogic.model.*;
 import traintickets.businesslogic.repository.TrainRepository;
-import traintickets.businesslogic.transport.UserInfo;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -32,35 +31,31 @@ class TrainServiceImplTest {
     @Test
     void addTrain_positive_saved() {
         var train = new Train(null, "express", List.of(new RailcarId("1"), new RailcarId("2")));
-        var userInfo = new UserInfo(new UserId("1"), "carrier_role");
-        trainService.addTrain(userInfo, train);
-        verify(trainRepository).addTrain(userInfo.role(), train);
+        trainService.addTrain(train);
+        verify(trainRepository).addTrain(train);
     }
 
     @Test
     void addTrain_negative_invalid() {
-        var userInfo = new UserInfo(new UserId("1"), "carrier_role");
         var train = new Train(null, "express", List.of());
-        assertThrows(InvalidEntityException.class, () -> trainService.addTrain(userInfo, train));
-        verify(trainRepository, never()).addTrain(any(), any());
+        assertThrows(InvalidEntityException.class, () -> trainService.addTrain(train));
+        verify(trainRepository, never()).addTrain(any());
     }
 
     @Test
     void getTrain_positive_found() {
         var trainId = new TrainId("1");
         var train = new Train(trainId, "express", List.of(new RailcarId("1"), new RailcarId("2")));
-        var userInfo = new UserInfo(new UserId("1"), "carrier_role");
-        given(trainRepository.getTrain(userInfo.role(), trainId)).willReturn(Optional.of(train));
-        var result = trainService.getTrain(userInfo, trainId);
+        given(trainRepository.getTrain(trainId)).willReturn(Optional.of(train));
+        var result = trainService.getTrain(trainId);
         assertSame(train, result);
     }
 
     @Test
     void getTrain_negative_notFound() {
         var trainId = new TrainId("1");
-        var userInfo = new UserInfo(new UserId("1"), "carrier_role");
-        given(trainRepository.getTrain(userInfo.role(), trainId)).willReturn(Optional.empty());
-        assertThrows(EntityNotFoundException.class, () -> trainService.getTrain(userInfo, trainId));
+        given(trainRepository.getTrain(trainId)).willReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class, () -> trainService.getTrain(trainId));
     }
 
     @Test
@@ -69,9 +64,8 @@ class TrainServiceImplTest {
         var train2 = new Train(new TrainId("2"), "express", List.of(new RailcarId("1")));
         var start = Timestamp.valueOf("2025-03-19 10:10:00");
         var end = Timestamp.valueOf("2025-03-19 11:40:00");
-        var userInfo = new UserInfo(new UserId("1"), "carrier_role");
-        given(trainRepository.getTrains(userInfo.role(), start, end)).willReturn(List.of(train1, train2));
-        var result = trainService.getTrains(userInfo, start, end);
+        given(trainRepository.getTrains(start, end)).willReturn(List.of(train1, train2));
+        var result = trainService.getTrains(start, end);
         assertNotNull(result);
         assertEquals(2, result.size());
         assertEquals(train1, result.get(0));
@@ -82,9 +76,8 @@ class TrainServiceImplTest {
     void getTrains_positive_empty() {
         var start = Timestamp.valueOf("2025-03-19 10:10:00");
         var end = Timestamp.valueOf("2025-03-19 11:40:00");
-        var userInfo = new UserInfo(new UserId("1"), "carrier_role");
-        given(trainRepository.getTrains(userInfo.role(), start, end)).willReturn(List.of());
-        var result = trainService.getTrains(userInfo, start, end);
+        given(trainRepository.getTrains(start, end)).willReturn(List.of());
+        var result = trainService.getTrains(start, end);
         assertNotNull(result);
         assertTrue(result.isEmpty());
     }

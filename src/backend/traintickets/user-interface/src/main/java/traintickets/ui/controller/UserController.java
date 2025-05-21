@@ -54,16 +54,16 @@ public final class UserController {
         if (!userId.equals(userInfo.userId())) {
             throw new ForbiddenException();
         }
-        ctx.json(userService.getUser(userId));
+        ctx.json(userService.getUser(userInfo, userId));
         logger.debug("user got");
     }
 
-    public void getUsers(Context ctx, UserInfo userInfo) {
+    public void getUsers(Context ctx) {
         var username = ctx.queryParam("username");
         if (username == null) {
             var raceId = ctx.queryParam("raceId");
             logger.debug("raceId: %s", raceId);
-            ctx.json(raceService.getPassengers(userInfo, new RaceId(raceId)));
+            ctx.json(raceService.getPassengers(new RaceId(raceId)));
             logger.debug("users got");
         } else {
             logger.debug("username: %s", username);

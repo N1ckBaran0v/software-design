@@ -57,7 +57,7 @@ public final class UserInterfaceModule implements ContextModule {
                     var userService = beanProvider.getInstance(UserService.class);
                     var raceService = beanProvider.getInstance(RaceService.class);
                     var loggerFactory = beanProvider.getInstance(UniLoggerFactory.class);
-                    var adminRole = securityConfig.getAdminRole().getAppName();
+                    var adminRole = securityConfig.getAdminRole();
                     return new UserController(userService, raceService, loggerFactory, adminRole);
                 })
                 .addSingleton(AbstractEndpointGroup.class, AuthGroup.class)
@@ -74,9 +74,9 @@ public final class UserInterfaceModule implements ContextModule {
                 .addSingleton(SecurityConfiguration.class, beanProvider -> {
                     var jwtManager = beanProvider.getInstance(JwtManager.class);
                     var loggerFactory = beanProvider.getInstance(UniLoggerFactory.class);
-                    var userRole = securityConfig.getUserRole().getAppName();
-                    var carrierRole = securityConfig.getCarrierRole().getAppName();
-                    var adminRole = securityConfig.getAdminRole().getAppName();
+                    var userRole = securityConfig.getUserRole();
+                    var carrierRole = securityConfig.getCarrierRole();
+                    var adminRole = securityConfig.getAdminRole();
                     return new SecurityConfiguration(jwtManager, loggerFactory, userRole, carrierRole, adminRole);
                 });
     }

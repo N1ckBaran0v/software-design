@@ -19,7 +19,8 @@ public final class TicketGroup extends AbstractEndpointGroup {
 
     @Override
     public void addEndpoints() {
-        post(ctx -> ticketController.addTickets(ctx, securityConfiguration.forUser(ctx)));
-        get(ctx -> ticketController.getTickets(ctx, securityConfiguration.forUser(ctx)));
+        before(securityConfiguration::forUser);
+        post(ticketController::addTickets);
+        get(ticketController::getTickets);
     }
 }

@@ -9,7 +9,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import traintickets.businesslogic.model.*;
 import traintickets.businesslogic.payment.PaymentData;
 import traintickets.businesslogic.repository.TicketRepository;
-import traintickets.businesslogic.transport.UserInfo;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -48,17 +47,15 @@ class TicketServiceImplTest {
 
     @Test
     void buyTickets_positive_saved() {
-        var userInfo = new UserInfo(new UserId("1"), "carrier_role");
-        ticketService.buyTickets(userInfo, tickets, paymentData);
-        verify(ticketRepository).addTickets(userInfo.role(), tickets, paymentData);
+        ticketService.buyTickets(tickets, paymentData);
+        verify(ticketRepository).addTickets(tickets, paymentData);
     }
 
     @Test
     void getTickets_positive_got() {
         var user = new UserId("1");
-        var userInfo = new UserInfo(new UserId("1"), "carrier_role");
-        given(ticketRepository.getTicketsByUser(userInfo.role(), user)).willReturn(tickets);
-        var result = ticketService.getTickets(userInfo, user);
+        given(ticketRepository.getTicketsByUser(user)).willReturn(tickets);
+        var result = ticketService.getTickets(user);
         assertNotNull(result);
         assertEquals(tickets.size(), result.size());
         for (var i = 0; i < result.size(); ++i) {
@@ -69,9 +66,8 @@ class TicketServiceImplTest {
     @Test
     void getTickets_positive_empty() {
         var user = new UserId("1");
-        var userInfo = new UserInfo(new UserId("1"), "carrier_role");
-        given(ticketRepository.getTicketsByUser(userInfo.role(), user)).willReturn(List.of());
-        var result = ticketService.getTickets(userInfo, user);
+        given(ticketRepository.getTicketsByUser(user)).willReturn(List.of());
+        var result = ticketService.getTickets(user);
         assertNotNull(result);
         assertTrue(result.isEmpty());
     }

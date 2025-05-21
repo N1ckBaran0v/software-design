@@ -10,6 +10,7 @@ public final class JavalinServer implements Server {
 
     public JavalinServer(Javalin javalin) {
         this.javalin = Objects.requireNonNull(javalin);
+        Runtime.getRuntime().addShutdownHook(new Thread(this::stop));
     }
 
     @Override

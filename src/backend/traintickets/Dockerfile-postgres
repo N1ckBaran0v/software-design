@@ -2,10 +2,9 @@ FROM postgres:16.8
 ENV POSTGRES_DB=train_tickets_postgres
 ENV POSTGRES_USER=train_database_admin
 ENV POSTGRES_PASSWORD=s3cr3tpassw0rd
-COPY ./data-access/src/test/resources/schema.sql       /docker-entrypoint-initdb.d/01.sql
-COPY ./data-access/src/test/resources/restrictions.sql /docker-entrypoint-initdb.d/02.sql
-COPY ./data-access/src/test/resources/trigger.sql      /docker-entrypoint-initdb.d/03.sql
-COPY ./data-access/src/test/resources/roles.sql        /docker-entrypoint-initdb.d/04.sql
-COPY ./data-access/src/test/resources/copy.sql         /docker-entrypoint-initdb.d/05.sql
-COPY ./csv_data                                        /data/
+COPY ./data-access-postgres/src/test/resources/schema.sql       /docker-entrypoint-initdb.d/01.sql
+COPY ./data-access-postgres/src/test/resources/restrictions.sql /docker-entrypoint-initdb.d/02.sql
+COPY ./data-access-postgres/src/test/resources/trigger.sql      /docker-entrypoint-initdb.d/03.sql
+COPY ./data-access-postgres/src/test/resources/copy.sql         /docker-entrypoint-initdb.d/04.sql
+COPY ./csv_data                                                 /data/
 EXPOSE 5432

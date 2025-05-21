@@ -7,7 +7,7 @@ import java.util.Date;
 import java.util.Optional;
 
 public interface TrainRepository {
-    void addTrain(String role, Train train);
-    Optional<Train> getTrain(String role, TrainId trainId);
-    Iterable<Train> getTrains(String role, Date start, Date end);
+    void addTrain(Train train);
+    Optional<Train> getTrain(TrainId trainId);
+    Iterable<Train> getTrains(Date start, Date end);
 }

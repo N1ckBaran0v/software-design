@@ -16,3 +16,6 @@ out/
 ### Custom ###
 *.jar
 *.csv
+start.sh
+*.log
+mongo_data/*.json

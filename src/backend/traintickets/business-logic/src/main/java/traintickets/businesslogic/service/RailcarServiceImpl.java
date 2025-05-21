@@ -3,7 +3,6 @@ package traintickets.businesslogic.service;
 import traintickets.businesslogic.api.RailcarService;
 import traintickets.businesslogic.model.Railcar;
 import traintickets.businesslogic.repository.RailcarRepository;
-import traintickets.businesslogic.transport.UserInfo;
 
 import java.util.List;
 import java.util.Objects;
@@ -17,14 +16,13 @@ public final class RailcarServiceImpl implements RailcarService {
     }
 
     @Override
-    public void addRailcar(UserInfo userInfo, Railcar railcar) {
+    public void addRailcar(Railcar railcar) {
         railcar.validate();
-        railcarRepository.addRailcar(userInfo.role(), railcar);
+        railcarRepository.addRailcar(railcar);
     }
 
     @Override
-    public List<Railcar> getRailcars(UserInfo userInfo, String type) {
-        var role = userInfo.role();
-        return StreamSupport.stream(railcarRepository.getRailcarsByType(role, type).spliterator(), false).toList();
+    public List<Railcar> getRailcars(String type) {
+        return StreamSupport.stream(railcarRepository.getRailcarsByType(type).spliterator(), false).toList();
     }
 }

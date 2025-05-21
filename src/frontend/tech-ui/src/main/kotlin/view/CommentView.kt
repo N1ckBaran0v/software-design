@@ -50,7 +50,7 @@ class CommentView(override val client: Client, val io: IOUtil): ExecutableView(c
         try {
             if (userData != null) {
                 val score = io.readNum("Введите оценку от 1 до 5: ")
-                println("Введите комментарий: ")
+                print("Введите комментарий: ")
                 val text = readLine() ?: ""
                 val comment = Comment(null, UserId(userData.id), trainId, score, text)
                 val body = Json.encodeToString(comment).toRequestBody("application/json".toMediaType())

@@ -14,16 +14,13 @@ public final class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final JwtManager jwtManager;
     private final String clientRole;
-    private final String systemRole;
 
     public AuthServiceImpl(UserRepository userRepository,
                            JwtManager jwtManager,
-                           String defaultRole,
-                           String systemRole) {
+                           String defaultRole) {
         this.userRepository = Objects.requireNonNull(userRepository);
         this.jwtManager = Objects.requireNonNull(jwtManager);
         this.clientRole = Objects.requireNonNull(defaultRole);
-        this.systemRole = Objects.requireNonNull(systemRole);
     }
 
     @Override
@@ -40,13 +37,13 @@ public final class AuthServiceImpl implements AuthService {
         var name = form.name();
         var user = new User(null, username, password, name, clientRole, true);
         user.validate();
-        var registered = userRepository.addUser(systemRole, user);
+        var registered = userRepository.addUser(user);
         return jwtManager.generateToken(registered.id(), registered.role());
     }
 
     @Override
     public String login(LoginForm form) {
-        var user = userRepository.getUserByUsername(systemRole, form.username()).orElseThrow(
+        var user = userRepository.getUserByUsername(form.username()).orElseThrow(
                 () -> new EntityNotFoundException(String.format("User %s not found", form.username())));
         if (!user.password().equals(form.password())) {
             throw new InvalidPasswordException();

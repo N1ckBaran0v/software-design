@@ -1,7 +1,5 @@
 package traintickets.control.modules;
 
-import traintickets.control.configuration.DatabaseConfig;
-import traintickets.control.configuration.SecurityConfig;
 import traintickets.di.ApplicationContextBuilder;
 import traintickets.di.ContextModule;
 import traintickets.jdbc.api.JdbcTemplate;
@@ -11,12 +9,12 @@ import traintickets.jdbc.model.DatabaseParams;
 import java.util.Map;
 
 public final class JdbcTemplateModule implements ContextModule {
-    private final DatabaseConfig databaseConfig;
-    private final SecurityConfig securityConfig;
+    private final Map<String, String> databaseParams;
+    private final String url;
 
-    public JdbcTemplateModule(DatabaseConfig databaseConfig, SecurityConfig securityConfig) {
-        this.databaseConfig = databaseConfig;
-        this.securityConfig = securityConfig;
+    public JdbcTemplateModule(Map<String, String> databaseParams, String url) {
+        this.databaseParams = databaseParams;
+        this.url = url;
     }
 
     @Override
@@ -24,16 +22,10 @@ public final class JdbcTemplateModule implements ContextModule {
         builder.addSingleton(JdbcTemplate.class, beanProvider -> {
             var factory = beanProvider.getInstance(JdbcTemplateFactory.class);
             var params = new DatabaseParams(
-                    databaseConfig.getUrl(),
-                    databaseConfig.getUsername(),
-                    databaseConfig.getPassword(),
-                    Map.of(
-                            securityConfig.getUserRole().getAppName(), securityConfig.getUserRole().getDbName(),
-                            securityConfig.getCarrierRole().getAppName(), securityConfig.getCarrierRole().getDbName(),
-                            securityConfig.getAdminRole().getAppName(), securityConfig.getAdminRole().getDbName(),
-                            securityConfig.getSystemRole().getAppName(), securityConfig.getSystemRole().getDbName()
-                    ),
-                    databaseConfig.getPoolSize()
+                    url,
+                    databaseParams.get("username"),
+                    databaseParams.get("password"),
+                    Integer.parseInt(databaseParams.get("poolSize"))
             );
             return factory.create(params);
         });

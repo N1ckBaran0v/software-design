@@ -8,7 +8,7 @@ import traintickets.businesslogic.transport.UserInfo;
 public interface UserService {
     void createUser(User user);
     void deleteUser(UserId userId);
-    TransportUser getUser(UserId userId);
+    TransportUser getUser(UserInfo userInfo, UserId userId);
     User getUserByAdmin(String username);
     void updateUser(UserInfo userInfo, TransportUser user);
     void updateUserByAdmin(User user);

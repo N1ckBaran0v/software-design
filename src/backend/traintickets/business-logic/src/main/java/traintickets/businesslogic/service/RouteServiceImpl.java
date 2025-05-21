@@ -26,17 +26,17 @@ public final class RouteServiceImpl implements RouteService {
         }
 
         private void getBought(Race race) {
-            var train = trainRepository.getTrain(systemRole, race.trainId()).orElseThrow(
+            var train = trainRepository.getTrain(race.trainId()).orElseThrow(
                     () -> new EntityNotFoundException(String.format("No train with id %s found", race.trainId().id())));
             numbers = train.railcars();
             railcars = new HashMap<>();
-            railcarRepository.getRailcarsByTrain(systemRole, train.id()).forEach(railcar ->
+            railcarRepository.getRailcarsByTrain(train.id()).forEach(railcar ->
                     railcars.put(railcar.id(), railcar));
             boughtAll = new ArrayList<>(numbers.size());
             for (var i = 0; i < numbers.size(); ++i) {
                 boughtAll.add(new HashMap<>());
             }
-            ticketRepository.getTicketsByRace(systemRole, race.id()).forEach(ticket -> {
+            ticketRepository.getTicketsByRace(race.id()).forEach(ticket -> {
                 var bought = boughtAll.get(ticket.railcar() - 1);
                 if (!bought.containsKey(ticket.place().number())) {
                     bought.put(ticket.place().number(), new ArrayList<>());
@@ -72,30 +72,27 @@ public final class RouteServiceImpl implements RouteService {
     private final TrainRepository trainRepository;
     private final RaceRepository raceRepository;
     private final TicketRepository ticketRepository;
-    private final String systemRole;
 
     public RouteServiceImpl(RailcarRepository railcarRepository,
                             TrainRepository trainRepository,
                             RaceRepository raceRepository,
-                            TicketRepository ticketRepository,
-                            String systemRole) {
+                            TicketRepository ticketRepository) {
         this.railcarRepository = Objects.requireNonNull(railcarRepository);
         this.trainRepository = Objects.requireNonNull(trainRepository);
         this.raceRepository = Objects.requireNonNull(raceRepository);
         this.ticketRepository = Objects.requireNonNull(ticketRepository);
-        this.systemRole = Objects.requireNonNull(systemRole);
     }
 
     @Override
     public Race getRace(RaceId raceId) {
-        return raceRepository.getRace(systemRole, raceId).orElseThrow(
+        return raceRepository.getRace(raceId).orElseThrow(
                 () -> new EntityNotFoundException(String.format("No race with id %s found", raceId.id())));
     }
 
     @Override
     public List<Route> getRoutes(Filter filter) {
         filter.searchValidate();
-        var races = raceRepository.getRaces(systemRole, filter).stream()
+        var races = raceRepository.getRaces(filter).stream()
                 .map(RaceWrapper::new).toList();
         var transfers = filter.transfers();
         var result = new ArrayList<Route>();
@@ -179,15 +176,23 @@ public final class RouteServiceImpl implements RouteService {
                 var intersection = new HashSet<>(startSchedule.get(start));
                 intersection.retainAll(endSchedule.get(end));
                 if (!intersection.isEmpty()) {
-                    var station = intersection.iterator().next();
-                    var schedule1 = startWrappers.get(start).schedule;
-                    var schedule2 = endWrappers.get(end).schedule;
-                    var index1 = findSchedule(schedule1, station);
-                    var index2 = findSchedule(schedule2, station);
-                    var raceIds = List.of(start, end);
-                    var departures = List.of(schedule1.get(startPositions.get(start)), schedule2.get(index2));
-                    var destinations = List.of(schedule1.get(index1), schedule2.get(endPositions.get(end)));
-                    routes.add(new Route(raceIds, departures, destinations));
+                    for (var station : intersection) {
+                        var wrapper1 = startWrappers.get(start);
+                        var wrapper2 = endWrappers.get(end);
+                        var schedule1 = wrapper1.schedule;
+                        var schedule2 = wrapper2.schedule;
+                        var index1 = findSchedule(schedule1, station);
+                        var index2 = findSchedule(schedule2, station);
+                        var flag = validateRace(filter, wrapper1, 0, index1) &&
+                                validateRace(filter, wrapper2, index2, schedule2.size() - 1);
+                        if (flag) {
+                            var raceIds = List.of(start, end);
+                            var departures = List.of(schedule1.get(startPositions.get(start)), schedule2.get(index2));
+                            var destinations = List.of(schedule1.get(index1), schedule2.get(endPositions.get(end)));
+                            routes.add(new Route(raceIds, departures, destinations));
+                            break;
+                        }
+                    }
                 }
             }
         }
@@ -333,7 +338,7 @@ public final class RouteServiceImpl implements RouteService {
 
     @Override
     public List<List<Place>> getFreePlaces(RaceId raceId, ScheduleId departureId, ScheduleId destinationId) {
-        var race = raceRepository.getRace(systemRole, raceId).orElseThrow(
+        var race = raceRepository.getRace(raceId).orElseThrow(
                 () -> new EntityNotFoundException(String.format("No race with id %s found", raceId.id())));
         var departure = (Date) null;
         var destination = (Date) null;

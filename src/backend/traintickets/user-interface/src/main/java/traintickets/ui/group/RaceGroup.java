@@ -19,8 +19,14 @@ public final class RaceGroup extends AbstractEndpointGroup {
 
     @Override
     public void addEndpoints() {
-        post(ctx -> raceController.addRace(ctx, securityConfiguration.forCarrier(ctx)));
+        post(ctx -> {
+            securityConfiguration.forCarrier(ctx);
+            raceController.addRace(ctx);
+        });
         get("/{raceId}", raceController::getRace);
-        patch("/{raceId}", ctx -> raceController.finishRace(ctx, securityConfiguration.forCarrier(ctx)));
+        patch("/{raceId}", ctx -> {
+            securityConfiguration.forCarrier(ctx);
+            raceController.finishRace(ctx);
+        });
     }
 }

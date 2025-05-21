@@ -8,9 +8,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import traintickets.businesslogic.model.Place;
 import traintickets.businesslogic.model.Railcar;
 import traintickets.businesslogic.model.RailcarId;
-import traintickets.businesslogic.model.UserId;
 import traintickets.businesslogic.repository.RailcarRepository;
-import traintickets.businesslogic.transport.UserInfo;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -30,9 +28,8 @@ class RailcarServiceImplTest {
     @Test
     void addRailcar_positive_saved() {
         var railcar = new Railcar(null, "1", "cars", List.of(new Place(null, 1, "", "cars", BigDecimal.valueOf(1000))));
-        var userInfo = new UserInfo(new UserId("1"), "carrier_role");
-        railcarService.addRailcar(userInfo, railcar);
-        verify(railcarRepository).addRailcar(userInfo.role(), railcar);
+        railcarService.addRailcar(railcar);
+        verify(railcarRepository).addRailcar(railcar);
     }
 
     @Test
@@ -42,9 +39,8 @@ class RailcarServiceImplTest {
         var railcar1 = new Railcar(railcarId1, "1", type, List.of());
         var railcarId2 = new RailcarId("2");
         var railcar2 = new Railcar(railcarId2, "2", type, List.of());
-        var userInfo = new UserInfo(new UserId("1"), "carrier_role");
-        given(railcarRepository.getRailcarsByType(userInfo.role(), type)).willReturn(List.of(railcar1, railcar2));
-        var result = railcarService.getRailcars(userInfo, type);
+        given(railcarRepository.getRailcarsByType(type)).willReturn(List.of(railcar1, railcar2));
+        var result = railcarService.getRailcars(type);
         assertNotNull(result);
         assertEquals(2, result.size());
         assertEquals(railcar1, result.get(0));
@@ -54,9 +50,8 @@ class RailcarServiceImplTest {
     @Test
     void getRailcars_positive_empty() {
         var type = "cars";
-        var userInfo = new UserInfo(new UserId("1"), "carrier_role");
-        given(railcarRepository.getRailcarsByType(userInfo.role(), type)).willReturn(List.of());
-        var result = railcarService.getRailcars(userInfo, type);
+        given(railcarRepository.getRailcarsByType(type)).willReturn(List.of());
+        var result = railcarService.getRailcars(type);
         assertNotNull(result);
         assertTrue(result.isEmpty());
     }
